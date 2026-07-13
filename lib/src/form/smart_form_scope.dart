@@ -14,11 +14,17 @@ abstract interface class SmartFormRegistrar {
 final class SmartFormScope extends InheritedWidget {
   const SmartFormScope({
     required this.registrar,
+    required this.scrollDuration,
+    required this.scrollCurve,
+    required this.scrollAlignment,
     required super.child,
     super.key,
   });
 
   final SmartFormRegistrar registrar;
+  final Duration scrollDuration;
+  final Curve scrollCurve;
+  final double scrollAlignment;
 
   static SmartFormScope? maybeOf(BuildContext context) {
     return context.dependOnInheritedWidgetOfExactType<SmartFormScope>();
@@ -37,7 +43,10 @@ final class SmartFormScope extends InheritedWidget {
 
   @override
   bool updateShouldNotify(SmartFormScope oldWidget) {
-    return !identical(registrar, oldWidget.registrar);
+    return !identical(registrar, oldWidget.registrar) ||
+        scrollDuration != oldWidget.scrollDuration ||
+        scrollCurve != oldWidget.scrollCurve ||
+        scrollAlignment != oldWidget.scrollAlignment;
   }
 }
 

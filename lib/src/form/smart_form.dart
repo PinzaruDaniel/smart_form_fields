@@ -13,6 +13,9 @@ class SmartForm extends StatefulWidget {
     this.controller,
     this.scrollToFirstError = true,
     this.focusFirstError = true,
+    this.scrollDuration = const Duration(milliseconds: 350),
+    this.scrollCurve = Curves.easeOutCubic,
+    this.scrollAlignment = 0.2,
     this.mainAxisSize = MainAxisSize.min,
     super.key,
   });
@@ -21,6 +24,9 @@ class SmartForm extends StatefulWidget {
   final SmartFormController? controller;
   final bool scrollToFirstError;
   final bool focusFirstError;
+  final Duration scrollDuration;
+  final Curve scrollCurve;
+  final double scrollAlignment;
   final MainAxisSize mainAxisSize;
 
   @override
@@ -188,6 +194,9 @@ class SmartFormState extends State<SmartForm>
   Widget build(BuildContext context) {
     return SmartFormScope(
       registrar: this,
+      scrollDuration: widget.scrollDuration,
+      scrollCurve: widget.scrollCurve,
+      scrollAlignment: widget.scrollAlignment,
       child: Column(
         mainAxisSize: widget.mainAxisSize,
         children: <Widget>[
