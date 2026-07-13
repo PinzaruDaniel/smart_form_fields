@@ -41,8 +41,20 @@ The first release will provide:
 See [PLAN.md](PLAN.md) for the implementation phases, API decisions, test
 matrix, and release gates.
 
+## Example application
+
+The [example](example/) directory contains a complete Material 3 registration
+form with synchronous and asynchronous validation, value patching, reset,
+server errors, first-error navigation, and a custom boolean field.
+
+```sh
+cd example
+flutter run
+```
+
 ## Current status
 
-The package foundation, form key/controller API, immutable result model, and
-internal field registry are implemented. Generic and reusable fields are the
-next milestone.
+The package foundation, form key/controller API, immutable result model,
+registry, generic custom field, text field, and core sync/async validation are
+implemented. Built-in validators and first-error navigation hardening are the
+next milestones.

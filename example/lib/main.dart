@@ -1,122 +1,375 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:smart_form_fields/smart_form_fields.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const SmartFormFieldsExampleApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class SmartFormFieldsExampleApp extends StatelessWidget {
+  const SmartFormFieldsExampleApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    const seedColor = Color(0xFF315C4C);
+
     return MaterialApp(
-      title: 'Flutter Demo',
+      debugShowCheckedModeBanner: false,
+      title: 'Smart Form Fields example',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: seedColor,
+          brightness: Brightness.light,
+        ),
+        useMaterial3: true,
+        inputDecorationTheme: const InputDecorationTheme(
+          border: OutlineInputBorder(),
+          filled: true,
+        ),
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const RegistrationExamplePage(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+class RegistrationExamplePage extends StatefulWidget {
+  const RegistrationExamplePage({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<RegistrationExamplePage> createState() =>
+      _RegistrationExamplePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _RegistrationExamplePageState extends State<RegistrationExamplePage> {
+  final SmartFormController _formController = SmartFormController();
+  bool _isSubmitting = false;
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+  static String? _required(String label, String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return '$label is required';
+    }
+    return null;
+  }
+
+  static String? _email(String? value) {
+    final requiredError = _required('Email', value);
+    if (requiredError != null) {
+      return requiredError;
+    }
+    final emailPattern = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+    return emailPattern.hasMatch(value!) ? null : 'Enter a valid email address';
+  }
+
+  static String? _phone(String? value) {
+    final requiredError = _required('Phone', value);
+    if (requiredError != null) {
+      return requiredError;
+    }
+    final digits = value!.replaceAll(RegExp(r'\D'), '');
+    return digits.length >= 8 ? null : 'Enter at least 8 digits';
+  }
+
+  static String? _password(String? value) {
+    final requiredError = _required('Password', value);
+    if (requiredError != null) {
+      return requiredError;
+    }
+    return value!.length >= 8 ? null : 'Use at least 8 characters';
+  }
+
+  Future<String?> _checkEmailAvailability(String? value) async {
+    if (value == null || value.isEmpty) {
+      return null;
+    }
+    await Future<void>.delayed(const Duration(milliseconds: 450));
+    if (value.toLowerCase() == 'taken@example.com') {
+      return 'This email is already registered';
+    }
+    return null;
+  }
+
+  String? _confirmPassword(String? value) {
+    final requiredError = _required('Password confirmation', value);
+    if (requiredError != null) {
+      return requiredError;
+    }
+    return value == _formController.valueOf<String>('password')
+        ? null
+        : 'Passwords do not match';
+  }
+
+  Future<void> _submit() async {
+    if (_isSubmitting) {
+      return;
+    }
+    setState(() => _isSubmitting = true);
+    final result = await _formController.validate();
+    if (!mounted) {
+      return;
+    }
+    setState(() => _isSubmitting = false);
+
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          result.isValid
+              ? 'Account data is valid for ${result.values['email']}'
+              : 'Please correct ${result.errors.length} field(s).',
+        ),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  void _fillSample() {
+    _formController.patchValue(<String, Object?>{
+      'firstName': 'Ana',
+      'lastName': 'Popescu',
+      'email': 'ana@example.com',
+      'phone': '+373 60 123 456',
+      'password': 'flutter123',
+      'confirmPassword': 'flutter123',
+      'newsletter': true,
     });
+  }
+
+  void _reset() {
+    _formController.reset();
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+  }
+
+  Future<void> _showServerErrors() async {
+    await _formController.setErrors(const <String, String>{
+      'email': 'The server rejected this email address',
+      'phone': 'The server could not verify this phone number',
+    }, scrollToFirstError: true);
+  }
+
+  @override
+  void dispose() {
+    _formController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
+    final theme = Theme.of(context);
+
     return Scaffold(
       appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+        title: const Text('Smart form example'),
+        actions: <Widget>[
+          IconButton(
+            tooltip: 'Reset form',
+            onPressed: _reset,
+            icon: const Icon(Icons.restart_alt),
+          ),
+        ],
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: .center,
-          children: [
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 720),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  Icon(
+                    Icons.fact_check_outlined,
+                    size: 48,
+                    color: theme.colorScheme.primary,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Create your account',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.headlineMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'This demo shows registration, validation, value patching, '
+                    'server errors, reset, and first-error navigation.',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  SmartForm(
+                    controller: _formController,
+                    children: <Widget>[
+                      const _NameFields(),
+                      const SizedBox(height: 16),
+                      SmartTextField(
+                        name: 'email',
+                        decoration: const InputDecoration(
+                          labelText: 'Email',
+                          hintText: 'you@example.com',
+                          prefixIcon: Icon(Icons.email_outlined),
+                        ),
+                        keyboardType: TextInputType.emailAddress,
+                        textInputAction: TextInputAction.next,
+                        validators: <SmartValidator<String>>[_email],
+                        asyncValidators: <SmartAsyncValidator<String>>[
+                          _checkEmailAvailability,
+                        ],
+                        asyncValidationDebounce: const Duration(
+                          milliseconds: 400,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      SmartTextField(
+                        name: 'phone',
+                        decoration: const InputDecoration(
+                          labelText: 'Phone',
+                          hintText: '+373 60 123 456',
+                          prefixIcon: Icon(Icons.phone_outlined),
+                        ),
+                        keyboardType: TextInputType.phone,
+                        textInputAction: TextInputAction.next,
+                        inputFormatters: <TextInputFormatter>[
+                          FilteringTextInputFormatter.allow(
+                            RegExp(r'[\d\s+()-]'),
+                          ),
+                        ],
+                        validators: <SmartValidator<String>>[_phone],
+                      ),
+                      const SizedBox(height: 16),
+                      SmartTextField(
+                        name: 'password',
+                        decoration: const InputDecoration(
+                          labelText: 'Password',
+                          prefixIcon: Icon(Icons.lock_outline),
+                        ),
+                        obscureText: true,
+                        autocorrect: false,
+                        enableSuggestions: false,
+                        textInputAction: TextInputAction.next,
+                        validators: <SmartValidator<String>>[_password],
+                      ),
+                      const SizedBox(height: 16),
+                      SmartTextField(
+                        name: 'confirmPassword',
+                        decoration: const InputDecoration(
+                          labelText: 'Confirm password',
+                          prefixIcon: Icon(Icons.lock_reset_outlined),
+                        ),
+                        obscureText: true,
+                        autocorrect: false,
+                        enableSuggestions: false,
+                        textInputAction: TextInputAction.done,
+                        validators: <SmartValidator<String>>[_confirmPassword],
+                        onSubmitted: (_) => unawaited(_submit()),
+                      ),
+                      const SizedBox(height: 12),
+                      SmartFormField<bool>(
+                        name: 'newsletter',
+                        initialValue: false,
+                        builder: (context, field) {
+                          return Card(
+                            margin: EdgeInsets.zero,
+                            child: SwitchListTile(
+                              title: const Text('Product updates'),
+                              subtitle: const Text(
+                                'A custom boolean field built with '
+                                'SmartFormField<bool>.',
+                              ),
+                              value: field.value ?? false,
+                              onChanged: field.enabled ? field.didChange : null,
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  FilledButton.icon(
+                    onPressed: _isSubmitting ? null : _submit,
+                    icon: _isSubmitting
+                        ? const SizedBox.square(
+                            dimension: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.check_circle_outline),
+                    label: Text(
+                      _isSubmitting ? 'Validating…' : 'Create account',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: <Widget>[
+                      TextButton.icon(
+                        onPressed: _fillSample,
+                        icon: const Icon(Icons.auto_fix_high_outlined),
+                        label: const Text('Fill sample'),
+                      ),
+                      TextButton.icon(
+                        onPressed: _showServerErrors,
+                        icon: const Icon(Icons.cloud_off_outlined),
+                        label: const Text('Show server errors'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ],
+          ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ),
+    );
+  }
+}
+
+class _NameFields extends StatelessWidget {
+  const _NameFields();
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final firstName = SmartTextField(
+          name: 'firstName',
+          decoration: const InputDecoration(labelText: 'First name'),
+          textCapitalization: TextCapitalization.words,
+          textInputAction: TextInputAction.next,
+          validators: <SmartValidator<String>>[
+            (value) =>
+                _RegistrationExamplePageState._required('First name', value),
+          ],
+        );
+        final lastName = SmartTextField(
+          name: 'lastName',
+          decoration: const InputDecoration(labelText: 'Last name'),
+          textCapitalization: TextCapitalization.words,
+          textInputAction: TextInputAction.next,
+          validators: <SmartValidator<String>>[
+            (value) =>
+                _RegistrationExamplePageState._required('Last name', value),
+          ],
+        );
+
+        if (constraints.maxWidth < 520) {
+          return Column(
+            children: <Widget>[firstName, const SizedBox(height: 16), lastName],
+          );
+        }
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Expanded(child: firstName),
+            const SizedBox(width: 16),
+            Expanded(child: lastName),
+          ],
+        );
+      },
     );
   }
 }

@@ -15,6 +15,7 @@ class SmartTextField extends StatefulWidget {
     this.focusNode,
     this.validators = const [],
     this.asyncValidators = const [],
+    this.asyncValidationDebounce,
     this.enabled = true,
     this.decoration = const InputDecoration(),
     this.keyboardType,
@@ -40,6 +41,7 @@ class SmartTextField extends StatefulWidget {
   final FocusNode? focusNode;
   final List<SmartValidator<String>> validators;
   final List<SmartAsyncValidator<String>> asyncValidators;
+  final Duration? asyncValidationDebounce;
   final bool enabled;
   final InputDecoration decoration;
   final TextInputType? keyboardType;
@@ -126,6 +128,7 @@ class _SmartTextFieldState extends State<SmartTextField> {
       initialValue: _controller.text,
       validators: widget.validators,
       asyncValidators: widget.asyncValidators,
+      asyncValidationDebounce: widget.asyncValidationDebounce,
       enabled: widget.enabled,
       focusNode: widget.focusNode,
       builder: (context, field) {

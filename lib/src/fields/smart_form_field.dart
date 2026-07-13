@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import '../form/smart_field_handle.dart';
@@ -19,6 +22,7 @@ class SmartFormField<T> extends StatefulWidget {
     this.asyncValidators = const [],
     this.enabled = true,
     this.focusNode,
+    this.asyncValidationDebounce,
     super.key,
   }) : assert(name.length > 0, 'A field name cannot be empty.');
 
@@ -29,6 +33,12 @@ class SmartFormField<T> extends StatefulWidget {
   final SmartFieldBuilder<T> builder;
   final bool enabled;
   final FocusNode? focusNode;
+
+  /// Delay before asynchronous validators run after a value change.
+  ///
+  /// Explicit calls to [SmartFieldController.validate] and form validation
+  /// always bypass this delay.
+  final Duration? asyncValidationDebounce;
 
   @override
   State<SmartFormField<T>> createState() => _SmartFormFieldState<T>();
@@ -108,17 +118,43 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
       );
     }
     if (!identical(oldWidget.focusNode, widget.focusNode)) {
+      final hadFocus = _focusNode.hasFocus;
       if (oldWidget.focusNode == null) {
         _focusNode.dispose();
       }
       _focusNode = widget.focusNode ?? FocusNode();
+      if (hadFocus && widget.enabled) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            focus();
+          }
+        });
+      }
     }
     if (!_isDirty && oldWidget.initialValue != widget.initialValue) {
-      _value = widget.initialValue;
-    }
-    if (!widget.enabled && oldWidget.enabled) {
       _validationGeneration++;
+      _value = widget.initialValue;
+      _errorText = null;
       _isValidating = false;
+    }
+    final validatorsChanged =
+        !listEquals(oldWidget.validators, widget.validators) ||
+        !listEquals(oldWidget.asyncValidators, widget.asyncValidators) ||
+        oldWidget.asyncValidationDebounce != widget.asyncValidationDebounce;
+    if (validatorsChanged) {
+      _validationGeneration++;
+      _errorText = null;
+      _isValidating = false;
+      if (_isTouched && widget.enabled) {
+        unawaited(_validateAfterChange());
+      }
+    } else if (oldWidget.enabled != widget.enabled) {
+      _validationGeneration++;
+      _errorText = null;
+      _isValidating = false;
+      if (widget.enabled && _isTouched) {
+        unawaited(_validateAfterChange());
+      }
     }
   }
 
@@ -142,6 +178,9 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
       _isDirty = true;
       _isTouched = true;
     });
+    if (widget.enabled) {
+      unawaited(_validateAfterChange());
+    }
   }
 
   @override
@@ -150,22 +189,70 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
   @override
   Future<bool> validate() async {
     final generation = ++_validationGeneration;
-    setState(() {
-      _isTouched = true;
-      _isValidating = widget.asyncValidators.isNotEmpty;
-    });
+    return _validateGeneration(generation, debounceAsync: false);
+  }
+
+  Future<void> _validateAfterChange() async {
+    final generation = _validationGeneration;
+    try {
+      await _validateGeneration(generation, debounceAsync: true);
+    } catch (error, stackTrace) {
+      if (_isCurrentGeneration(generation)) {
+        FlutterError.reportError(
+          FlutterErrorDetails(
+            exception: error,
+            stack: stackTrace,
+            library: 'smart_form_fields',
+            context: ErrorDescription(
+              'while asynchronously validating SmartFormField "$name" '
+              'after its value changed',
+            ),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<bool> _validateGeneration(
+    int generation, {
+    required bool debounceAsync,
+  }) async {
+    final value = _value;
+
+    if (_isCurrentGeneration(generation)) {
+      setState(() {
+        _isTouched = true;
+        _isValidating = false;
+      });
+    }
 
     try {
       for (final validator in widget.validators) {
-        final error = validator(_value);
+        final error = validator(value);
         if (error != null) {
           _applyValidationResult(generation, error);
           return false;
         }
       }
 
+      if (widget.asyncValidators.isNotEmpty &&
+          _isCurrentGeneration(generation)) {
+        setState(() => _isValidating = true);
+      }
+
+      final debounce = widget.asyncValidationDebounce;
+      if (debounceAsync &&
+          widget.asyncValidators.isNotEmpty &&
+          debounce != null &&
+          debounce > Duration.zero) {
+        await Future<void>.delayed(debounce);
+        if (!_isCurrentGeneration(generation)) {
+          return isValid;
+        }
+      }
+
       for (final validator in widget.asyncValidators) {
-        final error = await validator(_value);
+        final error = await validator(value);
         if (!_isCurrentGeneration(generation)) {
           return isValid;
         }

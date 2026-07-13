@@ -23,4 +23,7 @@ abstract interface class SmartFieldController<T> {
   Future<bool> validate();
 
   void reset();
+
+  /// Clears the current validation or server error.
+  void clearError();
 }

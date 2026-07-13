@@ -1,17 +1,17 @@
-# smart_form_fields_example
+# smart_form_fields example
 
-A new Flutter project.
+A Material 3 registration form demonstrating the package's current API:
 
-## Getting Started
+- `SmartFormController` validation, reset, value patching, and server errors;
+- `SmartTextField` with synchronous and debounced asynchronous validators;
+- immutable validation results and first-error navigation;
+- a custom boolean field built with `SmartFormField<bool>`.
 
-This project is a starting point for a Flutter application.
+Run the example from this directory:
 
-A few resources to get you started if this is your first Flutter project:
+```sh
+flutter run
+```
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Use `taken@example.com` to see the asynchronous availability error, or select
+**Show server errors** to apply errors returned by a simulated backend.
