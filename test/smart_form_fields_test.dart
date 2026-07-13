@@ -201,7 +201,9 @@ void main() {
         ),
       );
 
-      final result = await controller.validate();
+      final validation = controller.validate();
+      await tester.pumpAndSettle();
+      final result = await validation;
 
       expect(result.isValid, isFalse);
       expect(result.errors, <String, String>{
@@ -256,6 +258,34 @@ void main() {
       );
       expect(controller.valueOf<String>('email'), 'person@example.com');
     });
+
+    testWidgets('navigation failures do not change the validation result', (
+      tester,
+    ) async {
+      final controller = SmartFormController();
+
+      await tester.pumpWidget(
+        _host(
+          SmartForm(
+            controller: controller,
+            children: const <Widget>[
+              _TestField(
+                name: 'invalid',
+                validationError: 'Required',
+                throwOnNavigation: true,
+              ),
+            ],
+          ),
+        ),
+      );
+
+      final validation = controller.validate();
+      await tester.pumpAndSettle();
+      final result = await validation;
+
+      expect(result.isValid, isFalse);
+      expect(result.errors, <String, String>{'invalid': 'Required'});
+    });
   });
 
   test('SmartFormResult exposes immutable snapshots', () {
@@ -284,6 +314,7 @@ class _TestField extends StatefulWidget {
     this.validationError,
     this.enabled = true,
     this.validationOrder,
+    this.throwOnNavigation = false,
     super.key,
   });
 
@@ -292,6 +323,7 @@ class _TestField extends StatefulWidget {
   final String? validationError;
   final bool enabled;
   final List<String>? validationOrder;
+  final bool throwOnNavigation;
 
   @override
   State<_TestField> createState() => _TestFieldState();
@@ -384,10 +416,20 @@ class _TestFieldState extends State<_TestField>
   void setError(String error) => _error = error;
 
   @override
-  void focus() => focusCount++;
+  void focus() {
+    focusCount++;
+    if (widget.throwOnNavigation) {
+      throw StateError('Focus failed');
+    }
+  }
 
   @override
-  Future<void> scrollIntoView() async => scrollCount++;
+  Future<void> scrollIntoView() async {
+    scrollCount++;
+    if (widget.throwOnNavigation) {
+      throw StateError('Scroll failed');
+    }
+  }
 
   @override
   Widget build(BuildContext context) => const SizedBox.shrink();

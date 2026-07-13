@@ -48,6 +48,10 @@ final class SmartFieldRegistry {
     return null;
   }
 
+  bool contains(SmartFieldHandle<Object?> field) {
+    return _entryForIdentity(field) != null;
+  }
+
   void register(SmartFieldHandle<Object?> field, {required int sectionOrder}) {
     final existingEntry = _entryForIdentity(field);
     if (existingEntry != null) {

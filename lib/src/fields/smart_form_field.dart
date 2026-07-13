@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
+import '../animation/smart_error_animation.dart';
 import '../form/smart_field_handle.dart';
 import '../form/smart_form_scope.dart';
 import '../validation/smart_async_validator.dart';
@@ -23,6 +25,7 @@ class SmartFormField<T> extends StatefulWidget {
     this.enabled = true,
     this.focusNode,
     this.asyncValidationDebounce,
+    this.errorAnimation,
     super.key,
   }) : assert(name.length > 0, 'A field name cannot be empty.');
 
@@ -40,11 +43,15 @@ class SmartFormField<T> extends StatefulWidget {
   /// always bypass this delay.
   final Duration? asyncValidationDebounce;
 
+  /// Overrides the containing form's error animation for this field.
+  final SmartErrorAnimation? errorAnimation;
+
   @override
   State<SmartFormField<T>> createState() => _SmartFormFieldState<T>();
 }
 
 class _SmartFormFieldState<T> extends State<SmartFormField<T>>
+    with SingleTickerProviderStateMixin
     implements SmartFieldController<T>, SmartFieldHandle<T> {
   final GlobalKey _anchorKey = GlobalKey();
 
@@ -56,6 +63,8 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
   bool _isDirty = false;
   bool _isTouched = false;
   int _validationGeneration = 0;
+  late final AnimationController _errorAnimationController;
+  bool _errorAnimationActive = false;
 
   @override
   String get name => widget.name;
@@ -89,6 +98,10 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
     super.initState();
     _value = widget.initialValue;
     _focusNode = widget.focusNode ?? FocusNode();
+    _errorAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 360),
+    );
   }
 
   @override
@@ -165,6 +178,7 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
     if (widget.focusNode == null) {
       _focusNode.dispose();
     }
+    _errorAnimationController.dispose();
     super.dispose();
   }
 
@@ -280,6 +294,9 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
       _errorText = error;
       _isValidating = false;
     });
+    if (error != null) {
+      _animateError();
+    }
   }
 
   bool _isCurrentGeneration(int generation) {
@@ -315,6 +332,26 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
       _isValidating = false;
       _isTouched = true;
     });
+    _animateError();
+  }
+
+  SmartErrorAnimation get _effectiveErrorAnimation {
+    return widget.errorAnimation ??
+        _formScope?.errorAnimation ??
+        SmartErrorAnimation.none;
+  }
+
+  void _animateError() {
+    final animationsDisabled =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    if (animationsDisabled ||
+        _effectiveErrorAnimation == SmartErrorAnimation.none) {
+      _errorAnimationActive = false;
+      _errorAnimationController.value = 1;
+      return;
+    }
+    _errorAnimationActive = true;
+    unawaited(_errorAnimationController.forward(from: 0));
   }
 
   @override
@@ -346,7 +383,35 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
   Widget build(BuildContext context) {
     return Builder(
       key: _anchorKey,
-      builder: (context) => widget.builder(context, this),
+      builder: (context) {
+        final child = widget.builder(context, this);
+        return AnimatedBuilder(
+          animation: _errorAnimationController,
+          child: child,
+          builder: (context, child) {
+            if (!_errorAnimationActive) {
+              return child!;
+            }
+            final progress = Curves.easeOut.transform(
+              _errorAnimationController.value,
+            );
+            return switch (_effectiveErrorAnimation) {
+              SmartErrorAnimation.none => child!,
+              SmartErrorAnimation.shake => Transform.translate(
+                offset: Offset(
+                  math.sin(progress * math.pi * 6) * 8 * (1 - progress),
+                  0,
+                ),
+                child: child,
+              ),
+              SmartErrorAnimation.fade => Opacity(
+                opacity: 0.45 + 0.55 * progress,
+                child: child,
+              ),
+            };
+          },
+        );
+      },
     );
   }
 }

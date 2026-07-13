@@ -6,7 +6,7 @@ field.
 
 > This package is under active development and is not ready for production use.
 
-## Planned API
+## Quick start
 
 ```dart
 final formKey = SmartFormKey();
@@ -14,9 +14,13 @@ final formKey = SmartFormKey();
 SmartForm(
   key: formKey,
   children: [
-    SmartEmailField(
+    SmartTextField(
       name: 'email',
-      labelText: 'Email',
+      decoration: const InputDecoration(labelText: 'Email'),
+      validators: <SmartValidator<String>>[
+        SmartValidators.required<String>(),
+        SmartValidators.email(),
+      ],
     ),
   ],
 );
@@ -27,6 +31,10 @@ if (result.isValid) {
   print(result.values['email']);
 }
 ```
+
+Built-in validators include `required`, `email`, exact/minimum/maximum length,
+`pattern`, `number`, `min`, and `max`. Every validator accepts a message
+override, and optional fields can omit `required`.
 
 The first release will provide:
 
@@ -55,6 +63,7 @@ flutter run
 ## Current status
 
 The package foundation, form key/controller API, immutable result model,
-registry, generic custom field, text field, and core sync/async validation are
-implemented. Built-in validators and first-error navigation hardening are the
-next milestones.
+registry, generic custom field, text field, core sync/async validation,
+built-in validators, error animations, and first-error navigation are
+implemented. Email, password, phone, date, and dropdown convenience fields are
+the next milestone.

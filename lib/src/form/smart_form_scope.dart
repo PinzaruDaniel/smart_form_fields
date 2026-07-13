@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+import '../animation/smart_error_animation.dart';
 import 'smart_field_handle.dart';
 
 abstract interface class SmartFormRegistrar {
@@ -17,6 +18,7 @@ final class SmartFormScope extends InheritedWidget {
     required this.scrollDuration,
     required this.scrollCurve,
     required this.scrollAlignment,
+    required this.errorAnimation,
     required super.child,
     super.key,
   });
@@ -25,6 +27,7 @@ final class SmartFormScope extends InheritedWidget {
   final Duration scrollDuration;
   final Curve scrollCurve;
   final double scrollAlignment;
+  final SmartErrorAnimation errorAnimation;
 
   static SmartFormScope? maybeOf(BuildContext context) {
     return context.dependOnInheritedWidgetOfExactType<SmartFormScope>();
@@ -46,7 +49,8 @@ final class SmartFormScope extends InheritedWidget {
     return !identical(registrar, oldWidget.registrar) ||
         scrollDuration != oldWidget.scrollDuration ||
         scrollCurve != oldWidget.scrollCurve ||
-        scrollAlignment != oldWidget.scrollAlignment;
+        scrollAlignment != oldWidget.scrollAlignment ||
+        errorAnimation != oldWidget.errorAnimation;
   }
 }
 

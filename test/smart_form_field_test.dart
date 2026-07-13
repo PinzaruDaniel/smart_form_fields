@@ -63,8 +63,9 @@ void main() {
       ),
     );
 
-    final result = await formKey.validate();
+    final validation = formKey.validate();
     await tester.pumpAndSettle();
+    final result = await validation;
 
     expect(result.isValid, isFalse);
     expect(result.errors, <String, String>{'email': 'Email is required'});

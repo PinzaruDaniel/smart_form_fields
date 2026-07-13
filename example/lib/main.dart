@@ -44,39 +44,44 @@ class RegistrationExamplePage extends StatefulWidget {
 
 class _RegistrationExamplePageState extends State<RegistrationExamplePage> {
   final SmartFormController _formController = SmartFormController();
+  late final List<SmartValidator<String>> _emailValidators;
+  late final List<SmartValidator<String>> _phoneValidators;
+  late final List<SmartValidator<String>> _passwordValidators;
+  late final List<SmartValidator<String>> _confirmationValidators;
   bool _isSubmitting = false;
 
-  static String? _required(String label, String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return '$label is required';
-    }
-    return null;
-  }
-
-  static String? _email(String? value) {
-    final requiredError = _required('Email', value);
-    if (requiredError != null) {
-      return requiredError;
-    }
-    final emailPattern = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
-    return emailPattern.hasMatch(value!) ? null : 'Enter a valid email address';
+  @override
+  void initState() {
+    super.initState();
+    _emailValidators = <SmartValidator<String>>[
+      SmartValidators.required<String>(message: 'Email is required'),
+      SmartValidators.email(),
+    ];
+    _phoneValidators = <SmartValidator<String>>[
+      SmartValidators.required<String>(message: 'Phone is required'),
+      _phone,
+    ];
+    _passwordValidators = <SmartValidator<String>>[
+      SmartValidators.required<String>(message: 'Password is required'),
+      SmartValidators.minLength<String>(
+        8,
+        message: 'Use at least 8 characters',
+      ),
+    ];
+    _confirmationValidators = <SmartValidator<String>>[
+      SmartValidators.required<String>(
+        message: 'Password confirmation is required',
+      ),
+      _confirmPassword,
+    ];
   }
 
   static String? _phone(String? value) {
-    final requiredError = _required('Phone', value);
-    if (requiredError != null) {
-      return requiredError;
+    if (value == null || value.isEmpty) {
+      return null;
     }
-    final digits = value!.replaceAll(RegExp(r'\D'), '');
+    final digits = value.replaceAll(RegExp(r'\D'), '');
     return digits.length >= 8 ? null : 'Enter at least 8 digits';
-  }
-
-  static String? _password(String? value) {
-    final requiredError = _required('Password', value);
-    if (requiredError != null) {
-      return requiredError;
-    }
-    return value!.length >= 8 ? null : 'Use at least 8 characters';
   }
 
   Future<String?> _checkEmailAvailability(String? value) async {
@@ -91,9 +96,8 @@ class _RegistrationExamplePageState extends State<RegistrationExamplePage> {
   }
 
   String? _confirmPassword(String? value) {
-    final requiredError = _required('Password confirmation', value);
-    if (requiredError != null) {
-      return requiredError;
+    if (value == null || value.isEmpty) {
+      return null;
     }
     return value == _formController.valueOf<String>('password')
         ? null
@@ -214,7 +218,7 @@ class _RegistrationExamplePageState extends State<RegistrationExamplePage> {
                         ),
                         keyboardType: TextInputType.emailAddress,
                         textInputAction: TextInputAction.next,
-                        validators: <SmartValidator<String>>[_email],
+                        validators: _emailValidators,
                         asyncValidators: <SmartAsyncValidator<String>>[
                           _checkEmailAvailability,
                         ],
@@ -237,7 +241,7 @@ class _RegistrationExamplePageState extends State<RegistrationExamplePage> {
                             RegExp(r'[\d\s+()-]'),
                           ),
                         ],
-                        validators: <SmartValidator<String>>[_phone],
+                        validators: _phoneValidators,
                       ),
                       const SizedBox(height: 16),
                       SmartTextField(
@@ -250,7 +254,7 @@ class _RegistrationExamplePageState extends State<RegistrationExamplePage> {
                         autocorrect: false,
                         enableSuggestions: false,
                         textInputAction: TextInputAction.next,
-                        validators: <SmartValidator<String>>[_password],
+                        validators: _passwordValidators,
                       ),
                       const SizedBox(height: 16),
                       SmartTextField(
@@ -263,7 +267,7 @@ class _RegistrationExamplePageState extends State<RegistrationExamplePage> {
                         autocorrect: false,
                         enableSuggestions: false,
                         textInputAction: TextInputAction.done,
-                        validators: <SmartValidator<String>>[_confirmPassword],
+                        validators: _confirmationValidators,
                         onSubmitted: (_) => unawaited(_submit()),
                       ),
                       const SizedBox(height: 12),
@@ -341,8 +345,7 @@ class _NameFields extends StatelessWidget {
           textCapitalization: TextCapitalization.words,
           textInputAction: TextInputAction.next,
           validators: <SmartValidator<String>>[
-            (value) =>
-                _RegistrationExamplePageState._required('First name', value),
+            SmartValidators.required<String>(message: 'First name is required'),
           ],
         );
         final lastName = SmartTextField(
@@ -351,8 +354,7 @@ class _NameFields extends StatelessWidget {
           textCapitalization: TextCapitalization.words,
           textInputAction: TextInputAction.next,
           validators: <SmartValidator<String>>[
-            (value) =>
-                _RegistrationExamplePageState._required('Last name', value),
+            SmartValidators.required<String>(message: 'Last name is required'),
           ],
         );
 

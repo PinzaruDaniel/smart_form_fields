@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+import '../animation/smart_error_animation.dart';
 import 'smart_field_handle.dart';
 import 'smart_field_registry.dart';
 import 'smart_form_controller.dart';
@@ -16,6 +17,7 @@ class SmartForm extends StatefulWidget {
     this.scrollDuration = const Duration(milliseconds: 350),
     this.scrollCurve = Curves.easeOutCubic,
     this.scrollAlignment = 0.2,
+    this.errorAnimation = SmartErrorAnimation.shake,
     this.mainAxisSize = MainAxisSize.min,
     super.key,
   });
@@ -27,6 +29,7 @@ class SmartForm extends StatefulWidget {
   final Duration scrollDuration;
   final Curve scrollCurve;
   final double scrollAlignment;
+  final SmartErrorAnimation errorAnimation;
   final MainAxisSize mainAxisSize;
 
   @override
@@ -99,12 +102,11 @@ class SmartFormState extends State<SmartForm>
     final shouldFocus = focusFirstError ?? widget.focusFirstError;
 
     if (firstInvalidField != null) {
-      if (shouldScroll) {
-        await firstInvalidField.scrollIntoView();
-      }
-      if (shouldFocus && mounted) {
-        firstInvalidField.focus();
-      }
+      await _navigateToInvalidField(
+        firstInvalidField,
+        scroll: shouldScroll,
+        focus: shouldFocus,
+      );
     }
 
     return SmartFormResult(
@@ -112,6 +114,38 @@ class SmartFormState extends State<SmartForm>
       values: _registry.values,
       errors: errors,
     );
+  }
+
+  Future<void> _navigateToInvalidField(
+    SmartFieldHandle<Object?> field, {
+    required bool scroll,
+    required bool focus,
+  }) async {
+    if (!scroll && !focus) {
+      return;
+    }
+
+    // Error widgets can change field heights. Navigate only after that layout
+    // has completed, and tolerate a field disappearing during the frame.
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted || !_registry.contains(field)) {
+      return;
+    }
+
+    if (scroll) {
+      try {
+        await field.scrollIntoView();
+      } catch (_) {
+        // Navigation is best-effort and must not alter the validation result.
+      }
+    }
+    if (focus && mounted && _registry.contains(field)) {
+      try {
+        field.focus();
+      } catch (_) {
+        // A caller-owned focus node may become unavailable during navigation.
+      }
+    }
   }
 
   @override
@@ -154,7 +188,14 @@ class SmartFormState extends State<SmartForm>
       fields[index].setError(errors.values.elementAt(index));
     }
     if (scrollToFirstError) {
-      await _registry.firstInvalidField?.scrollIntoView();
+      final firstInvalidField = _registry.firstInvalidField;
+      if (firstInvalidField != null) {
+        await _navigateToInvalidField(
+          firstInvalidField,
+          scroll: true,
+          focus: false,
+        );
+      }
     }
   }
 
@@ -197,6 +238,7 @@ class SmartFormState extends State<SmartForm>
       scrollDuration: widget.scrollDuration,
       scrollCurve: widget.scrollCurve,
       scrollAlignment: widget.scrollAlignment,
+      errorAnimation: widget.errorAnimation,
       child: Column(
         mainAxisSize: widget.mainAxisSize,
         children: <Widget>[

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../animation/smart_error_animation.dart';
 import '../validation/smart_async_validator.dart';
 import '../validation/smart_validator.dart';
 import 'smart_field_controller.dart';
@@ -16,6 +17,7 @@ class SmartTextField extends StatefulWidget {
     this.validators = const [],
     this.asyncValidators = const [],
     this.asyncValidationDebounce,
+    this.errorAnimation,
     this.enabled = true,
     this.decoration = const InputDecoration(),
     this.keyboardType,
@@ -42,6 +44,7 @@ class SmartTextField extends StatefulWidget {
   final List<SmartValidator<String>> validators;
   final List<SmartAsyncValidator<String>> asyncValidators;
   final Duration? asyncValidationDebounce;
+  final SmartErrorAnimation? errorAnimation;
   final bool enabled;
   final InputDecoration decoration;
   final TextInputType? keyboardType;
@@ -129,6 +132,7 @@ class _SmartTextFieldState extends State<SmartTextField> {
       validators: widget.validators,
       asyncValidators: widget.asyncValidators,
       asyncValidationDebounce: widget.asyncValidationDebounce,
+      errorAnimation: widget.errorAnimation,
       enabled: widget.enabled,
       focusNode: widget.focusNode,
       builder: (context, field) {
