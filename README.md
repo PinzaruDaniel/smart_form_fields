@@ -32,6 +32,24 @@ if (result.isValid) {
 }
 ```
 
+### Validation timing
+
+Fields validate when they lose focus by default. Entering text clears an old
+field or server error, but does not show a new validator error while the user is
+still typing. Calling `validate()`—for example from a submit button—always
+validates every enabled field immediately.
+
+Change-time validation remains available per field:
+
+```dart
+SmartTextField(
+  name: 'username',
+  autovalidateMode: AutovalidateMode.onUserInteraction,
+  asyncValidationDebounce: const Duration(milliseconds: 400),
+  asyncValidators: [...],
+);
+```
+
 Built-in validators include `required`, `email`, exact/minimum/maximum length,
 `pattern`, `number`, `min`, and `max`. Every validator accepts a message
 override, and optional fields can omit `required`.
@@ -53,7 +71,8 @@ matrix, and release gates.
 
 The [example](example/) directory contains a complete Material 3 registration
 form with synchronous and asynchronous validation, value patching, reset,
-server errors, first-error navigation, and a custom boolean field.
+server errors, focus-loss validation, first-error navigation, and a custom
+boolean field.
 
 ```sh
 cd example

@@ -1,17 +1,16 @@
 # smart_form_fields example
 
-A Material 3 registration form demonstrating the package's current API:
+A Material 3 registration form demonstrating:
 
-- `SmartFormController` validation, reset, value patching, and server errors;
-- `SmartTextField` with synchronous and debounced asynchronous validators;
-- immutable validation results and first-error navigation;
-- a custom boolean field built with `SmartFormField<bool>`.
+- validation on focus loss and explicit submission;
+- synchronous and asynchronous validators;
+- scrolling and focusing the first invalid field;
+- form value patching and reset;
+- server error injection;
+- a custom boolean `SmartFormField<bool>`.
 
-Run the example from this directory:
+Run it from this directory:
 
 ```sh
 flutter run
 ```
-
-Use `taken@example.com` to see the asynchronous availability error, or select
-**Show server errors** to apply errors returned by a simulated backend.

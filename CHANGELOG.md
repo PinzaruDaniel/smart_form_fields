@@ -1,3 +1,12 @@
+## 0.0.2
+
+* Validate fields on focus loss by default.
+* Keep explicit form submission validation immediate and support opt-in
+  change-time validation with `AutovalidateMode.onUserInteraction`.
+* Prevent parent rebuilds from validating an `onUnfocus` field while it remains
+  focused.
+* Expand the example and widget tests for focus-loss and submission validation.
+
 ## 0.0.1
 
 * Scaffold the Flutter package.

@@ -27,6 +27,25 @@ void main() {
     expect(find.text('Please correct 6 field(s).'), findsOneWidget);
   });
 
+  testWidgets('validates email after focus leaves the field', (tester) async {
+    await tester.pumpWidget(const SmartFormFieldsExampleApp());
+
+    final emailField = find.widgetWithText(TextField, 'Email');
+    await tester.ensureVisible(emailField);
+    await tester.tap(emailField);
+    await tester.enterText(emailField, 'invalid');
+    await tester.pump();
+
+    expect(find.text('Enter a valid email address.'), findsNothing);
+
+    final phoneField = find.widgetWithText(TextField, 'Phone');
+    await tester.ensureVisible(phoneField);
+    await tester.tap(phoneField);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Enter a valid email address.'), findsOneWidget);
+  });
+
   testWidgets('fills and validates the sample account', (tester) async {
     await tester.pumpWidget(const SmartFormFieldsExampleApp());
 

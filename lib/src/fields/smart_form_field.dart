@@ -24,6 +24,7 @@ class SmartFormField<T> extends StatefulWidget {
     this.asyncValidators = const [],
     this.enabled = true,
     this.focusNode,
+    this.autovalidateMode = AutovalidateMode.onUnfocus,
     this.asyncValidationDebounce,
     this.errorAnimation,
     super.key,
@@ -36,6 +37,13 @@ class SmartFormField<T> extends StatefulWidget {
   final SmartFieldBuilder<T> builder;
   final bool enabled;
   final FocusNode? focusNode;
+
+  /// Controls when validation runs without an explicit form validation call.
+  ///
+  /// The default validates after the field loses focus. Regardless of this
+  /// value, calling `SmartFormController.validate()` or `SmartFormKey.validate()`
+  /// always validates the field immediately.
+  final AutovalidateMode autovalidateMode;
 
   /// Delay before asynchronous validators run after a value change.
   ///
@@ -62,6 +70,7 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
   bool _isValidating = false;
   bool _isDirty = false;
   bool _isTouched = false;
+  bool _wasFocused = false;
   int _validationGeneration = 0;
   late final AnimationController _errorAnimationController;
   bool _errorAnimationActive = false;
@@ -98,10 +107,19 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
     super.initState();
     _value = widget.initialValue;
     _focusNode = widget.focusNode ?? FocusNode();
+    _wasFocused = _focusNode.hasFocus;
+    _focusNode.addListener(_handleFocusChanged);
     _errorAnimationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 360),
     );
+    if (widget.enabled && widget.autovalidateMode == AutovalidateMode.always) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          unawaited(_validateAutomatically(reason: 'automatically'));
+        }
+      });
+    }
   }
 
   @override
@@ -132,10 +150,13 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
     }
     if (!identical(oldWidget.focusNode, widget.focusNode)) {
       final hadFocus = _focusNode.hasFocus;
+      _focusNode.removeListener(_handleFocusChanged);
       if (oldWidget.focusNode == null) {
         _focusNode.dispose();
       }
       _focusNode = widget.focusNode ?? FocusNode();
+      _focusNode.addListener(_handleFocusChanged);
+      _wasFocused = _focusNode.hasFocus || hadFocus;
       if (hadFocus && widget.enabled) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) {
@@ -158,16 +179,22 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
       _validationGeneration++;
       _errorText = null;
       _isValidating = false;
-      if (_isTouched && widget.enabled) {
-        unawaited(_validateAfterChange());
+      if (_shouldAutovalidateNow) {
+        unawaited(_validateAutomatically(reason: 'after validators changed'));
       }
     } else if (oldWidget.enabled != widget.enabled) {
       _validationGeneration++;
       _errorText = null;
       _isValidating = false;
-      if (widget.enabled && _isTouched) {
-        unawaited(_validateAfterChange());
+      if (_shouldAutovalidateNow) {
+        unawaited(_validateAutomatically(reason: 'after being enabled'));
       }
+    }
+    if (oldWidget.autovalidateMode != widget.autovalidateMode &&
+        _shouldAutovalidateNow) {
+      unawaited(
+        _validateAutomatically(reason: 'after validation mode changed'),
+      );
     }
   }
 
@@ -175,6 +202,7 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
   void dispose() {
     _validationGeneration++;
     _formScope?.registrar.unregisterField(this);
+    _focusNode.removeListener(_handleFocusChanged);
     if (widget.focusNode == null) {
       _focusNode.dispose();
     }
@@ -184,6 +212,9 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
 
   @override
   void didChange(T? value) {
+    final shouldRevalidateExistingError =
+        widget.autovalidateMode == AutovalidateMode.onUserInteractionIfError &&
+        _errorText != null;
     _validationGeneration++;
     setState(() {
       _value = value;
@@ -192,8 +223,16 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
       _isDirty = true;
       _isTouched = true;
     });
-    if (widget.enabled) {
-      unawaited(_validateAfterChange());
+    if (widget.enabled &&
+        (widget.autovalidateMode == AutovalidateMode.always ||
+            widget.autovalidateMode == AutovalidateMode.onUserInteraction ||
+            shouldRevalidateExistingError)) {
+      unawaited(
+        _validateAutomatically(
+          debounceAsync: true,
+          reason: 'after its value changed',
+        ),
+      );
     }
   }
 
@@ -206,10 +245,28 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
     return _validateGeneration(generation, debounceAsync: false);
   }
 
-  Future<void> _validateAfterChange() async {
+  void _handleFocusChanged() {
+    if (_focusNode.hasFocus) {
+      _wasFocused = true;
+      return;
+    }
+    if (!_wasFocused) {
+      return;
+    }
+    _wasFocused = false;
+    if (widget.enabled &&
+        widget.autovalidateMode == AutovalidateMode.onUnfocus) {
+      unawaited(_validateAutomatically(reason: 'after losing focus'));
+    }
+  }
+
+  Future<void> _validateAutomatically({
+    bool debounceAsync = false,
+    required String reason,
+  }) async {
     final generation = _validationGeneration;
     try {
-      await _validateGeneration(generation, debounceAsync: true);
+      await _validateGeneration(generation, debounceAsync: debounceAsync);
     } catch (error, stackTrace) {
       if (_isCurrentGeneration(generation)) {
         FlutterError.reportError(
@@ -219,7 +276,7 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
             library: 'smart_form_fields',
             context: ErrorDescription(
               'while asynchronously validating SmartFormField "$name" '
-              'after its value changed',
+              '$reason',
             ),
           ),
         );
@@ -301,6 +358,20 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
 
   bool _isCurrentGeneration(int generation) {
     return mounted && generation == _validationGeneration;
+  }
+
+  bool get _shouldAutovalidateNow {
+    if (!widget.enabled) {
+      return false;
+    }
+    return switch (widget.autovalidateMode) {
+      AutovalidateMode.disabled => false,
+      AutovalidateMode.always => true,
+      AutovalidateMode.onUserInteraction => _isDirty,
+      AutovalidateMode.onUnfocus => _isTouched && !_focusNode.hasFocus,
+      AutovalidateMode.onUserInteractionIfError =>
+        _isDirty && _errorText != null,
+    };
   }
 
   @override

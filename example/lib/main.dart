@@ -205,6 +205,7 @@ class _RegistrationExamplePageState extends State<RegistrationExamplePage> {
                   ),
                   const SizedBox(height: 24),
                   SmartForm(
+                    errorAnimation: .fade,
                     controller: _formController,
                     children: <Widget>[
                       const _NameFields(),
@@ -222,9 +223,6 @@ class _RegistrationExamplePageState extends State<RegistrationExamplePage> {
                         asyncValidators: <SmartAsyncValidator<String>>[
                           _checkEmailAvailability,
                         ],
-                        asyncValidationDebounce: const Duration(
-                          milliseconds: 400,
-                        ),
                       ),
                       const SizedBox(height: 16),
                       SmartTextField(

@@ -217,6 +217,129 @@ void main() {
     expect(find.text('Already registered'), findsNothing);
   });
 
+  testWidgets('validates on focus loss instead of while typing by default', (
+    tester,
+  ) async {
+    final controller = SmartFormController();
+
+    await tester.pumpWidget(
+      _app(
+        SmartForm(
+          controller: controller,
+          children: <Widget>[
+            SmartTextField(
+              name: 'email',
+              decoration: const InputDecoration(labelText: 'Email'),
+              validators: <SmartValidator<String>>[
+                SmartValidators.email(message: 'Invalid email'),
+              ],
+            ),
+            const SmartTextField(
+              name: 'next',
+              decoration: InputDecoration(labelText: 'Next field'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    final emailField = find.widgetWithText(TextField, 'Email');
+    await tester.tap(emailField);
+    await tester.enterText(emailField, 'invalid');
+    await tester.pump();
+
+    expect(find.text('Invalid email'), findsNothing);
+
+    await tester.tap(find.widgetWithText(TextField, 'Next field'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Invalid email'), findsOneWidget);
+  });
+
+  testWidgets('explicit form validation validates the focused field', (
+    tester,
+  ) async {
+    final controller = SmartFormController();
+
+    await tester.pumpWidget(
+      _app(
+        SmartForm(
+          controller: controller,
+          children: <Widget>[
+            SmartTextField(
+              name: 'password',
+              decoration: const InputDecoration(labelText: 'Password'),
+              validators: <SmartValidator<String>>[
+                SmartValidators.minLength<String>(
+                  8,
+                  message: 'Use at least 8 characters',
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+
+    final passwordField = find.byType(TextField);
+    await tester.tap(passwordField);
+    await tester.enterText(passwordField, 'short');
+    await tester.pump();
+    expect(find.text('Use at least 8 characters'), findsNothing);
+
+    final result = await controller.validate(
+      scrollToError: false,
+      focusFirstError: false,
+    );
+    await tester.pumpAndSettle();
+
+    expect(result.isValid, isFalse);
+    expect(find.text('Use at least 8 characters'), findsOneWidget);
+  });
+
+  testWidgets('parent rebuild does not validate an on-unfocus field in focus', (
+    tester,
+  ) async {
+    late StateSetter rebuildHost;
+    var error = 'Initial error';
+
+    await tester.pumpWidget(
+      _app(
+        StatefulBuilder(
+          builder: (context, setState) {
+            rebuildHost = setState;
+            return SmartForm(
+              children: <Widget>[
+                SmartTextField(
+                  name: 'phone',
+                  decoration: const InputDecoration(labelText: 'Phone'),
+                  validators: <SmartValidator<String>>[(value) => error],
+                ),
+                const SmartTextField(
+                  name: 'next',
+                  decoration: InputDecoration(labelText: 'Next field'),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+
+    final phoneField = find.widgetWithText(TextField, 'Phone');
+    await tester.tap(phoneField);
+    await tester.enterText(phoneField, '123');
+    rebuildHost(() => error = 'Updated error');
+    await tester.pump();
+
+    expect(find.text('Initial error'), findsNothing);
+    expect(find.text('Updated error'), findsNothing);
+
+    await tester.tap(find.widgetWithText(TextField, 'Next field'));
+    await tester.pumpAndSettle();
+    expect(find.text('Updated error'), findsOneWidget);
+  });
+
   testWidgets('debounces change validation but not explicit validation', (
     tester,
   ) async {
@@ -230,6 +353,7 @@ void main() {
           children: <Widget>[
             SmartFormField<String>(
               name: 'username',
+              autovalidateMode: AutovalidateMode.onUserInteraction,
               asyncValidationDebounce: const Duration(milliseconds: 300),
               asyncValidators: <SmartAsyncValidator<String>>[
                 (value) async {
