@@ -1,3 +1,10 @@
+## 0.0.8
+
+* Unfocus the active form field when the keyboard starts closing.
+* Dismiss focus when tapping outside the active field, including blank space
+  inside the form.
+* Add opt-out flags and a keyboard visibility callback on `SmartForm`.
+
 ## 0.0.7
 
 * Split the example bootstrap, app shell, and screens into focused files.

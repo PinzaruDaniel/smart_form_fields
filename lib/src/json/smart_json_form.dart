@@ -41,6 +41,9 @@ class SmartJsonForm extends StatelessWidget {
     this.scrollToFirstError,
     this.focusFirstError,
     this.errorAnimation,
+    this.dismissKeyboardOnTapOutside = true,
+    this.unfocusOnKeyboardDismiss = true,
+    this.onKeyboardVisibilityChanged,
     super.key,
   });
 
@@ -55,6 +58,9 @@ class SmartJsonForm extends StatelessWidget {
     bool? scrollToFirstError,
     bool? focusFirstError,
     SmartErrorAnimation? errorAnimation,
+    bool dismissKeyboardOnTapOutside = true,
+    bool unfocusOnKeyboardDismiss = true,
+    ValueChanged<bool>? onKeyboardVisibilityChanged,
     Key? key,
   }) {
     return SmartJsonForm(
@@ -69,6 +75,9 @@ class SmartJsonForm extends StatelessWidget {
       scrollToFirstError: scrollToFirstError,
       focusFirstError: focusFirstError,
       errorAnimation: errorAnimation,
+      dismissKeyboardOnTapOutside: dismissKeyboardOnTapOutside,
+      unfocusOnKeyboardDismiss: unfocusOnKeyboardDismiss,
+      onKeyboardVisibilityChanged: onKeyboardVisibilityChanged,
     );
   }
 
@@ -82,6 +91,9 @@ class SmartJsonForm extends StatelessWidget {
   final bool? scrollToFirstError;
   final bool? focusFirstError;
   final SmartErrorAnimation? errorAnimation;
+  final bool dismissKeyboardOnTapOutside;
+  final bool unfocusOnKeyboardDismiss;
+  final ValueChanged<bool>? onKeyboardVisibilityChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -94,6 +106,9 @@ class SmartJsonForm extends StatelessWidget {
       scrollToFirstError: scrollToFirstError ?? schema.scrollToFirstError,
       focusFirstError: focusFirstError ?? schema.focusFirstError,
       errorAnimation: errorAnimation ?? schema.errorAnimation,
+      dismissKeyboardOnTapOutside: dismissKeyboardOnTapOutside,
+      unfocusOnKeyboardDismiss: unfocusOnKeyboardDismiss,
+      onKeyboardVisibilityChanged: onKeyboardVisibilityChanged,
       children: <Widget>[
         for (var index = 0; index < fields.length; index++) ...<Widget>[
           if (index > 0 && spacing > 0) SizedBox(height: spacing),

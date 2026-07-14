@@ -152,6 +152,27 @@ SmartEmailField(
 The debounce applies to automatic validation only. A submit-triggered
 `validate()` call starts immediately.
 
+## Keyboard and focus behavior
+
+`SmartForm` observes keyboard visibility through Flutter view-inset changes.
+By default, it unfocuses its active field when the keyboard starts closing and
+when the user taps outside that field, including blank space inside the form.
+Only focus owned by that form is changed.
+
+```dart
+SmartForm(
+  dismissKeyboardOnTapOutside: true,
+  unfocusOnKeyboardDismiss: true,
+  onKeyboardVisibilityChanged: (isVisible) {
+    debugPrint('Keyboard visible: $isVisible');
+  },
+  children: [...],
+);
+```
+
+Set either behavior flag to `false` when a screen manages focus itself. The
+same options are available on `SmartJsonForm`.
+
 ## Custom fields
 
 Compose `SmartFormField<T>` when the built-in Material wrappers do not match

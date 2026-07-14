@@ -1,3 +1,5 @@
+import 'dart:ui' show FlutterView;
+
 import 'package:flutter/widgets.dart';
 
 import '../animation/smart_error_animation.dart';
@@ -19,6 +21,9 @@ class SmartForm extends StatefulWidget {
     this.scrollCurve,
     this.scrollAlignment,
     this.errorAnimation,
+    this.dismissKeyboardOnTapOutside = true,
+    this.unfocusOnKeyboardDismiss = true,
+    this.onKeyboardVisibilityChanged,
     this.mainAxisSize = MainAxisSize.min,
     super.key,
   });
@@ -31,6 +36,16 @@ class SmartForm extends StatefulWidget {
   final Curve? scrollCurve;
   final double? scrollAlignment;
   final SmartErrorAnimation? errorAnimation;
+
+  /// Unfocuses this form's active field when a pointer taps outside it.
+  final bool dismissKeyboardOnTapOutside;
+
+  /// Unfocuses this form's active field when the keyboard becomes hidden.
+  final bool unfocusOnKeyboardDismiss;
+
+  /// Called when the keyboard changes between visible and hidden.
+  final ValueChanged<bool>? onKeyboardVisibilityChanged;
+
   final MainAxisSize mainAxisSize;
 
   @override
@@ -38,13 +53,47 @@ class SmartForm extends StatefulWidget {
 }
 
 class SmartFormState extends State<SmartForm>
+    with WidgetsBindingObserver
     implements SmartFormControllerDelegate, SmartFormRegistrar {
   final SmartFieldRegistry _registry = SmartFieldRegistry();
+  final FocusScopeNode _focusScopeNode = FocusScopeNode(
+    debugLabel: 'SmartForm focus scope',
+  );
+  FlutterView? _view;
+  double _lastKeyboardInset = 0;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     widget.controller?.attach(this);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final nextView = View.maybeOf(context);
+    if (!identical(_view, nextView)) {
+      _view = nextView;
+      _lastKeyboardInset = nextView?.viewInsets.bottom ?? 0;
+    }
+  }
+
+  @override
+  void didChangeMetrics() {
+    final currentInset = _view?.viewInsets.bottom ?? 0;
+    final previousInset = _lastKeyboardInset;
+    final wasVisible = previousInset > 0;
+    final isVisible = currentInset > 0;
+    _lastKeyboardInset = currentInset;
+
+    if (wasVisible != isVisible) {
+      widget.onKeyboardVisibilityChanged?.call(isVisible);
+    }
+    final isClosing = wasVisible && currentInset < previousInset;
+    if (widget.unfocusOnKeyboardDismiss && isClosing) {
+      _unfocusForm();
+    }
   }
 
   @override
@@ -58,8 +107,32 @@ class SmartFormState extends State<SmartForm>
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     widget.controller?.detach(this);
+    _focusScopeNode.dispose();
     super.dispose();
+  }
+
+  void _unfocusForm() {
+    if (_focusScopeNode.hasFocus) {
+      _focusScopeNode.unfocus();
+    }
+  }
+
+  void _handlePointerDown(PointerDownEvent event) {
+    if (!widget.dismissKeyboardOnTapOutside || !_focusScopeNode.hasFocus) {
+      return;
+    }
+    final focusContext = FocusManager.instance.primaryFocus?.context;
+    final renderObject = focusContext?.findRenderObject();
+    if (renderObject is! RenderBox || !renderObject.attached) {
+      _unfocusForm();
+      return;
+    }
+    final localPosition = renderObject.globalToLocal(event.position);
+    if (!renderObject.paintBounds.contains(localPosition)) {
+      _unfocusForm();
+    }
   }
 
   @override
@@ -238,24 +311,36 @@ class SmartFormState extends State<SmartForm>
   @override
   Widget build(BuildContext context) {
     final theme = SmartFormTheme.of(context);
-    return SmartFormScope(
-      registrar: this,
-      scrollDuration: widget.scrollDuration ?? theme.scrollDuration,
-      scrollCurve: widget.scrollCurve ?? theme.scrollCurve,
-      scrollAlignment: widget.scrollAlignment ?? theme.scrollAlignment,
-      errorAnimation: widget.errorAnimation ?? theme.errorAnimation,
-      child: Column(
-        mainAxisSize: widget.mainAxisSize,
-        children: <Widget>[
-          for (var index = 0; index < widget.children.length; index++)
-            SmartFormOrderScope(
-              key: widget.children[index].key == null
-                  ? null
-                  : ValueKey<Key>(widget.children[index].key!),
-              order: index,
-              child: widget.children[index],
+    return TapRegion(
+      onTapOutside: widget.dismissKeyboardOnTapOutside
+          ? (_) => _unfocusForm()
+          : null,
+      child: Listener(
+        behavior: HitTestBehavior.translucent,
+        onPointerDown: _handlePointerDown,
+        child: FocusScope(
+          node: _focusScopeNode,
+          child: SmartFormScope(
+            registrar: this,
+            scrollDuration: widget.scrollDuration ?? theme.scrollDuration,
+            scrollCurve: widget.scrollCurve ?? theme.scrollCurve,
+            scrollAlignment: widget.scrollAlignment ?? theme.scrollAlignment,
+            errorAnimation: widget.errorAnimation ?? theme.errorAnimation,
+            child: Column(
+              mainAxisSize: widget.mainAxisSize,
+              children: <Widget>[
+                for (var index = 0; index < widget.children.length; index++)
+                  SmartFormOrderScope(
+                    key: widget.children[index].key == null
+                        ? null
+                        : ValueKey<Key>(widget.children[index].key!),
+                    order: index,
+                    child: widget.children[index],
+                  ),
+              ],
             ),
-        ],
+          ),
+        ),
       ),
     );
   }
