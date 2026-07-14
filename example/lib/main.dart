@@ -44,36 +44,13 @@ class RegistrationExamplePage extends StatefulWidget {
 
 class _RegistrationExamplePageState extends State<RegistrationExamplePage> {
   final SmartFormController _formController = SmartFormController();
-  late final List<SmartValidator<String>> _emailValidators;
-  late final List<SmartValidator<String>> _phoneValidators;
-  late final List<SmartValidator<String>> _passwordValidators;
   late final List<SmartValidator<String>> _confirmationValidators;
   bool _isSubmitting = false;
 
   @override
   void initState() {
     super.initState();
-    _emailValidators = <SmartValidator<String>>[
-      SmartValidators.required<String>(message: 'Email is required'),
-      SmartValidators.email(),
-    ];
-    _phoneValidators = <SmartValidator<String>>[
-      SmartValidators.required<String>(message: 'Phone is required'),
-      _phone,
-    ];
-    _passwordValidators = <SmartValidator<String>>[
-      SmartValidators.required<String>(message: 'Password is required'),
-      SmartValidators.minLength<String>(
-        8,
-        message: 'Use at least 8 characters',
-      ),
-    ];
-    _confirmationValidators = <SmartValidator<String>>[
-      SmartValidators.required<String>(
-        message: 'Password confirmation is required',
-      ),
-      _confirmPassword,
-    ];
+    _confirmationValidators = <SmartValidator<String>>[_confirmPassword];
   }
 
   static String? _phone(String? value) {
@@ -134,9 +111,11 @@ class _RegistrationExamplePageState extends State<RegistrationExamplePage> {
       'firstName': 'Ana',
       'lastName': 'Popescu',
       'email': 'ana@example.com',
-      'phone': '+373 60 123 456',
+      'phone': '60 123 456',
       'password': 'flutter123',
       'confirmPassword': 'flutter123',
+      'birthDate': DateTime(1992, 5, 14),
+      'country': 'Moldova',
       'newsletter': true,
     });
   }
@@ -210,63 +189,93 @@ class _RegistrationExamplePageState extends State<RegistrationExamplePage> {
                     children: <Widget>[
                       const _NameFields(),
                       const SizedBox(height: 16),
-                      SmartTextField(
+                      SmartEmailField(
                         name: 'email',
+                        required: true,
+                        requiredMessage: 'Email is required',
+                        autovalidateMode: .onUnfocus,
                         decoration: const InputDecoration(
                           labelText: 'Email',
                           hintText: 'you@example.com',
                           prefixIcon: Icon(Icons.email_outlined),
                         ),
-                        keyboardType: TextInputType.emailAddress,
                         textInputAction: TextInputAction.next,
-                        validators: _emailValidators,
                         asyncValidators: <SmartAsyncValidator<String>>[
                           _checkEmailAvailability,
                         ],
                       ),
                       const SizedBox(height: 16),
-                      SmartTextField(
+                      SmartPhoneField(
+                        autovalidateMode: .onUnfocus,
                         name: 'phone',
+                        countryCode: '+373 ',
+                        required: true,
+                        requiredMessage: 'Phone is required',
                         decoration: const InputDecoration(
                           labelText: 'Phone',
-                          hintText: '+373 60 123 456',
+                          hintText: '60 123 456',
                           prefixIcon: Icon(Icons.phone_outlined),
                         ),
-                        keyboardType: TextInputType.phone,
                         textInputAction: TextInputAction.next,
                         inputFormatters: <TextInputFormatter>[
                           FilteringTextInputFormatter.allow(
                             RegExp(r'[\d\s+()-]'),
                           ),
                         ],
-                        validators: _phoneValidators,
+                        validators: <SmartValidator<String>>[_phone],
                       ),
                       const SizedBox(height: 16),
-                      SmartTextField(
+                      SmartPasswordField(
                         name: 'password',
+                        required: true,
+                        requiredMessage: 'Password is required',
+                        minLength: 8,
+                        minLengthMessage: 'Use at least 8 characters',
+                        autovalidateMode: .onUserInteractionIfError,
                         decoration: const InputDecoration(
                           labelText: 'Password',
                           prefixIcon: Icon(Icons.lock_outline),
                         ),
-                        obscureText: true,
-                        autocorrect: false,
-                        enableSuggestions: false,
                         textInputAction: TextInputAction.next,
-                        validators: _passwordValidators,
                       ),
                       const SizedBox(height: 16),
-                      SmartTextField(
+                      SmartPasswordField(
                         name: 'confirmPassword',
+                        required: true,
+                        requiredMessage: 'Password confirmation is required',
+                        minLength: null,
+                        autovalidateMode: .disabled,
                         decoration: const InputDecoration(
                           labelText: 'Confirm password',
                           prefixIcon: Icon(Icons.lock_reset_outlined),
                         ),
-                        obscureText: true,
-                        autocorrect: false,
-                        enableSuggestions: false,
                         textInputAction: TextInputAction.done,
                         validators: _confirmationValidators,
                         onSubmitted: (_) => unawaited(_submit()),
+                      ),
+                      const SizedBox(height: 16),
+                      SmartDateField(
+                        name: 'birthDate',
+                        firstDate: DateTime(1900),
+                        lastDate: DateTime.now(),
+                        required: true,
+                        requiredMessage: 'Birth date is required',
+                        decoration: const InputDecoration(
+                          labelText: 'Birth date',
+                          prefixIcon: Icon(Icons.cake_outlined),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      SmartDropdownField<String>(
+                        name: 'country',
+                        items: const <String>['Moldova', 'Romania', 'Ukraine'],
+                        itemLabelBuilder: (country) => country,
+                        required: true,
+                        requiredMessage: 'Country is required',
+                        decoration: const InputDecoration(
+                          labelText: 'Country',
+                          prefixIcon: Icon(Icons.public_outlined),
+                        ),
                       ),
                       const SizedBox(height: 12),
                       SmartFormField<bool>(
@@ -339,6 +348,7 @@ class _NameFields extends StatelessWidget {
       builder: (context, constraints) {
         final firstName = SmartTextField(
           name: 'firstName',
+          autovalidateMode: .disabled,
           decoration: const InputDecoration(labelText: 'First name'),
           textCapitalization: TextCapitalization.words,
           textInputAction: TextInputAction.next,

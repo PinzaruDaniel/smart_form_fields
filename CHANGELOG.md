@@ -1,3 +1,10 @@
+## 0.0.3
+
+* Add reusable email, password, phone, date, and generic dropdown fields.
+* Expand the registration example with birth-date and country fields.
+* Add focused widget coverage for every reusable field and date-picker
+  interaction.
+
 ## 0.0.2
 
 * Validate fields on focus loss by default.

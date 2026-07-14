@@ -14,13 +14,10 @@ final formKey = SmartFormKey();
 SmartForm(
   key: formKey,
   children: [
-    SmartTextField(
+    SmartEmailField(
       name: 'email',
+      required: true,
       decoration: const InputDecoration(labelText: 'Email'),
-      validators: <SmartValidator<String>>[
-        SmartValidators.required<String>(),
-        SmartValidators.email(),
-      ],
     ),
   ],
 );
@@ -84,5 +81,6 @@ flutter run
 The package foundation, form key/controller API, immutable result model,
 registry, generic custom field, text field, core sync/async validation,
 built-in validators, error animations, and first-error navigation are
-implemented. Email, password, phone, date, and dropdown convenience fields are
+implemented. The initial reusable field set now includes text, email, password,
+phone, date, and generic dropdown fields. Localization and package theming are
 the next milestone.

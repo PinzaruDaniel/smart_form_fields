@@ -9,6 +9,8 @@ void main() {
     expect(find.text('Create your account'), findsOneWidget);
     expect(find.widgetWithText(TextField, 'First name'), findsOneWidget);
     expect(find.widgetWithText(TextField, 'Email'), findsOneWidget);
+    expect(find.widgetWithText(TextField, 'Birth date'), findsOneWidget);
+    expect(find.text('Country'), findsOneWidget);
     expect(find.text('Product updates'), findsOneWidget);
   });
 
@@ -24,7 +26,7 @@ void main() {
 
     expect(find.text('First name is required'), findsOneWidget);
     expect(find.text('Email is required'), findsOneWidget);
-    expect(find.text('Please correct 6 field(s).'), findsOneWidget);
+    expect(find.text('Please correct 8 field(s).'), findsOneWidget);
   });
 
   testWidgets('validates email after focus leaves the field', (tester) async {
