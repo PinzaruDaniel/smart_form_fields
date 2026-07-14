@@ -6,6 +6,13 @@ export 'src/form/smart_form.dart' show SmartForm, SmartFormState;
 export 'src/form/smart_form_controller.dart' show SmartFormController;
 export 'src/form/smart_form_key.dart' show SmartFormKey;
 export 'src/form/smart_form_result.dart' show SmartFormResult;
+export 'src/json/smart_form_schema.dart'
+    show
+        SmartFormSchema,
+        SmartJsonFieldDefinition,
+        SmartJsonValidatorDefinition;
+export 'src/json/smart_json_form.dart'
+    show SmartJsonFieldBuilder, SmartJsonForm, SmartJsonValidatorBuilder;
 export 'src/theme/smart_form_theme.dart'
     show SmartFormTheme, SmartFormThemeData;
 export 'src/fields/smart_field_controller.dart' show SmartFieldController;

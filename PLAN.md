@@ -7,8 +7,10 @@ repetitive code needed to register fields, validate them, collect values, and
 move the user to the first invalid field while leaving visual design under the
 application's control.
 
-The first public release targets forms written as normal Flutter widget trees.
-Schema-driven and JSON-generated forms are explicitly out of scope.
+The first public release supports both normal Flutter widget trees and an
+opt-in JSON schema for API-driven forms. The JSON layer maps data to the same
+field widgets and validation engine rather than maintaining a parallel form
+implementation.
 
 ### Version 0.1.0 outcomes
 
@@ -18,6 +20,7 @@ Schema-driven and JSON-generated forms are explicitly out of scope.
 - The first invalid field is scrolled into view and focused when possible.
 - Applications can create custom fields with `SmartFormField<T>`.
 - Common text, email, password, phone, date, and dropdown fields are included.
+- API responses can describe forms through the opt-in JSON schema layer.
 - Validation-message localization is supplied by the application.
 - Server errors can be applied to one or many fields.
 - Package behavior works with Material 2 and Material 3 styling.
@@ -441,6 +444,9 @@ lib/
       smart_validator.dart
       smart_async_validator.dart
       smart_validators.dart
+    json/
+      smart_form_schema.dart
+      smart_json_form.dart
     animation/
       smart_error_animation.dart
     theme/

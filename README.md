@@ -72,6 +72,7 @@ The first release will provide:
 - scrolling and focusing the first invalid field;
 - immutable validation results and value snapshots;
 - custom generic fields and common Material field wrappers;
+- opt-in forms generated from API JSON schemas;
 - configurable validation messages;
 - server-side field error injection.
 
@@ -180,6 +181,80 @@ Render `field.errorText` in a custom widget and call `field.didChange` whenever
 its value changes. Use `field.isValidating` when the UI should expose async
 validation progress.
 
+## Forms from API JSON
+
+Use `SmartJsonForm.fromJson` when an API returns a form definition. The JSON
+layer builds the same smart field widgets, so values, validation timing, async
+race handling, reset, server errors, and first-error navigation behave exactly
+like a widget-authored form.
+
+```dart
+final schema = jsonDecode(response.body) as Map<String, Object?>;
+final controller = SmartFormController();
+
+SmartJsonForm.fromJson(
+  json: schema,
+  controller: controller,
+  asyncValidators: {
+    // JSON references this executable validator by name.
+    'emailAvailable': (value) async {
+      final available = await repository.isEmailAvailable(value as String?);
+      return available ? null : 'Email is already registered';
+    },
+  },
+);
+```
+
+Example API response:
+
+```json
+{
+  "scroll_to_first_error": true,
+  "error_animation": "fade",
+  "fields": [
+    {
+      "type": "email",
+      "name": "email",
+      "label_text": "Email",
+      "required": true,
+      "required_message": "Email is required",
+      "async_validators": ["emailAvailable"]
+    },
+    {
+      "type": "password",
+      "name": "password",
+      "label_text": "Password",
+      "min_length": 8,
+      "min_length_message": "Use at least 8 characters"
+    },
+    {
+      "type": "dropdown",
+      "name": "country",
+      "label_text": "Country",
+      "options": [
+        {"value": "md", "label": "Moldova"},
+        {"value": "ro", "label": "Romania"}
+      ]
+    }
+  ]
+}
+```
+
+Built-in field types are `text`, `email`, `phone`, `password`, `date`, and
+`dropdown`. Validator objects support `required`, `email`, `length`,
+`min_length`, `max_length`, `pattern`, `number`, `min`, and `max`; numeric or
+length limits use a `value` property.
+
+All JSON property names use snake_case, including `scroll_to_first_error`,
+`label_text`, `initial_value`, `required_message`, and `async_validators`.
+Autovalidation values also use names such as `on_unfocus` and
+`on_user_interaction`.
+
+JSON cannot contain executable Dart code. Register named async validators,
+`customValidatorBuilders`, or `customFieldBuilders` in the application for
+API-specific behavior. Unknown field and validator types fail explicitly
+instead of silently rendering an incomplete form.
+
 ## Server errors and value updates
 
 Backend errors can be applied after a request. The next value change clears
@@ -247,5 +322,5 @@ registry, generic custom field, text field, core sync/async validation,
 built-in validators, error animations, and first-error navigation are
 implemented. The initial reusable field set now includes text, email, password,
 phone, date, and generic dropdown fields. Shared form behavior can be configured
-with `SmartFormTheme`; bundled validation-message localization is intentionally
-out of scope.
+with `SmartFormTheme`, and `SmartJsonForm` can build the same fields from API
+schemas. Bundled validation-message localization is intentionally out of scope.

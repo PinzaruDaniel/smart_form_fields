@@ -1,3 +1,14 @@
+## 0.0.6
+
+* Add `SmartFormSchema` and `SmartJsonForm.fromJson` for API-driven forms.
+* Support built-in text, email, phone, password, date, and dropdown JSON field
+  types with synchronous validator configuration.
+* Allow applications to register custom JSON field builders, custom validator
+  builders, and named asynchronous validators.
+* Use snake_case keys throughout the API-driven JSON form schema.
+* Document canonical keys such as `scroll_to_first_error`, `label_text`,
+  `initial_value`, and `async_validators`.
+
 ## 0.0.5
 
 * Complete the README guidance for installation, controller lifecycle, custom
