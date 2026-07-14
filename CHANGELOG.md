@@ -1,3 +1,11 @@
+## 0.0.4
+
+* Add `SmartFormTheme` and `SmartFormThemeData` for shared scrolling, focus,
+  and error-animation behavior.
+* Allow values set directly on `SmartForm` to override inherited defaults.
+* Keep validation-message localization application-owned without adding
+  bundled language catalogs.
+
 ## 0.0.3
 
 * Add reusable email, password, phone, date, and generic dropdown fields.

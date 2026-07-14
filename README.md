@@ -58,11 +58,32 @@ The first release will provide:
 - scrolling and focusing the first invalid field;
 - immutable validation results and value snapshots;
 - custom generic fields and common Material field wrappers;
-- localized validation messages;
+- configurable validation messages;
 - server-side field error injection.
 
 See [PLAN.md](PLAN.md) for the implementation phases, API decisions, test
 matrix, and release gates.
+
+### Form behavior theme
+
+Use `SmartFormTheme` to share scrolling, focus, and error-animation defaults
+across multiple forms. Values set directly on `SmartForm` take precedence.
+
+```dart
+SmartFormTheme(
+  data: const SmartFormThemeData(
+    errorAnimation: SmartErrorAnimation.fade,
+    scrollToFirstError: true,
+  ),
+  child: SmartForm(
+    children: [...],
+  ),
+);
+```
+
+Validation-message localization remains application-owned. Pass the desired
+message to a validator, for example
+`SmartValidators.required(message: 'Required')`.
 
 ## Example application
 
@@ -82,5 +103,6 @@ The package foundation, form key/controller API, immutable result model,
 registry, generic custom field, text field, core sync/async validation,
 built-in validators, error animations, and first-error navigation are
 implemented. The initial reusable field set now includes text, email, password,
-phone, date, and generic dropdown fields. Localization and package theming are
-the next milestone.
+phone, date, and generic dropdown fields. Shared form behavior can be configured
+with `SmartFormTheme`; bundled validation-message localization is intentionally
+out of scope.

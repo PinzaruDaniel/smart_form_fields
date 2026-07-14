@@ -18,7 +18,7 @@ Schema-driven and JSON-generated forms are explicitly out of scope.
 - The first invalid field is scrolled into view and focused when possible.
 - Applications can create custom fields with `SmartFormField<T>`.
 - Common text, email, password, phone, date, and dropdown fields are included.
-- Validation messages are available in English, Romanian, and Russian.
+- Validation-message localization is supplied by the application.
 - Server errors can be applied to one or many fields.
 - Package behavior works with Material 2 and Material 3 styling.
 
@@ -329,15 +329,14 @@ a phone-number engine in `0.1`; accept formatter and custom validators.
 Exit criteria: each wrapper has focused widget tests and no parallel validation
 implementation outside `SmartFormField<T>`.
 
-### Phase 7 - localization and theming
+### Phase 7 - theming
 
-- Add `SmartFormLocalizations` for English, Romanian, and Russian.
-- Add overridable `SmartFormMessages` and field-level message overrides.
 - Add lightweight inherited `SmartFormTheme` behavior defaults.
-- Verify locale changes update future validation messages.
+- Keep validation messages configurable through validator arguments.
+- Do not bundle English, Romanian, or Russian validation message catalogs.
 
-Exit criteria: built-in validation has no hardcoded user-facing English in its
-execution path, and tests cover locale and override precedence.
+Exit criteria: form behavior can be configured for a widget subtree, direct
+form values take precedence, and no localization delegates are required.
 
 ### Phase 8 - example, documentation, and 0.1 release
 

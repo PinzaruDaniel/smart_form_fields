@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 import '../animation/smart_error_animation.dart';
+import '../theme/smart_form_theme.dart';
 import 'smart_field_handle.dart';
 import 'smart_field_registry.dart';
 import 'smart_form_controller.dart';
@@ -12,24 +13,24 @@ class SmartForm extends StatefulWidget {
   const SmartForm({
     required this.children,
     this.controller,
-    this.scrollToFirstError = true,
-    this.focusFirstError = true,
-    this.scrollDuration = const Duration(milliseconds: 350),
-    this.scrollCurve = Curves.easeOutCubic,
-    this.scrollAlignment = 0.2,
-    this.errorAnimation = SmartErrorAnimation.shake,
+    this.scrollToFirstError,
+    this.focusFirstError,
+    this.scrollDuration,
+    this.scrollCurve,
+    this.scrollAlignment,
+    this.errorAnimation,
     this.mainAxisSize = MainAxisSize.min,
     super.key,
   });
 
   final List<Widget> children;
   final SmartFormController? controller;
-  final bool scrollToFirstError;
-  final bool focusFirstError;
-  final Duration scrollDuration;
-  final Curve scrollCurve;
-  final double scrollAlignment;
-  final SmartErrorAnimation errorAnimation;
+  final bool? scrollToFirstError;
+  final bool? focusFirstError;
+  final Duration? scrollDuration;
+  final Curve? scrollCurve;
+  final double? scrollAlignment;
+  final SmartErrorAnimation? errorAnimation;
   final MainAxisSize mainAxisSize;
 
   @override
@@ -85,6 +86,7 @@ class SmartFormState extends State<SmartForm>
     bool? scrollToError,
     bool? focusFirstError,
   }) async {
+    final theme = SmartFormTheme.of(context);
     final fields = _registry.fields;
     for (final field in fields) {
       if (field.enabled) {
@@ -98,8 +100,10 @@ class SmartFormState extends State<SmartForm>
           field.name: field.errorText!,
     };
     final firstInvalidField = _registry.firstInvalidField;
-    final shouldScroll = scrollToError ?? widget.scrollToFirstError;
-    final shouldFocus = focusFirstError ?? widget.focusFirstError;
+    final shouldScroll =
+        scrollToError ?? widget.scrollToFirstError ?? theme.scrollToFirstError;
+    final shouldFocus =
+        focusFirstError ?? widget.focusFirstError ?? theme.focusFirstError;
 
     if (firstInvalidField != null) {
       await _navigateToInvalidField(
@@ -233,12 +237,13 @@ class SmartFormState extends State<SmartForm>
 
   @override
   Widget build(BuildContext context) {
+    final theme = SmartFormTheme.of(context);
     return SmartFormScope(
       registrar: this,
-      scrollDuration: widget.scrollDuration,
-      scrollCurve: widget.scrollCurve,
-      scrollAlignment: widget.scrollAlignment,
-      errorAnimation: widget.errorAnimation,
+      scrollDuration: widget.scrollDuration ?? theme.scrollDuration,
+      scrollCurve: widget.scrollCurve ?? theme.scrollCurve,
+      scrollAlignment: widget.scrollAlignment ?? theme.scrollAlignment,
+      errorAnimation: widget.errorAnimation ?? theme.errorAnimation,
       child: Column(
         mainAxisSize: widget.mainAxisSize,
         children: <Widget>[
