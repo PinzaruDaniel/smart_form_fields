@@ -8,6 +8,7 @@ A Material 3 registration form demonstrating:
 - scrolling and focusing the first invalid field;
 - form value patching and reset;
 - server error injection;
+- shared behavior defaults with `SmartFormTheme`;
 - a custom boolean `SmartFormField<bool>`.
 
 Run it from this directory:

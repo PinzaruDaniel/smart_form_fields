@@ -1,3 +1,11 @@
+## 0.0.5
+
+* Complete the README guidance for installation, controller lifecycle, custom
+  fields, async validation, server errors, disabled fields, and navigation.
+* Demonstrate shared `SmartFormTheme` behavior in the example application.
+* Align the implementation plan and public API documentation with
+  application-owned validation localization.
+
 ## 0.0.4
 
 * Add `SmartFormTheme` and `SmartFormThemeData` for shared scrolling, focus,

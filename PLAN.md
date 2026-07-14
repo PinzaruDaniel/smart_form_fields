@@ -388,7 +388,7 @@ correct fields.
 
 ### Unit tests
 
-- Built-in validators and localized messages.
+- Built-in validators and message overrides.
 - First-error validation ordering.
 - Async success/failure, exceptions, debounce, and stale result races.
 - Result immutability and value type preservation.
@@ -402,7 +402,7 @@ correct fields.
 - Error rendering, validating state, and animation.
 - Focus and scrolling through a long form and nested scrollable.
 - Non-focusable field fallback and reduced motion.
-- Material 2/3 theme inheritance and locale changes.
+- Material 2/3 theme inheritance and behavior-theme changes.
 
 ### Integration tests
 
@@ -441,19 +441,14 @@ lib/
       smart_validator.dart
       smart_async_validator.dart
       smart_validators.dart
-    localization/
-      smart_form_localizations.dart
-      smart_form_messages.dart
     animation/
       smart_error_animation.dart
     theme/
       smart_form_theme.dart
-      smart_form_theme_data.dart
 test/
   form/
   fields/
   validation/
-  localization/
   helpers/
 example/
   lib/

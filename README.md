@@ -6,6 +6,20 @@ field.
 
 > This package is under active development and is not ready for production use.
 
+## Installation
+
+Add the package to your application:
+
+```shell
+flutter pub add smart_form_fields
+```
+
+Then import its single public library:
+
+```dart
+import 'package:smart_form_fields/smart_form_fields.dart';
+```
+
 ## Quick start
 
 ```dart
@@ -84,6 +98,135 @@ SmartFormTheme(
 Validation-message localization remains application-owned. Pass the desired
 message to a validator, for example
 `SmartValidators.required(message: 'Required')`.
+
+## Form access and controller lifecycle
+
+Use `SmartFormKey` for local, key-based access or `SmartFormController` when a
+controller fits the owning widget better. Both expose validation, current
+values, value patching, reset, focus/scroll commands, and server errors.
+
+```dart
+class RegistrationState extends State<Registration> {
+  final formController = SmartFormController();
+
+  @override
+  void dispose() {
+    formController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SmartForm(
+      controller: formController,
+      children: const [...],
+    );
+  }
+}
+```
+
+A caller-owned controller is not disposed by `SmartForm`. One controller can
+be attached to only one mounted form at a time, and commands require it to be
+attached.
+
+## Async validation
+
+Async validators return a `Future<String?>`. Explicit form validation always
+waits for them. Obsolete results are discarded when a value changes while an
+older validation request is still running.
+
+```dart
+SmartEmailField(
+  name: 'email',
+  asyncValidationDebounce: const Duration(milliseconds: 400),
+  asyncValidators: [
+    (value) async {
+      final available = await repository.isEmailAvailable(value);
+      return available ? null : 'Email is already registered';
+    },
+  ],
+);
+```
+
+The debounce applies to automatic validation only. A submit-triggered
+`validate()` call starts immediately.
+
+## Custom fields
+
+Compose `SmartFormField<T>` when the built-in Material wrappers do not match
+the desired interaction. This is also the way to use a bottom sheet, dialog,
+or custom picker instead of `SmartDropdownField<T>`.
+
+```dart
+SmartFormField<String>(
+  name: 'country',
+  validators: [SmartValidators.required(message: 'Choose a country')],
+  builder: (context, field) {
+    return ListTile(
+      title: Text(field.value ?? 'Choose country'),
+      subtitle: field.errorText == null ? null : Text(field.errorText!),
+      onTap: field.enabled
+          ? () async {
+              final value = await showCountryBottomSheet(context);
+              if (value != null) field.didChange(value);
+            }
+          : null,
+    );
+  },
+);
+```
+
+Render `field.errorText` in a custom widget and call `field.didChange` whenever
+its value changes. Use `field.isValidating` when the UI should expose async
+validation progress.
+
+## Server errors and value updates
+
+Backend errors can be applied after a request. The next value change clears
+the server error for that field.
+
+```dart
+await formController.setErrors(
+  {
+    'email': 'The server rejected this email',
+    'phone': 'The server could not verify this number',
+  },
+  scrollToFirstError: true,
+);
+
+formController.patchValue({
+  'email': 'person@example.com',
+  'country': 'Moldova',
+});
+```
+
+`patchValue` validates all field names before changing any value. Unknown names
+throw instead of leaving the form partially updated.
+
+## Disabled fields and navigation
+
+Disabled fields remain registered and appear in `values`, but validation skips
+them. On failed validation, `SmartForm` navigates to the first invalid enabled
+field in current widget order. Scrolling and focusing are best-effort and never
+change the returned `SmartFormResult`.
+
+Set `scrollToFirstError` or `focusFirstError` to `false` when the surrounding
+screen owns navigation. Custom fields that cannot accept keyboard focus still
+scroll into view. Reduced-motion platform settings suppress error animation.
+
+## Validation result
+
+`validate()` returns an immutable snapshot. Values preserve their field types,
+so text fields return `String?`, date fields return `DateTime?`, and generic
+fields return their declared type.
+
+```dart
+final result = await formController.validate();
+if (!result.isValid) return;
+
+final email = result.values['email'] as String?;
+final birthDate = result.values['birthDate'] as DateTime?;
+```
 
 ## Example application
 

@@ -29,7 +29,10 @@ class SmartFormFieldsExampleApp extends StatelessWidget {
           filled: true,
         ),
       ),
-      home: const RegistrationExamplePage(),
+      home: const SmartFormTheme(
+        data: SmartFormThemeData(errorAnimation: SmartErrorAnimation.fade),
+        child: RegistrationExamplePage(),
+      ),
     );
   }
 }
@@ -184,7 +187,6 @@ class _RegistrationExamplePageState extends State<RegistrationExamplePage> {
                   ),
                   const SizedBox(height: 24),
                   SmartForm(
-                    errorAnimation: .fade,
                     controller: _formController,
                     children: <Widget>[
                       const _NameFields(),
