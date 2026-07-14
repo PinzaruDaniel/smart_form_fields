@@ -305,10 +305,11 @@ final birthDate = result.values['birthDate'] as DateTime?;
 
 ## Example application
 
-The [example](example/) directory contains a complete Material 3 registration
-form with synchronous and asynchronous validation, value patching, reset,
-server errors, focus-loss validation, first-error navigation, and a custom
-boolean field.
+The [example](example/) directory contains three Material 3 screens: a complete
+registration flow, a snake_case JSON/API form, and an imperative controller
+playground. Together they demonstrate reusable and custom fields, sync/async
+validation, bottom-sheet selection, value updates, dynamic and disabled fields,
+reset, server errors, focus/scroll commands, and first-error navigation.
 
 ```sh
 cd example

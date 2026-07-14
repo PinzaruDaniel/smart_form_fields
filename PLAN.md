@@ -343,8 +343,8 @@ form values take precedence, and no localization delegates are required.
 
 ### Phase 8 - example, documentation, and 0.1 release
 
-- Build a polished registration example with first/last name, email, phone,
-  password, confirmation placeholder, birth date, and country dropdown.
+- Build a polished multi-screen example with a registration form, JSON/API
+  form, and controller/custom-field playground.
 - For `0.1`, demonstrate confirmation using a custom validator that closes over
   application state; ship `matchesField` only in the dependency milestone.
 - Document custom fields, async validation, server errors, controller lifecycle,

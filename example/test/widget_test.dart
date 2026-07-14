@@ -1,10 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:smart_form_fields_example/main.dart';
+import 'package:smart_form_fields_example/app.dart';
 
 void main() {
+  testWidgets('renders the example hub', (tester) async {
+    await tester.pumpWidget(const SmartFormFieldsExampleApp());
+
+    expect(find.text('Package examples'), findsOneWidget);
+    expect(find.text('Registration form'), findsOneWidget);
+    expect(find.text('JSON API form'), findsOneWidget);
+    expect(find.text('Controller playground'), findsOneWidget);
+  });
+
   testWidgets('renders the registration example', (tester) async {
     await tester.pumpWidget(const SmartFormFieldsExampleApp());
+    await _openExample(tester, 'Registration form');
 
     expect(find.text('Create your account'), findsOneWidget);
     expect(find.widgetWithText(TextField, 'First name'), findsOneWidget);
@@ -18,6 +28,7 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(const SmartFormFieldsExampleApp());
+    await _openExample(tester, 'Registration form');
 
     final submitButton = find.widgetWithText(FilledButton, 'Create account');
     await tester.ensureVisible(submitButton);
@@ -31,6 +42,7 @@ void main() {
 
   testWidgets('validates email after focus leaves the field', (tester) async {
     await tester.pumpWidget(const SmartFormFieldsExampleApp());
+    await _openExample(tester, 'Registration form');
 
     final emailField = find.widgetWithText(TextField, 'Email');
     await tester.ensureVisible(emailField);
@@ -50,6 +62,7 @@ void main() {
 
   testWidgets('fills and validates the sample account', (tester) async {
     await tester.pumpWidget(const SmartFormFieldsExampleApp());
+    await _openExample(tester, 'Registration form');
 
     final fillButton = find.widgetWithText(TextButton, 'Fill sample');
     await tester.ensureVisible(fillButton);
@@ -70,4 +83,99 @@ void main() {
       findsOneWidget,
     );
   });
+
+  testWidgets('builds and validates the JSON API example', (tester) async {
+    await tester.pumpWidget(const SmartFormFieldsExampleApp());
+    await _openExample(tester, 'JSON API form');
+
+    expect(
+      find.text('Rendered from a snake_case API response'),
+      findsOneWidget,
+    );
+    expect(find.widgetWithText(TextField, 'Work email'), findsOneWidget);
+    expect(find.text('Accept API usage terms'), findsOneWidget);
+
+    final fillButton = find.widgetWithText(TextButton, 'Fill JSON sample');
+    await tester.scrollUntilVisible(
+      fillButton,
+      300,
+      scrollable: _pageScrollable(),
+    );
+    await tester.tap(fillButton);
+    await tester.pump();
+
+    expect(find.text('api@example.com'), findsOneWidget);
+    expect(tester.widget<Switch>(find.byType(Switch)).value, isTrue);
+
+    final validateButton = find.widgetWithText(
+      FilledButton,
+      'Validate JSON form',
+    );
+    await tester.tap(validateButton);
+    await tester.pump();
+    expect(find.text('Validating JSON…'), findsOneWidget);
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('JSON values:'), findsOneWidget);
+  });
+
+  testWidgets('demonstrates controller and bottom-sheet operations', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const SmartFormFieldsExampleApp());
+    await _openExample(tester, 'Controller playground');
+
+    expect(find.text('Imperative form controls'), findsOneWidget);
+    expect(find.text('Disabled account ID'), findsOneWidget);
+
+    final patchButton = find.widgetWithText(OutlinedButton, 'Patch values');
+    await tester.scrollUntilVisible(
+      patchButton,
+      300,
+      scrollable: _pageScrollable(),
+    );
+    await tester.tap(patchButton);
+    await tester.pump();
+    expect(find.text('Smart checkout'), findsOneWidget);
+
+    final picker = find.text('Monthly');
+    expect(picker, findsOneWidget);
+
+    final field = find.text('Monthly').first;
+    await tester.ensureVisible(field);
+    await tester.tap(field);
+    await tester.pumpAndSettle();
+    expect(find.text('Quarterly'), findsOneWidget);
+    await tester.tap(find.text('Quarterly'));
+    await tester.pumpAndSettle();
+    expect(find.text('Quarterly'), findsOneWidget);
+
+    final removeButton = find.widgetWithText(
+      OutlinedButton,
+      'Remove dynamic field',
+    );
+    await tester.ensureVisible(removeButton);
+    await tester.tap(removeButton);
+    await tester.pump();
+    expect(
+      find.widgetWithText(TextField, 'Dynamic referral code'),
+      findsNothing,
+    );
+  });
+}
+
+Future<void> _openExample(WidgetTester tester, String title) async {
+  final link = find.text(title);
+  await tester.ensureVisible(link);
+  await tester.tap(link);
+  await tester.pumpAndSettle();
+}
+
+Finder _pageScrollable() {
+  return find
+      .descendant(
+        of: find.byType(ListView).first,
+        matching: find.byType(Scrollable),
+      )
+      .first;
 }

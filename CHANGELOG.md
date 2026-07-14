@@ -1,3 +1,10 @@
+## 0.0.7
+
+* Split the example bootstrap, app shell, and screens into focused files.
+* Add separate registration, JSON/API form, and controller playground screens.
+* Demonstrate reusable and custom fields, JSON registries, bottom-sheet input,
+  dynamic/disabled fields, and the complete key/controller command surface.
+
 ## 0.0.6
 
 * Add `SmartFormSchema` and `SmartJsonForm.fromJson` for API-driven forms.
