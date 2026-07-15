@@ -155,9 +155,12 @@ The debounce applies to automatic validation only. A submit-triggered
 ## Keyboard and focus behavior
 
 `SmartForm` observes keyboard visibility through Flutter view-inset changes.
-By default, it unfocuses its active field when the keyboard starts closing and
+By default, it unfocuses its active field when the keyboard becomes hidden and
 when the user taps outside that field, including blank space inside the form.
 Only focus owned by that form is changed.
+
+Moving directly between fields does not create an intermediate unfocus, and a
+keyboard height change while switching input types is not treated as dismissal.
 
 ```dart
 SmartForm(

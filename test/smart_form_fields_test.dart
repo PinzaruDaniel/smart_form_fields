@@ -424,6 +424,9 @@ class _TestFieldState extends State<_TestField>
   }
 
   @override
+  bool containsGlobalPosition(Offset position) => false;
+
+  @override
   Future<void> scrollIntoView() async {
     scrollCount++;
     if (widget.throwOnNavigation) {

@@ -90,8 +90,7 @@ class SmartFormState extends State<SmartForm>
     if (wasVisible != isVisible) {
       widget.onKeyboardVisibilityChanged?.call(isVisible);
     }
-    final isClosing = wasVisible && currentInset < previousInset;
-    if (widget.unfocusOnKeyboardDismiss && isClosing) {
+    if (widget.unfocusOnKeyboardDismiss && wasVisible && !isVisible) {
       _unfocusForm();
     }
   }
@@ -121,6 +120,9 @@ class SmartFormState extends State<SmartForm>
 
   void _handlePointerDown(PointerDownEvent event) {
     if (!widget.dismissKeyboardOnTapOutside || !_focusScopeNode.hasFocus) {
+      return;
+    }
+    if (_registry.containsGlobalPosition(event.position)) {
       return;
     }
     final focusContext = FocusManager.instance.primaryFocus?.context;

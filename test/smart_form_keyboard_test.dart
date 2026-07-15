@@ -58,7 +58,7 @@ void main() {
     expect(tester.widget<TextField>(field).focusNode!.hasFocus, isFalse);
   });
 
-  testWidgets('keyboard closing unfocuses and reports visibility', (
+  testWidgets('keyboard hiding unfocuses and reports visibility', (
     tester,
   ) async {
     addTearDown(tester.view.resetViewInsets);
@@ -87,11 +87,61 @@ void main() {
     tester.view.viewInsets = const FakeViewPadding(bottom: 150);
     await tester.pump();
     expect(visibilityChanges, <bool>[true]);
-    expect(tester.widget<TextField>(field).focusNode!.hasFocus, isFalse);
+    expect(tester.widget<TextField>(field).focusNode!.hasFocus, isTrue);
 
     tester.view.viewInsets = FakeViewPadding.zero;
     await tester.pump();
     expect(visibilityChanges, <bool>[true, false]);
+    expect(tester.widget<TextField>(field).focusNode!.hasFocus, isFalse);
+  });
+
+  testWidgets('moving between fields keeps keyboard focus and valid values', (
+    tester,
+  ) async {
+    addTearDown(tester.view.resetViewInsets);
+    final visibilityChanges = <bool>[];
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SmartForm(
+            onKeyboardVisibilityChanged: visibilityChanges.add,
+            children: <Widget>[
+              SmartTextField(
+                name: 'first_name',
+                decoration: const InputDecoration(labelText: 'First name'),
+                validators: <SmartValidator<String>>[
+                  SmartValidators.required<String>(
+                    message: 'First name is required',
+                  ),
+                ],
+              ),
+              SmartPhoneField(
+                name: 'phone',
+                decoration: const InputDecoration(labelText: 'Phone'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    final firstName = find.widgetWithText(TextField, 'First name');
+    final phone = find.widgetWithText(TextField, 'Phone');
+    await tester.tap(firstName);
+    await tester.enterText(firstName, 'Daniel');
+    tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+    await tester.pump();
+
+    await tester.tap(phone);
+    await tester.pumpAndSettle();
+    expect(tester.widget<TextField>(phone).focusNode!.hasFocus, isTrue);
+    expect(find.text('First name is required'), findsNothing);
+
+    tester.view.viewInsets = const FakeViewPadding(bottom: 250);
+    await tester.pump();
+    expect(tester.widget<TextField>(phone).focusNode!.hasFocus, isTrue);
+    expect(visibilityChanges, <bool>[true]);
   });
 
   testWidgets('keyboard dismissal behavior can be disabled', (tester) async {

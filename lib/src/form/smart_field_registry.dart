@@ -1,3 +1,5 @@
+import 'dart:ui' show Offset;
+
 import 'package:flutter/foundation.dart';
 
 import 'smart_field_handle.dart';
@@ -50,6 +52,10 @@ final class SmartFieldRegistry {
 
   bool contains(SmartFieldHandle<Object?> field) {
     return _entryForIdentity(field) != null;
+  }
+
+  bool containsGlobalPosition(Offset position) {
+    return fields.any((field) => field.containsGlobalPosition(position));
   }
 
   void register(SmartFieldHandle<Object?> field, {required int sectionOrder}) {

@@ -433,6 +433,16 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
   }
 
   @override
+  bool containsGlobalPosition(Offset position) {
+    final renderObject = _anchorKey.currentContext?.findRenderObject();
+    if (renderObject is! RenderBox || !renderObject.attached) {
+      return false;
+    }
+    final localPosition = renderObject.globalToLocal(position);
+    return renderObject.paintBounds.contains(localPosition);
+  }
+
+  @override
   Future<void> scrollIntoView() async {
     final anchorContext = _anchorKey.currentContext;
     if (anchorContext == null) {

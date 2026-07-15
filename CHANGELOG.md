@@ -1,6 +1,14 @@
+## 0.0.9
+
+* Preserve direct focus transfer when tapping another field in the same form.
+* Treat only a fully hidden keyboard as dismissal so keyboard-height changes
+  between input types do not unfocus the destination field.
+* Prevent valid values from receiving transient required errors during field
+  navigation.
+
 ## 0.0.8
 
-* Unfocus the active form field when the keyboard starts closing.
+* Unfocus the active form field when the keyboard becomes hidden.
 * Dismiss focus when tapping outside the active field, including blank space
   inside the form.
 * Add opt-out flags and a keyboard visibility callback on `SmartForm`.

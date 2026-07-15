@@ -1,3 +1,5 @@
+import 'dart:ui' show Offset;
+
 /// Internal contract between a smart field and its containing form.
 abstract interface class SmartFieldHandle<T> {
   String get name;
@@ -21,6 +23,8 @@ abstract interface class SmartFieldHandle<T> {
   void setError(String error);
 
   void focus();
+
+  bool containsGlobalPosition(Offset position);
 
   Future<void> scrollIntoView();
 }
