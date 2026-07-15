@@ -391,7 +391,7 @@ class _TestFieldState extends State<_TestField>
   }
 
   @override
-  Future<bool> validate() async {
+  Future<bool> validate({bool animateError = true}) async {
     widget.validationOrder?.add(name);
     _error = widget.validationError;
     return isValid;
@@ -413,7 +413,10 @@ class _TestFieldState extends State<_TestField>
   void clearError() => _error = null;
 
   @override
-  void setError(String error) => _error = error;
+  void setError(String error, {bool animateError = true}) => _error = error;
+
+  @override
+  void animateError() {}
 
   @override
   void focus() {

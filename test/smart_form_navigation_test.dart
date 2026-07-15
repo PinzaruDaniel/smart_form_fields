@@ -167,6 +167,67 @@ void main() {
     expect(tester.getTopLeft(find.byKey(fieldKey)), initialPosition);
   });
 
+  testWidgets('starts error animation after scrolling completes', (
+    tester,
+  ) async {
+    final controller = SmartFormController();
+    final scrollController = ScrollController();
+    const fieldKey = ValueKey<String>('deferred-animation-field');
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            height: 200,
+            child: SingleChildScrollView(
+              controller: scrollController,
+              child: SmartForm(
+                controller: controller,
+                focusFirstError: false,
+                scrollDuration: const Duration(milliseconds: 600),
+                errorAnimation: SmartErrorAnimation.fade,
+                children: <Widget>[
+                  const SizedBox(height: 500),
+                  SmartFormField<String>(
+                    name: 'deferred',
+                    validators: <SmartValidator<String>>[(_) => 'Invalid'],
+                    builder: (context, field) =>
+                        const SizedBox(key: fieldKey, width: 100, height: 40),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final validation = controller.validate();
+    await tester.pump();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(scrollController.offset, greaterThan(0));
+    expect(
+      find.ancestor(of: find.byKey(fieldKey), matching: find.byType(Opacity)),
+      findsNothing,
+    );
+
+    await tester.pump(const Duration(milliseconds: 301));
+    await tester.pump();
+    await validation;
+
+    final opacityFinder = find.ancestor(
+      of: find.byKey(fieldKey),
+      matching: find.byType(Opacity),
+    );
+    expect(opacityFinder, findsOneWidget);
+    expect(tester.widget<Opacity>(opacityFinder).opacity, lessThan(1));
+
+    await tester.pumpAndSettle();
+    scrollController.dispose();
+  });
+
   testWidgets('tolerates a field disappearing during async validation', (
     tester,
   ) async {

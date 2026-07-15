@@ -171,7 +171,7 @@ class SmartFormState extends State<SmartForm>
     final fields = _registry.fields;
     for (final field in fields) {
       if (field.enabled) {
-        await field.validate();
+        await field.validate(animateError: false);
       }
     }
 
@@ -192,6 +192,9 @@ class SmartFormState extends State<SmartForm>
         scroll: shouldScroll,
         focus: shouldFocus,
       );
+      if (mounted && _registry.contains(firstInvalidField)) {
+        firstInvalidField.animateError();
+      }
     }
 
     return SmartFormResult(
@@ -270,7 +273,10 @@ class SmartFormState extends State<SmartForm>
       fields.add(_fieldNamed(name));
     }
     for (var index = 0; index < fields.length; index++) {
-      fields[index].setError(errors.values.elementAt(index));
+      fields[index].setError(
+        errors.values.elementAt(index),
+        animateError: !scrollToFirstError,
+      );
     }
     if (scrollToFirstError) {
       final firstInvalidField = _registry.firstInvalidField;
@@ -280,6 +286,9 @@ class SmartFormState extends State<SmartForm>
           scroll: true,
           focus: false,
         );
+        if (mounted && _registry.contains(firstInvalidField)) {
+          firstInvalidField.animateError();
+        }
       }
     }
   }

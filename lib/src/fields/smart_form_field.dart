@@ -253,9 +253,13 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
   void setValue(T? value) => didChange(value);
 
   @override
-  Future<bool> validate() async {
+  Future<bool> validate({bool animateError = true}) async {
     final generation = ++_validationGeneration;
-    return _validateGeneration(generation, debounceAsync: false);
+    return _validateGeneration(
+      generation,
+      debounceAsync: false,
+      animateError: animateError,
+    );
   }
 
   void _handleFocusChanged() {
@@ -279,7 +283,11 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
   }) async {
     final generation = _validationGeneration;
     try {
-      await _validateGeneration(generation, debounceAsync: debounceAsync);
+      await _validateGeneration(
+        generation,
+        debounceAsync: debounceAsync,
+        animateError: true,
+      );
     } catch (error, stackTrace) {
       if (_isCurrentGeneration(generation)) {
         FlutterError.reportError(
@@ -300,6 +308,7 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
   Future<bool> _validateGeneration(
     int generation, {
     required bool debounceAsync,
+    required bool animateError,
   }) async {
     final value = _value;
 
@@ -314,7 +323,7 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
       for (final validator in widget.validators) {
         final error = validator(value);
         if (error != null) {
-          _applyValidationResult(generation, error);
+          _applyValidationResult(generation, error, animateError: animateError);
           return false;
         }
       }
@@ -341,12 +350,12 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
           return isValid;
         }
         if (error != null) {
-          _applyValidationResult(generation, error);
+          _applyValidationResult(generation, error, animateError: animateError);
           return false;
         }
       }
 
-      _applyValidationResult(generation, null);
+      _applyValidationResult(generation, null, animateError: false);
       return true;
     } catch (_) {
       if (_isCurrentGeneration(generation)) {
@@ -356,7 +365,11 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
     }
   }
 
-  void _applyValidationResult(int generation, String? error) {
+  void _applyValidationResult(
+    int generation,
+    String? error, {
+    required bool animateError,
+  }) {
     if (!_isCurrentGeneration(generation)) {
       return;
     }
@@ -364,7 +377,7 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
       _errorText = error;
       _isValidating = false;
     });
-    if (error != null) {
+    if (error != null && animateError) {
       _animateError();
     }
   }
@@ -415,15 +428,20 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
   }
 
   @override
-  void setError(String error) {
+  void setError(String error, {bool animateError = true}) {
     _validationGeneration++;
     setState(() {
       _errorText = error;
       _isValidating = false;
       _isTouched = true;
     });
-    _animateError();
+    if (animateError) {
+      _animateError();
+    }
   }
+
+  @override
+  void animateError() => _animateError();
 
   SmartErrorAnimation get _effectiveErrorAnimation {
     return widget.errorAnimation ??

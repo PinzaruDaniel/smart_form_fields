@@ -333,6 +333,8 @@ change the returned `SmartFormResult`.
 Set `scrollToFirstError` or `focusFirstError` to `false` when the surrounding
 screen owns navigation. Custom fields that cannot accept keyboard focus still
 scroll into view. Reduced-motion platform settings suppress error animation.
+When form validation navigates to an invalid field, its error animation starts
+only after scrolling and focus navigation finish.
 
 ## Validation result
 

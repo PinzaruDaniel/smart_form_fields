@@ -12,7 +12,7 @@ abstract interface class SmartFieldHandle<T> {
 
   String? get errorText;
 
-  Future<bool> validate();
+  Future<bool> validate({bool animateError = true});
 
   void setValue(T? value);
 
@@ -20,7 +20,9 @@ abstract interface class SmartFieldHandle<T> {
 
   void clearError();
 
-  void setError(String error);
+  void setError(String error, {bool animateError = true});
+
+  void animateError();
 
   void focus();
 

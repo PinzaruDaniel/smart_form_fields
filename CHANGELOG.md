@@ -1,3 +1,11 @@
+## 0.0.11
+
+* Start first-invalid-field error animation only after scrolling and focus
+  navigation complete.
+* Apply the same ordering when scrolling to injected server errors.
+* Keep automatic field validation animations immediate when no navigation is
+  requested.
+
 ## 0.0.10
 
 * Add a form-level `autovalidateMode` default to `SmartForm` and
