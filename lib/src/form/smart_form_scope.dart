@@ -19,6 +19,7 @@ final class SmartFormScope extends InheritedWidget {
     required this.scrollCurve,
     required this.scrollAlignment,
     required this.errorAnimation,
+    required this.autovalidateMode,
     required super.child,
     super.key,
   });
@@ -28,6 +29,7 @@ final class SmartFormScope extends InheritedWidget {
   final Curve scrollCurve;
   final double scrollAlignment;
   final SmartErrorAnimation errorAnimation;
+  final AutovalidateMode autovalidateMode;
 
   static SmartFormScope? maybeOf(BuildContext context) {
     return context.dependOnInheritedWidgetOfExactType<SmartFormScope>();
@@ -50,7 +52,8 @@ final class SmartFormScope extends InheritedWidget {
         scrollDuration != oldWidget.scrollDuration ||
         scrollCurve != oldWidget.scrollCurve ||
         scrollAlignment != oldWidget.scrollAlignment ||
-        errorAnimation != oldWidget.errorAnimation;
+        errorAnimation != oldWidget.errorAnimation ||
+        autovalidateMode != oldWidget.autovalidateMode;
   }
 }
 

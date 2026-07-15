@@ -24,7 +24,7 @@ class SmartFormField<T> extends StatefulWidget {
     this.asyncValidators = const [],
     this.enabled = true,
     this.focusNode,
-    this.autovalidateMode = AutovalidateMode.onUnfocus,
+    this.autovalidateMode,
     this.asyncValidationDebounce,
     this.errorAnimation,
     super.key,
@@ -40,10 +40,9 @@ class SmartFormField<T> extends StatefulWidget {
 
   /// Controls when validation runs without an explicit form validation call.
   ///
-  /// The default validates after the field loses focus. Regardless of this
-  /// value, calling `SmartFormController.validate()` or `SmartFormKey.validate()`
-  /// always validates the field immediately.
-  final AutovalidateMode autovalidateMode;
+  /// When omitted, inherits the containing `SmartForm.autovalidateMode`.
+  /// Explicit controller/key validation always runs immediately.
+  final AutovalidateMode? autovalidateMode;
 
   /// Delay before asynchronous validators run after a value change.
   ///
@@ -113,18 +112,12 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
       vsync: this,
       duration: const Duration(milliseconds: 360),
     );
-    if (widget.enabled && widget.autovalidateMode == AutovalidateMode.always) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          unawaited(_validateAutomatically(reason: 'automatically'));
-        }
-      });
-    }
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    final previousMode = _formScope == null ? null : _effectiveAutovalidateMode;
     final nextScope = SmartFormScope.of(context);
     if (!identical(_formScope?.registrar, nextScope.registrar)) {
       _formScope?.registrar.unregisterField(this);
@@ -136,6 +129,21 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
       this,
       sectionOrder: SmartFormOrderScope.of(context),
     );
+    if (previousMode == null &&
+        widget.enabled &&
+        _effectiveAutovalidateMode == AutovalidateMode.always) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          unawaited(_validateAutomatically(reason: 'automatically'));
+        }
+      });
+    } else if (previousMode != null &&
+        previousMode != _effectiveAutovalidateMode &&
+        _shouldAutovalidateNow) {
+      unawaited(
+        _validateAutomatically(reason: 'after form validation mode changed'),
+      );
+    }
   }
 
   @override
@@ -190,7 +198,11 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
         unawaited(_validateAutomatically(reason: 'after being enabled'));
       }
     }
-    if (oldWidget.autovalidateMode != widget.autovalidateMode &&
+    final oldAutovalidateMode =
+        oldWidget.autovalidateMode ??
+        _formScope?.autovalidateMode ??
+        AutovalidateMode.onUnfocus;
+    if (oldAutovalidateMode != _effectiveAutovalidateMode &&
         _shouldAutovalidateNow) {
       unawaited(
         _validateAutomatically(reason: 'after validation mode changed'),
@@ -213,7 +225,8 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
   @override
   void didChange(T? value) {
     final shouldRevalidateExistingError =
-        widget.autovalidateMode == AutovalidateMode.onUserInteractionIfError &&
+        _effectiveAutovalidateMode ==
+            AutovalidateMode.onUserInteractionIfError &&
         _errorText != null;
     _validationGeneration++;
     setState(() {
@@ -224,8 +237,8 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
       _isTouched = true;
     });
     if (widget.enabled &&
-        (widget.autovalidateMode == AutovalidateMode.always ||
-            widget.autovalidateMode == AutovalidateMode.onUserInteraction ||
+        (_effectiveAutovalidateMode == AutovalidateMode.always ||
+            _effectiveAutovalidateMode == AutovalidateMode.onUserInteraction ||
             shouldRevalidateExistingError)) {
       unawaited(
         _validateAutomatically(
@@ -255,7 +268,7 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
     }
     _wasFocused = false;
     if (widget.enabled &&
-        widget.autovalidateMode == AutovalidateMode.onUnfocus) {
+        _effectiveAutovalidateMode == AutovalidateMode.onUnfocus) {
       unawaited(_validateAutomatically(reason: 'after losing focus'));
     }
   }
@@ -364,7 +377,7 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
     if (!widget.enabled) {
       return false;
     }
-    return switch (widget.autovalidateMode) {
+    return switch (_effectiveAutovalidateMode) {
       AutovalidateMode.disabled => false,
       AutovalidateMode.always => true,
       AutovalidateMode.onUserInteraction => _isDirty,
@@ -372,6 +385,12 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
       AutovalidateMode.onUserInteractionIfError =>
         _isDirty && _errorText != null,
     };
+  }
+
+  AutovalidateMode get _effectiveAutovalidateMode {
+    return widget.autovalidateMode ??
+        _formScope?.autovalidateMode ??
+        AutovalidateMode.onUnfocus;
   }
 
   @override

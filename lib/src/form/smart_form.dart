@@ -24,6 +24,7 @@ class SmartForm extends StatefulWidget {
     this.dismissKeyboardOnTapOutside = true,
     this.unfocusOnKeyboardDismiss = true,
     this.onKeyboardVisibilityChanged,
+    this.autovalidateMode = AutovalidateMode.onUnfocus,
     this.mainAxisSize = MainAxisSize.min,
     super.key,
   });
@@ -45,6 +46,11 @@ class SmartForm extends StatefulWidget {
 
   /// Called when the keyboard changes between visible and hidden.
   final ValueChanged<bool>? onKeyboardVisibilityChanged;
+
+  /// Default automatic validation mode for descendant smart fields.
+  ///
+  /// A field can override this value with its own `autovalidateMode`.
+  final AutovalidateMode autovalidateMode;
 
   final MainAxisSize mainAxisSize;
 
@@ -328,6 +334,7 @@ class SmartFormState extends State<SmartForm>
             scrollCurve: widget.scrollCurve ?? theme.scrollCurve,
             scrollAlignment: widget.scrollAlignment ?? theme.scrollAlignment,
             errorAnimation: widget.errorAnimation ?? theme.errorAnimation,
+            autovalidateMode: widget.autovalidateMode,
             child: Column(
               mainAxisSize: widget.mainAxisSize,
               children: <Widget>[

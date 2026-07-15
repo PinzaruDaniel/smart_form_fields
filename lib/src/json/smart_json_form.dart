@@ -44,6 +44,7 @@ class SmartJsonForm extends StatelessWidget {
     this.dismissKeyboardOnTapOutside = true,
     this.unfocusOnKeyboardDismiss = true,
     this.onKeyboardVisibilityChanged,
+    this.autovalidateMode = AutovalidateMode.onUnfocus,
     super.key,
   });
 
@@ -61,6 +62,7 @@ class SmartJsonForm extends StatelessWidget {
     bool dismissKeyboardOnTapOutside = true,
     bool unfocusOnKeyboardDismiss = true,
     ValueChanged<bool>? onKeyboardVisibilityChanged,
+    AutovalidateMode autovalidateMode = AutovalidateMode.onUnfocus,
     Key? key,
   }) {
     return SmartJsonForm(
@@ -78,6 +80,7 @@ class SmartJsonForm extends StatelessWidget {
       dismissKeyboardOnTapOutside: dismissKeyboardOnTapOutside,
       unfocusOnKeyboardDismiss: unfocusOnKeyboardDismiss,
       onKeyboardVisibilityChanged: onKeyboardVisibilityChanged,
+      autovalidateMode: autovalidateMode,
     );
   }
 
@@ -94,6 +97,7 @@ class SmartJsonForm extends StatelessWidget {
   final bool dismissKeyboardOnTapOutside;
   final bool unfocusOnKeyboardDismiss;
   final ValueChanged<bool>? onKeyboardVisibilityChanged;
+  final AutovalidateMode autovalidateMode;
 
   @override
   Widget build(BuildContext context) {
@@ -109,6 +113,7 @@ class SmartJsonForm extends StatelessWidget {
       dismissKeyboardOnTapOutside: dismissKeyboardOnTapOutside,
       unfocusOnKeyboardDismiss: unfocusOnKeyboardDismiss,
       onKeyboardVisibilityChanged: onKeyboardVisibilityChanged,
+      autovalidateMode: autovalidateMode,
       children: <Widget>[
         for (var index = 0; index < fields.length; index++) ...<Widget>[
           if (index > 0 && spacing > 0) SizedBox(height: spacing),
@@ -328,10 +333,10 @@ class SmartJsonForm extends StatelessWidget {
     ];
   }
 
-  AutovalidateMode _autovalidateMode(SmartJsonFieldDefinition field) {
+  AutovalidateMode? _autovalidateMode(SmartJsonFieldDefinition field) {
     final value = field.stringValue('autovalidate_mode');
     if (value == null) {
-      return AutovalidateMode.onUnfocus;
+      return null;
     }
     final mode = switch (value) {
       'disabled' => AutovalidateMode.disabled,

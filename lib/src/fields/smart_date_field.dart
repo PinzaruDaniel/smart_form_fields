@@ -23,7 +23,7 @@ class SmartDateField extends StatefulWidget {
     this.requiredMessage = 'This field is required.',
     this.validators = const [],
     this.asyncValidators = const [],
-    this.autovalidateMode = AutovalidateMode.onUnfocus,
+    this.autovalidateMode,
     this.errorAnimation,
     this.enabled = true,
     this.decoration = const InputDecoration(),
@@ -49,7 +49,7 @@ class SmartDateField extends StatefulWidget {
   final String requiredMessage;
   final List<SmartValidator<DateTime>> validators;
   final List<SmartAsyncValidator<DateTime>> asyncValidators;
-  final AutovalidateMode autovalidateMode;
+  final AutovalidateMode? autovalidateMode;
   final SmartErrorAnimation? errorAnimation;
   final bool enabled;
   final InputDecoration decoration;

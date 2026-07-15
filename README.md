@@ -50,6 +50,27 @@ field or server error, but does not show a new validator error while the user is
 still typing. Calling `validate()`—for example from a submit button—always
 validates every enabled field immediately.
 
+To validate only after the user taps a submit button, set the mode once on the
+form. Every descendant field inherits it:
+
+```dart
+SmartForm(
+  controller: formController,
+  autovalidateMode: AutovalidateMode.disabled,
+  children: [
+    SmartTextField(name: 'first_name', validators: [...]),
+    SmartEmailField(name: 'email', required: true),
+  ],
+);
+
+final result = await formController.validate();
+```
+
+An individual field can still override the form default with its own
+`autovalidateMode`. `SmartJsonForm` provides the same form-level option, while
+the snake_case field property `autovalidate_mode` remains available for a JSON
+field override.
+
 Change-time validation remains available per field:
 
 ```dart

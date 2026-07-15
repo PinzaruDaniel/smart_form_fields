@@ -20,7 +20,7 @@ class SmartPhoneField extends StatefulWidget {
     this.validators = const [],
     this.asyncValidators = const [],
     this.asyncValidationDebounce,
-    this.autovalidateMode = AutovalidateMode.onUnfocus,
+    this.autovalidateMode,
     this.errorAnimation,
     this.enabled = true,
     this.decoration = const InputDecoration(),
@@ -41,7 +41,7 @@ class SmartPhoneField extends StatefulWidget {
   final List<SmartValidator<String>> validators;
   final List<SmartAsyncValidator<String>> asyncValidators;
   final Duration? asyncValidationDebounce;
-  final AutovalidateMode autovalidateMode;
+  final AutovalidateMode? autovalidateMode;
   final SmartErrorAnimation? errorAnimation;
   final bool enabled;
   final InputDecoration decoration;

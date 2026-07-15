@@ -1,3 +1,12 @@
+## 0.0.10
+
+* Add a form-level `autovalidateMode` default to `SmartForm` and
+  `SmartJsonForm`.
+* Let descendant fields inherit the form mode while preserving field-level
+  overrides.
+* Support submit-only validation without repeating configuration on every
+  field.
+
 ## 0.0.9
 
 * Preserve direct focus transfer when tapping another field in the same form.
