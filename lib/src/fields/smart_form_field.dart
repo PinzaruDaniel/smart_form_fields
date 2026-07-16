@@ -11,11 +11,13 @@ import '../validation/smart_async_validator.dart';
 import '../validation/smart_validator.dart';
 import 'smart_field_controller.dart';
 
+/// Builds a custom field from its public state controller.
 typedef SmartFieldBuilder<T> =
     Widget Function(BuildContext context, SmartFieldController<T> field);
 
 /// A generic field that participates in the closest [SmartForm].
 class SmartFormField<T> extends StatefulWidget {
+  /// Creates a custom field registered with the closest [SmartForm].
   const SmartFormField({
     required this.name,
     required this.builder,
@@ -30,12 +32,25 @@ class SmartFormField<T> extends StatefulWidget {
     super.key,
   }) : assert(name.length > 0, 'A field name cannot be empty.');
 
+  /// Unique name used for registration, values, and errors.
   final String name;
+
+  /// Value restored by [SmartFieldController.reset].
   final T? initialValue;
+
+  /// Synchronous validators run in declaration order.
   final List<SmartValidator<T>> validators;
+
+  /// Asynchronous validators run after synchronous validation succeeds.
   final List<SmartAsyncValidator<T>> asyncValidators;
+
+  /// Builds the field's application-owned interface.
   final SmartFieldBuilder<T> builder;
+
+  /// Whether the field accepts changes and participates in validation.
   final bool enabled;
+
+  /// Optional caller-owned focus node.
   final FocusNode? focusNode;
 
   /// Controls when validation runs without an explicit form validation call.

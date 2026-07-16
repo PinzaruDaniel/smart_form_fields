@@ -30,6 +30,7 @@ typedef SmartJsonValidatorBuilder =
 
 /// Builds a [SmartForm] from an API-provided JSON schema.
 class SmartJsonForm extends StatelessWidget {
+  /// Creates a form from an already parsed [schema].
   const SmartJsonForm({
     required this.schema,
     this.controller,
@@ -48,6 +49,7 @@ class SmartJsonForm extends StatelessWidget {
     super.key,
   });
 
+  /// Parses [json] and creates a form from the resulting schema.
   factory SmartJsonForm.fromJson({
     required Map<String, Object?> json,
     SmartFormController? controller,
@@ -84,19 +86,46 @@ class SmartJsonForm extends StatelessWidget {
     );
   }
 
+  /// Parsed schema that defines the form.
   final SmartFormSchema schema;
+
+  /// Optional controller attached to the generated form.
   final SmartFormController? controller;
+
+  /// Optional key attached to the generated form.
   final SmartFormKey? formKey;
+
+  /// Builders keyed by application-specific JSON field type.
   final Map<String, SmartJsonFieldBuilder> customFieldBuilders;
+
+  /// Builders keyed by application-specific validator type.
   final Map<String, SmartJsonValidatorBuilder> customValidatorBuilders;
+
+  /// Executable asynchronous validators keyed by schema name.
   final Map<String, SmartAsyncValidator<Object?>> asyncValidators;
+
+  /// Vertical space inserted between generated fields.
   final double spacing;
+
+  /// Optional first-error scrolling override.
   final bool? scrollToFirstError;
+
+  /// Optional first-error focus override.
   final bool? focusFirstError;
+
+  /// Optional error animation override.
   final SmartErrorAnimation? errorAnimation;
+
+  /// Whether pointer taps outside the active field dismiss focus.
   final bool dismissKeyboardOnTapOutside;
+
+  /// Whether a fully hidden keyboard dismisses the active field.
   final bool unfocusOnKeyboardDismiss;
+
+  /// Called when keyboard visibility changes.
   final ValueChanged<bool>? onKeyboardVisibilityChanged;
+
+  /// Default automatic validation timing for generated fields.
   final AutovalidateMode autovalidateMode;
 
   @override

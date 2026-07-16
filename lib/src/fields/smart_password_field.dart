@@ -8,6 +8,7 @@ import 'smart_text_field.dart';
 
 /// A password field with optional required and minimum-length validation.
 class SmartPasswordField extends StatefulWidget {
+  /// Creates a password field registered as [name].
   const SmartPasswordField({
     required this.name,
     this.initialValue,
@@ -32,25 +33,64 @@ class SmartPasswordField extends StatefulWidget {
     super.key,
   }) : assert(minLength == null || minLength >= 0);
 
+  /// Unique form field name.
   final String name;
+
+  /// Initial password used when no [controller] is supplied.
   final String? initialValue;
+
+  /// Optional caller-owned text controller.
   final TextEditingController? controller;
+
+  /// Optional caller-owned focus node.
   final FocusNode? focusNode;
+
+  /// Whether an empty value is invalid.
   final bool required;
+
+  /// Message returned when [required] validation fails.
   final String requiredMessage;
+
+  /// Minimum password length, or null to disable length validation.
   final int? minLength;
+
+  /// Optional message returned when [minLength] validation fails.
   final String? minLengthMessage;
+
+  /// Additional synchronous validators run after built-in validators.
   final List<SmartValidator<String>> validators;
+
+  /// Asynchronous validators run after synchronous validators pass.
   final List<SmartAsyncValidator<String>> asyncValidators;
+
+  /// Debounce applied to automatic asynchronous validation.
   final Duration? asyncValidationDebounce;
+
+  /// Field-level automatic validation override.
   final AutovalidateMode? autovalidateMode;
+
+  /// Field-level error animation override.
   final SmartErrorAnimation? errorAnimation;
+
+  /// Whether the field accepts input and participates in validation.
   final bool enabled;
+
+  /// Material input decoration.
   final InputDecoration decoration;
+
+  /// Whether to display a password visibility button.
   final bool showVisibilityToggle;
+
+  /// Whether text is obscured when the field is first built.
   final bool initiallyObscured;
+
+  /// Action button displayed by the keyboard.
   final TextInputAction? textInputAction;
+
+  /// Called whenever the password value changes.
   final ValueChanged<String>? onChanged;
+
+  /// Called when the platform submits the password field.
   final ValueChanged<String>? onSubmitted;
 
   @override

@@ -1,3 +1,5 @@
+// ignore_for_file: public_member_api_docs
+
 import 'dart:ui' show Offset;
 
 /// Internal contract between a smart field and its containing form.

@@ -9,6 +9,7 @@ import 'smart_form_field.dart';
 
 /// A Material text field connected to the closest [SmartForm].
 class SmartTextField extends StatefulWidget {
+  /// Creates a Material text field registered as [name].
   const SmartTextField({
     required this.name,
     this.initialValue,
@@ -38,27 +39,70 @@ class SmartTextField extends StatefulWidget {
          'initialValue cannot be used with a TextEditingController.',
        );
 
+  /// Unique form field name.
   final String name;
+
+  /// Initial text used when no [controller] is supplied.
   final String? initialValue;
+
+  /// Optional caller-owned text controller.
   final TextEditingController? controller;
+
+  /// Optional caller-owned focus node.
   final FocusNode? focusNode;
+
+  /// Synchronous validators run in order.
   final List<SmartValidator<String>> validators;
+
+  /// Asynchronous validators run after synchronous validators pass.
   final List<SmartAsyncValidator<String>> asyncValidators;
+
+  /// Debounce applied to automatic asynchronous validation.
   final Duration? asyncValidationDebounce;
+
+  /// Field-level automatic validation override.
   final AutovalidateMode? autovalidateMode;
+
+  /// Field-level error animation override.
   final SmartErrorAnimation? errorAnimation;
+
+  /// Whether the text field accepts input and participates in validation.
   final bool enabled;
+
+  /// Material input decoration.
   final InputDecoration decoration;
+
+  /// Keyboard configuration passed to `TextField`.
   final TextInputType? keyboardType;
+
+  /// Action button displayed by the keyboard.
   final TextInputAction? textInputAction;
+
+  /// Automatic capitalization behavior.
   final TextCapitalization textCapitalization;
+
+  /// Whether the entered text is obscured.
   final bool obscureText;
+
+  /// Whether automatic correction is enabled.
   final bool autocorrect;
+
+  /// Whether the platform may show input suggestions.
   final bool enableSuggestions;
+
+  /// Formatters applied to text edits.
   final List<TextInputFormatter>? inputFormatters;
+
+  /// Maximum number of displayed lines.
   final int? maxLines;
+
+  /// Minimum number of displayed lines.
   final int? minLines;
+
+  /// Called after a user or external controller edit updates the value.
   final ValueChanged<String>? onChanged;
+
+  /// Called when the platform submits the text field.
   final ValueChanged<String>? onSubmitted;
 
   @override

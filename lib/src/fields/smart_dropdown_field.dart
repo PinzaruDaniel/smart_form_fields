@@ -6,12 +6,16 @@ import '../validation/smart_validator.dart';
 import '../validation/smart_validators.dart';
 import 'smart_form_field.dart';
 
+/// Produces the fallback text label for a dropdown item.
 typedef SmartItemLabelBuilder<T> = String Function(T item);
+
+/// Builds the widget displayed for a dropdown item.
 typedef SmartDropdownItemBuilder<T> =
     Widget Function(BuildContext context, T item);
 
 /// A Material dropdown connected to the closest [SmartForm].
 class SmartDropdownField<T> extends StatefulWidget {
+  /// Creates a Material dropdown registered as [name].
   const SmartDropdownField({
     required this.name,
     required this.items,
@@ -35,24 +39,61 @@ class SmartDropdownField<T> extends StatefulWidget {
     super.key,
   });
 
+  /// Unique form field name.
   final String name;
+
+  /// Values available for selection.
   final List<T> items;
+
+  /// Produces a text label for each item and selected value.
   final SmartItemLabelBuilder<T> itemLabelBuilder;
+
+  /// Optional custom widget builder for menu items.
   final SmartDropdownItemBuilder<T>? itemBuilder;
+
+  /// Initial selected value.
   final T? initialValue;
+
+  /// Optional caller-owned focus node.
   final FocusNode? focusNode;
+
+  /// Whether a null selection is invalid.
   final bool required;
+
+  /// Message returned when [required] validation fails.
   final String requiredMessage;
+
+  /// Additional synchronous validators run after required validation.
   final List<SmartValidator<T>> validators;
+
+  /// Asynchronous validators run after synchronous validators pass.
   final List<SmartAsyncValidator<T>> asyncValidators;
+
+  /// Field-level automatic validation override.
   final AutovalidateMode? autovalidateMode;
+
+  /// Field-level error animation override.
   final SmartErrorAnimation? errorAnimation;
+
+  /// Whether the dropdown accepts input and participates in validation.
   final bool enabled;
+
+  /// Material input decoration.
   final InputDecoration decoration;
+
+  /// Widget displayed when there is no selection.
   final Widget? hint;
+
+  /// Widget displayed when a disabled dropdown has no selection.
   final Widget? disabledHint;
+
+  /// Whether the dropdown fills its available horizontal space.
   final bool isExpanded;
+
+  /// Maximum height of the dropdown menu.
   final double? menuMaxHeight;
+
+  /// Called whenever the selected value changes.
   final ValueChanged<T?>? onChanged;
 
   @override

@@ -2,6 +2,7 @@ import 'dart:collection';
 
 /// An immutable snapshot produced by validating a smart form.
 final class SmartFormResult {
+  /// Creates an immutable validation result from the supplied snapshots.
   SmartFormResult({
     required this.isValid,
     required Map<String, Object?> values,

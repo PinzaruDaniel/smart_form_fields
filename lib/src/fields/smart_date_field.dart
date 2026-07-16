@@ -7,11 +7,13 @@ import '../validation/smart_validators.dart';
 import 'smart_field_controller.dart';
 import 'smart_form_field.dart';
 
+/// Formats a selected date for display inside [SmartDateField].
 typedef SmartDateFormatter =
     String Function(BuildContext context, DateTime value);
 
 /// A date field backed by Flutter's Material date picker.
 class SmartDateField extends StatefulWidget {
+  /// Creates a date-picker field registered as [name].
   const SmartDateField({
     required this.name,
     required this.firstDate,
@@ -39,28 +41,73 @@ class SmartDateField extends StatefulWidget {
     super.key,
   });
 
+  /// Unique form field name.
   final String name;
+
+  /// Initial selected date.
   final DateTime? initialValue;
+
+  /// Earliest selectable date.
   final DateTime firstDate;
+
+  /// Latest selectable date.
   final DateTime lastDate;
+
+  /// Date highlighted as today by the picker.
   final DateTime? currentDate;
+
+  /// Optional caller-owned focus node.
   final FocusNode? focusNode;
+
+  /// Whether a null date is invalid.
   final bool required;
+
+  /// Message returned when [required] validation fails.
   final String requiredMessage;
+
+  /// Additional synchronous validators run after required validation.
   final List<SmartValidator<DateTime>> validators;
+
+  /// Asynchronous validators run after synchronous validators pass.
   final List<SmartAsyncValidator<DateTime>> asyncValidators;
+
+  /// Field-level automatic validation override.
   final AutovalidateMode? autovalidateMode;
+
+  /// Field-level error animation override.
   final SmartErrorAnimation? errorAnimation;
+
+  /// Whether the field opens the picker and participates in validation.
   final bool enabled;
+
+  /// Material input decoration.
   final InputDecoration decoration;
+
+  /// Predicate that determines which dates can be selected.
   final SelectableDayPredicate? selectableDayPredicate;
+
+  /// Entry mode used when the date picker opens.
   final DatePickerEntryMode initialEntryMode;
+
+  /// Calendar mode used when the date picker opens.
   final DatePickerMode initialDatePickerMode;
+
+  /// Optional locale override for the date picker.
   final Locale? locale;
+
+  /// Optional picker help text.
   final String? helpText;
+
+  /// Optional picker cancel-button text.
   final String? cancelText;
+
+  /// Optional picker confirmation-button text.
   final String? confirmText;
+
+  /// Optional display formatter for the selected date.
   final SmartDateFormatter? dateFormatter;
+
+  /// Called after the user selects a date.
   final ValueChanged<DateTime?>? onChanged;
 
   @override

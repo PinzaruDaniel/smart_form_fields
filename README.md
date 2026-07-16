@@ -4,7 +4,8 @@ A behavior-first Flutter form package for field registration, synchronous and
 asynchronous validation, value collection, and navigation to the first invalid
 field.
 
-> This package is under active development and is not ready for production use.
+The 0.1 release provides a tested foundation for production Flutter forms. The
+public API remains pre-1.0 and may evolve through documented minor releases.
 
 ## Installation
 

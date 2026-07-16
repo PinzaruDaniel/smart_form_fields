@@ -12,6 +12,7 @@ import 'smart_form_scope.dart';
 
 /// Coordinates the smart fields below it.
 class SmartForm extends StatefulWidget {
+  /// Creates a form that coordinates the supplied [children].
   const SmartForm({
     required this.children,
     this.controller,
@@ -29,13 +30,28 @@ class SmartForm extends StatefulWidget {
     super.key,
   });
 
+  /// Fields and other widgets laid out vertically in registration order.
   final List<Widget> children;
+
+  /// Optional controller for imperative access to this form.
   final SmartFormController? controller;
+
+  /// Whether validation scrolls to the first invalid field.
   final bool? scrollToFirstError;
+
+  /// Whether validation focuses the first invalid field.
   final bool? focusFirstError;
+
+  /// Duration of first-error scrolling, or null to use the form theme.
   final Duration? scrollDuration;
+
+  /// Curve used for first-error scrolling, or null to use the form theme.
   final Curve? scrollCurve;
+
+  /// Alignment passed to `Scrollable.ensureVisible` during navigation.
   final double? scrollAlignment;
+
+  /// Error animation for descendant fields, or null to use the form theme.
   final SmartErrorAnimation? errorAnimation;
 
   /// Unfocuses this form's active field when a pointer taps outside it.
@@ -52,12 +68,14 @@ class SmartForm extends StatefulWidget {
   /// A field can override this value with its own `autovalidateMode`.
   final AutovalidateMode autovalidateMode;
 
+  /// Vertical sizing behavior of the form's internal column.
   final MainAxisSize mainAxisSize;
 
   @override
   SmartFormState createState() => SmartFormState();
 }
 
+/// Mutable state and imperative operations for a mounted [SmartForm].
 class SmartFormState extends State<SmartForm>
     with WidgetsBindingObserver
     implements SmartFormControllerDelegate, SmartFormRegistrar {

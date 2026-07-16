@@ -1,3 +1,13 @@
+## 0.1.0
+
+* Document the complete supported public API and enforce documentation in
+  analysis.
+* Add CI gates for formatting, analysis, package and example tests, coverage,
+  and publication validation.
+* Add Material 2, Material 3, accessibility, focus traversal, form lifecycle,
+  theme update, and long-form integration coverage.
+* Mark the package as ready for its first public minor release.
+
 ## 0.0.11
 
 * Start first-invalid-field error animation only after scrolling and focus

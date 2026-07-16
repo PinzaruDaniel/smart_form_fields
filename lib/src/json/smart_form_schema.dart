@@ -4,6 +4,7 @@ import '../animation/smart_error_animation.dart';
 
 /// A parsed, immutable form definition received from JSON.
 final class SmartFormSchema {
+  /// Creates an immutable schema from parsed field definitions and behavior.
   SmartFormSchema({
     required List<SmartJsonFieldDefinition> fields,
     this.scrollToFirstError,
@@ -11,6 +12,7 @@ final class SmartFormSchema {
     this.errorAnimation,
   }) : fields = List<SmartJsonFieldDefinition>.unmodifiable(fields);
 
+  /// Parses a snake_case JSON object into a validated schema.
   factory SmartFormSchema.fromJson(Map<String, Object?> json) {
     final rawFields = json['fields'];
     if (rawFields is! List<Object?>) {
@@ -39,14 +41,22 @@ final class SmartFormSchema {
     );
   }
 
+  /// Field definitions in display and validation order.
   final List<SmartJsonFieldDefinition> fields;
+
+  /// Optional schema-level first-error scrolling override.
   final bool? scrollToFirstError;
+
+  /// Optional schema-level first-error focus override.
   final bool? focusFirstError;
+
+  /// Optional schema-level error animation override.
   final SmartErrorAnimation? errorAnimation;
 }
 
 /// One field in a [SmartFormSchema].
 final class SmartJsonFieldDefinition {
+  /// Creates an immutable JSON field definition.
   SmartJsonFieldDefinition({
     required this.name,
     required this.type,
@@ -57,6 +67,7 @@ final class SmartJsonFieldDefinition {
        validators = List<SmartJsonValidatorDefinition>.unmodifiable(validators),
        asyncValidators = List<String>.unmodifiable(asyncValidators);
 
+  /// Parses one JSON field object.
   factory SmartJsonFieldDefinition.fromJson(
     Map<String, Object?> json, {
     String path = 'field',
@@ -93,22 +104,36 @@ final class SmartJsonFieldDefinition {
     );
   }
 
+  /// Unique field name.
   final String name;
+
+  /// Built-in or application-registered field type.
   final String type;
+
+  /// Immutable raw snake_case properties for this field.
   final Map<String, Object?> properties;
+
+  /// Parsed synchronous validator definitions.
   final List<SmartJsonValidatorDefinition> validators;
+
+  /// Names of application-registered asynchronous validators.
   final List<String> asyncValidators;
 
+  /// Reads an optional string property named [key].
   String? stringValue(String key) => _optionalString(properties[key], key);
 
+  /// Reads a boolean property or returns [fallback] when it is absent.
   bool boolValue(String key, {required bool fallback}) {
     return _optionalBool(properties[key], key) ?? fallback;
   }
 
+  /// Reads an optional integer property named [key].
   int? intValue(String key) => _optionalInt(properties[key], key);
 
+  /// Reads an optional numeric property named [key].
   num? numValue(String key) => _optionalNum(properties[key], key);
 
+  /// Reads an immutable list property, returning an empty list when absent.
   List<Object?> listValue(String key) {
     final value = properties[key];
     if (value == null) {
@@ -123,11 +148,13 @@ final class SmartJsonFieldDefinition {
 
 /// Configuration for one synchronous validator in JSON.
 final class SmartJsonValidatorDefinition {
+  /// Creates an immutable validator definition.
   SmartJsonValidatorDefinition({
     required this.type,
     required Map<String, Object?> properties,
   }) : properties = UnmodifiableMapView(Map<String, Object?>.of(properties));
 
+  /// Parses one JSON validator object.
   factory SmartJsonValidatorDefinition.fromJson(
     Map<String, Object?> json, {
     String path = 'validator',
@@ -138,20 +165,27 @@ final class SmartJsonValidatorDefinition {
     );
   }
 
+  /// Built-in or application-registered validator type.
   final String type;
+
+  /// Immutable raw properties for this validator.
   final Map<String, Object?> properties;
 
+  /// Optional error-message override.
   String? get message => _optionalString(properties['message'], 'message');
 
+  /// Reads a required string property named [key].
   String requireString(String key) {
     return _requiredString(properties[key], '$type.$key');
   }
 
+  /// Reads a required integer property named [key].
   int requireInt(String key) {
     return _optionalInt(properties[key], '$type.$key') ??
         (throw FormatException('$type.$key is required.'));
   }
 
+  /// Reads a required numeric property named [key].
   num requireNum(String key) {
     return _optionalNum(properties[key], '$type.$key') ??
         (throw FormatException('$type.$key is required.'));

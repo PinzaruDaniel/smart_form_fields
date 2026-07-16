@@ -8,6 +8,7 @@ import 'smart_text_field.dart';
 
 /// A text field configured for email input and validation.
 class SmartEmailField extends StatefulWidget {
+  /// Creates an email field registered as [name].
   const SmartEmailField({
     required this.name,
     this.initialValue,
@@ -29,22 +30,55 @@ class SmartEmailField extends StatefulWidget {
     super.key,
   });
 
+  /// Unique form field name.
   final String name;
+
+  /// Initial email used when no [controller] is supplied.
   final String? initialValue;
+
+  /// Optional caller-owned text controller.
   final TextEditingController? controller;
+
+  /// Optional caller-owned focus node.
   final FocusNode? focusNode;
+
+  /// Whether an empty value is invalid.
   final bool required;
+
+  /// Message returned when [required] validation fails.
   final String requiredMessage;
+
+  /// Message returned when email validation fails.
   final String invalidEmailMessage;
+
+  /// Additional synchronous validators run after built-in validators.
   final List<SmartValidator<String>> validators;
+
+  /// Asynchronous validators run after synchronous validators pass.
   final List<SmartAsyncValidator<String>> asyncValidators;
+
+  /// Debounce applied to automatic asynchronous validation.
   final Duration? asyncValidationDebounce;
+
+  /// Field-level automatic validation override.
   final AutovalidateMode? autovalidateMode;
+
+  /// Field-level error animation override.
   final SmartErrorAnimation? errorAnimation;
+
+  /// Whether the field accepts input and participates in validation.
   final bool enabled;
+
+  /// Material input decoration.
   final InputDecoration decoration;
+
+  /// Action button displayed by the keyboard.
   final TextInputAction? textInputAction;
+
+  /// Called whenever the email value changes.
   final ValueChanged<String>? onChanged;
+
+  /// Called when the platform submits the email field.
   final ValueChanged<String>? onSubmitted;
 
   @override

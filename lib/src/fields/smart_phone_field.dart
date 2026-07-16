@@ -9,6 +9,7 @@ import 'smart_text_field.dart';
 
 /// A phone input field without an opinionated international phone engine.
 class SmartPhoneField extends StatefulWidget {
+  /// Creates a phone field registered as [name].
   const SmartPhoneField({
     required this.name,
     this.initialValue,
@@ -31,23 +32,58 @@ class SmartPhoneField extends StatefulWidget {
     super.key,
   });
 
+  /// Unique form field name.
   final String name;
+
+  /// Initial phone text used when no [controller] is supplied.
   final String? initialValue;
+
+  /// Optional caller-owned text controller.
   final TextEditingController? controller;
+
+  /// Optional caller-owned focus node.
   final FocusNode? focusNode;
+
+  /// Optional visual prefix, such as `+373`.
   final String? countryCode;
+
+  /// Whether an empty value is invalid.
   final bool required;
+
+  /// Message returned when [required] validation fails.
   final String requiredMessage;
+
+  /// Additional synchronous validators for application-specific phone rules.
   final List<SmartValidator<String>> validators;
+
+  /// Asynchronous validators run after synchronous validators pass.
   final List<SmartAsyncValidator<String>> asyncValidators;
+
+  /// Debounce applied to automatic asynchronous validation.
   final Duration? asyncValidationDebounce;
+
+  /// Field-level automatic validation override.
   final AutovalidateMode? autovalidateMode;
+
+  /// Field-level error animation override.
   final SmartErrorAnimation? errorAnimation;
+
+  /// Whether the field accepts input and participates in validation.
   final bool enabled;
+
+  /// Material input decoration.
   final InputDecoration decoration;
+
+  /// Formatters applied to phone text edits.
   final List<TextInputFormatter>? inputFormatters;
+
+  /// Action button displayed by the keyboard.
   final TextInputAction? textInputAction;
+
+  /// Called whenever the phone value changes.
   final ValueChanged<String>? onChanged;
+
+  /// Called when the platform submits the phone field.
   final ValueChanged<String>? onSubmitted;
 
   @override

@@ -5,6 +5,7 @@ import '../animation/smart_error_animation.dart';
 /// Behavior defaults for descendant `SmartForm` widgets.
 @immutable
 class SmartFormThemeData {
+  /// Creates behavior defaults for descendant smart forms.
   const SmartFormThemeData({
     this.scrollToFirstError = true,
     this.focusFirstError = true,
@@ -14,13 +15,25 @@ class SmartFormThemeData {
     this.errorAnimation = SmartErrorAnimation.shake,
   });
 
+  /// Whether forms scroll to their first invalid field by default.
   final bool scrollToFirstError;
+
+  /// Whether forms focus their first invalid field by default.
   final bool focusFirstError;
+
+  /// Default duration for animated first-error scrolling.
   final Duration scrollDuration;
+
+  /// Default curve for animated first-error scrolling.
   final Curve scrollCurve;
+
+  /// Default alignment used when revealing an invalid field.
   final double scrollAlignment;
+
+  /// Default animation applied when a field receives an error.
   final SmartErrorAnimation errorAnimation;
 
+  /// Returns a copy with the supplied behavior defaults replaced.
   SmartFormThemeData copyWith({
     bool? scrollToFirstError,
     bool? focusFirstError,
@@ -66,15 +79,19 @@ class SmartFormThemeData {
 ///
 /// Values set directly on a form take precedence over this theme.
 class SmartFormTheme extends InheritedTheme {
+  /// Creates a theme that exposes [data] to [child].
   const SmartFormTheme({required this.data, required super.child, super.key});
 
+  /// Behavior defaults exposed to descendant forms.
   final SmartFormThemeData data;
 
+  /// Returns the closest theme data or package defaults when none exists.
   static SmartFormThemeData of(BuildContext context) {
     return context.dependOnInheritedWidgetOfExactType<SmartFormTheme>()?.data ??
         const SmartFormThemeData();
   }
 
+  /// Returns the closest theme data, or null when no theme is present.
   static SmartFormThemeData? maybeOf(BuildContext context) {
     return context.dependOnInheritedWidgetOfExactType<SmartFormTheme>()?.data;
   }
