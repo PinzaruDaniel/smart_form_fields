@@ -63,9 +63,14 @@ final class SmartJsonFieldDefinition {
     required Map<String, Object?> properties,
     required List<SmartJsonValidatorDefinition> validators,
     required List<String> asyncValidators,
+    Map<String, List<String>> asyncValidatorDependencies = const {},
   }) : properties = UnmodifiableMapView(Map<String, Object?>.of(properties)),
        validators = List<SmartJsonValidatorDefinition>.unmodifiable(validators),
-       asyncValidators = List<String>.unmodifiable(asyncValidators);
+       asyncValidators = List<String>.unmodifiable(asyncValidators),
+       asyncValidatorDependencies = UnmodifiableMapView(<String, List<String>>{
+         for (final entry in asyncValidatorDependencies.entries)
+           entry.key: List<String>.unmodifiable(entry.value),
+       });
 
   /// Parses one JSON field object.
   factory SmartJsonFieldDefinition.fromJson(
@@ -82,6 +87,34 @@ final class SmartJsonFieldDefinition {
     if (rawAsyncValidators is! List<Object?>) {
       throw FormatException('$path.async_validators must be a list.');
     }
+    final asyncValidatorNames = <String>[];
+    final asyncDependencies = <String, List<String>>{};
+    for (var index = 0; index < rawAsyncValidators.length; index++) {
+      final value = rawAsyncValidators[index];
+      final itemPath = '$path.async_validators[$index]';
+      if (value is String) {
+        asyncValidatorNames.add(_requiredString(value, itemPath));
+        continue;
+      }
+      final object = _objectMap(value, itemPath);
+      final name = _requiredString(object['name'], '$itemPath.name');
+      final rawDependsOn = object['depends_on'] ?? const <Object?>[];
+      if (rawDependsOn is! List<Object?>) {
+        throw FormatException('$itemPath.depends_on must be a list.');
+      }
+      asyncValidatorNames.add(name);
+      asyncDependencies[name] = <String>[
+        for (
+          var dependencyIndex = 0;
+          dependencyIndex < rawDependsOn.length;
+          dependencyIndex++
+        )
+          _requiredString(
+            rawDependsOn[dependencyIndex],
+            '$itemPath.depends_on[$dependencyIndex]',
+          ),
+      ];
+    }
 
     return SmartJsonFieldDefinition(
       name: name,
@@ -94,13 +127,8 @@ final class SmartJsonFieldDefinition {
             path: '$path.validators[$index]',
           ),
       ],
-      asyncValidators: <String>[
-        for (var index = 0; index < rawAsyncValidators.length; index++)
-          _requiredString(
-            rawAsyncValidators[index],
-            '$path.async_validators[$index]',
-          ),
-      ],
+      asyncValidators: asyncValidatorNames,
+      asyncValidatorDependencies: asyncDependencies,
     );
   }
 
@@ -118,6 +146,9 @@ final class SmartJsonFieldDefinition {
 
   /// Names of application-registered asynchronous validators.
   final List<String> asyncValidators;
+
+  /// Explicit dependency names for object-form asynchronous validators.
+  final Map<String, List<String>> asyncValidatorDependencies;
 
   /// Reads an optional string property named [key].
   String? stringValue(String key) => _optionalString(properties[key], key);

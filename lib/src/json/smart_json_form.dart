@@ -11,7 +11,9 @@ import '../form/smart_form.dart';
 import '../form/smart_form_controller.dart';
 import '../form/smart_form_key.dart';
 import '../validation/smart_async_validator.dart';
+import '../validation/smart_async_validators.dart';
 import '../validation/smart_validator.dart';
+import '../validation/smart_validator_metadata.dart';
 import '../validation/smart_validators.dart';
 import 'smart_form_schema.dart';
 
@@ -338,6 +340,20 @@ class SmartJsonForm extends StatelessWidget {
           definition.requireNum('value'),
           message: definition.message,
         );
+      case 'matches_field':
+        return SmartValidators.matchesField<Object?>(
+          definition.requireString('field'),
+          message: definition.message ?? 'Values do not match.',
+        );
+      case 'required_when':
+        if (!definition.properties.containsKey('equals')) {
+          throw const FormatException('required_when.equals is required.');
+        }
+        return SmartValidators.requiredWhen<Object?>(
+          field: definition.requireString('field'),
+          equals: definition.properties['equals'],
+          message: definition.message ?? 'This field is required.',
+        );
       default:
         final builder = customValidatorBuilders[definition.type];
         if (builder == null) {
@@ -354,12 +370,30 @@ class SmartJsonForm extends StatelessWidget {
     SmartJsonFieldDefinition field,
   ) {
     return <SmartAsyncValidator<Object?>>[
-      for (final name in field.asyncValidators)
-        asyncValidators[name] ??
-            (throw FlutterError(
-              'No async validator is registered for "$name".',
-            )),
+      for (final name in field.asyncValidators) _asyncValidator(field, name),
     ];
+  }
+
+  SmartAsyncValidator<Object?> _asyncValidator(
+    SmartJsonFieldDefinition field,
+    String name,
+  ) {
+    final validator =
+        asyncValidators[name] ??
+        (throw FlutterError('No async validator is registered for "$name".'));
+    final dependencies = <String>{
+      ...dependenciesOfAsyncValidator(validator),
+      ...?field.asyncValidatorDependencies[name],
+    };
+    if (dependencies.isEmpty) {
+      return validator;
+    }
+    return SmartAsyncValidators.dependent<Object?>(
+      dependsOn: dependencies,
+      validator: (value, context) {
+        return runSmartAsyncValidator(validator, value, context);
+      },
+    );
   }
 
   AutovalidateMode? _autovalidateMode(SmartJsonFieldDefinition field) {
@@ -399,7 +433,7 @@ List<SmartValidator<T>> _adaptValidators<T>(
   List<SmartValidator<Object?>> validators,
 ) {
   return <SmartValidator<T>>[
-    for (final validator in validators) (value) => validator(value),
+    for (final validator in validators) adaptSmartValidator<T>(validator),
   ];
 }
 
@@ -407,7 +441,7 @@ List<SmartAsyncValidator<T>> _adaptAsyncValidators<T>(
   List<SmartAsyncValidator<Object?>> validators,
 ) {
   return <SmartAsyncValidator<T>>[
-    for (final validator in validators) (value) => validator(value),
+    for (final validator in validators) adaptSmartAsyncValidator<T>(validator),
   ];
 }
 

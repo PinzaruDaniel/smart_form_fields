@@ -1,3 +1,18 @@
+## 0.2.0
+
+* Add read-only `SmartValidationContext` snapshots and explicit dependency
+  metadata for synchronous and asynchronous validators.
+* Add `SmartValidators.matchesField`, `SmartValidators.requiredWhen`, custom
+  dependent validators, and `SmartAsyncValidators.dependent`.
+* Automatically revalidate previously validated dependent fields when source
+  values change, while preserving async race protection and atomic patches.
+* Detect unknown dependency names and dependency cycles with descriptive
+  errors.
+* Add snake_case JSON support for `matches_field`, `required_when`, and async
+  validator `depends_on` metadata.
+* Update the registration example to use dependency-aware password
+  confirmation.
+
 ## 0.1.0
 
 * Document the complete supported public API and enforce documentation in

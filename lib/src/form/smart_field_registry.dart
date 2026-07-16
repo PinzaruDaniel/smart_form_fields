@@ -105,6 +105,85 @@ final class SmartFieldRegistry {
     }
   }
 
+  List<SmartFieldHandle<Object?>> dependentsOf(Iterable<String> sourceNames) {
+    final sources = sourceNames.toSet();
+    return List<SmartFieldHandle<Object?>>.unmodifiable(
+      <SmartFieldHandle<Object?>>[
+        for (final field in fields)
+          if (field.dependencies.any(sources.contains)) field,
+      ],
+    );
+  }
+
+  void validateDependencyGraph({required bool requireKnownFields}) {
+    final fieldsByName = <String, SmartFieldHandle<Object?>>{
+      for (final field in fields) field.name: field,
+    };
+
+    if (requireKnownFields) {
+      for (final field in fields) {
+        for (final dependency in field.dependencies) {
+          if (!fieldsByName.containsKey(dependency)) {
+            throw FlutterError.fromParts(<DiagnosticsNode>[
+              ErrorSummary(
+                'SmartForm field "${field.name}" has an unknown dependency.',
+              ),
+              ErrorDescription(
+                'No field named "$dependency" is registered with this form.',
+              ),
+            ]);
+          }
+        }
+      }
+    }
+
+    final visiting = <String>{};
+    final visited = <String>{};
+    final path = <String>[];
+
+    List<String>? visit(String name) {
+      if (visiting.contains(name)) {
+        final cycleStart = path.indexOf(name);
+        return <String>[...path.sublist(cycleStart), name];
+      }
+      if (visited.contains(name)) {
+        return null;
+      }
+
+      visiting.add(name);
+      path.add(name);
+      final field = fieldsByName[name];
+      if (field != null) {
+        for (final dependency in field.dependencies) {
+          if (!fieldsByName.containsKey(dependency)) {
+            continue;
+          }
+          final cycle = visit(dependency);
+          if (cycle != null) {
+            return cycle;
+          }
+        }
+      }
+      path.removeLast();
+      visiting.remove(name);
+      visited.add(name);
+      return null;
+    }
+
+    for (final field in fields) {
+      final cycle = visit(field.name);
+      if (cycle != null) {
+        throw FlutterError.fromParts(<DiagnosticsNode>[
+          ErrorSummary('SmartForm dependency cycle detected.'),
+          ErrorDescription(cycle.join(' -> ')),
+          ErrorHint(
+            'Remove one dependency edge so validation has an acyclic graph.',
+          ),
+        ]);
+      }
+    }
+  }
+
   _SmartFieldEntry? _entryForIdentity(SmartFieldHandle<Object?> field) {
     for (final entry in _entries) {
       if (identical(entry.field, field)) {

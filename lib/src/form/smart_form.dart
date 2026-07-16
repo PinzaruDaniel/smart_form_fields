@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 
 import '../animation/smart_error_animation.dart';
 import '../theme/smart_form_theme.dart';
+import '../validation/smart_validation_context.dart';
 import 'smart_field_handle.dart';
 import 'smart_field_registry.dart';
 import 'smart_form_controller.dart';
@@ -166,6 +167,11 @@ class SmartFormState extends State<SmartForm>
       Map<String, Object?>.unmodifiable(_registry.values);
 
   @override
+  SmartValidationContext get validationContext {
+    return SmartValidationContext(_registry.values);
+  }
+
+  @override
   T? valueOf<T>(String name) {
     final value = _fieldNamed(name).value;
     if (value == null) {
@@ -186,10 +192,12 @@ class SmartFormState extends State<SmartForm>
     bool? focusFirstError,
   }) async {
     final theme = SmartFormTheme.of(context);
+    _registry.validateDependencyGraph(requireKnownFields: true);
     final fields = _registry.fields;
+    final validationSnapshot = validationContext;
     for (final field in fields) {
       if (field.enabled) {
-        await field.validate(animateError: false);
+        await field.validate(animateError: false, context: validationSnapshot);
       }
     }
 
@@ -266,8 +274,12 @@ class SmartFormState extends State<SmartForm>
       fields.add(_fieldNamed(name));
     }
     for (var index = 0; index < fields.length; index++) {
-      fields[index].setValue(values.values.elementAt(index));
+      fields[index].setValue(
+        values.values.elementAt(index),
+        notifyDependents: false,
+      );
     }
+    _revalidateDependents(values.keys);
   }
 
   @override
@@ -332,6 +344,21 @@ class SmartFormState extends State<SmartForm>
   @override
   void unregisterField(SmartFieldHandle<Object?> field) {
     _registry.unregister(field);
+  }
+
+  @override
+  void fieldValueChanged(SmartFieldHandle<Object?> field) {
+    if (_registry.contains(field)) {
+      _revalidateDependents(<String>[field.name]);
+    }
+  }
+
+  void _revalidateDependents(Iterable<String> sourceNames) {
+    _registry.validateDependencyGraph(requireKnownFields: false);
+    final context = validationContext;
+    for (final dependent in _registry.dependentsOf(sourceNames)) {
+      dependent.dependencyDidChange(context);
+    }
   }
 
   SmartFieldHandle<Object?> _fieldNamed(String name) {

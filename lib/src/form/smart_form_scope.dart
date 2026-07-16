@@ -3,15 +3,20 @@
 import 'package:flutter/widgets.dart';
 
 import '../animation/smart_error_animation.dart';
+import '../validation/smart_validation_context.dart';
 import 'smart_field_handle.dart';
 
 abstract interface class SmartFormRegistrar {
+  SmartValidationContext get validationContext;
+
   void registerField(
     SmartFieldHandle<Object?> field, {
     required int sectionOrder,
   });
 
   void unregisterField(SmartFieldHandle<Object?> field);
+
+  void fieldValueChanged(SmartFieldHandle<Object?> field);
 }
 
 final class SmartFormScope extends InheritedWidget {

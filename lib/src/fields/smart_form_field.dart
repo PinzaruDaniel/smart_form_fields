@@ -8,7 +8,9 @@ import '../animation/smart_error_animation.dart';
 import '../form/smart_field_handle.dart';
 import '../form/smart_form_scope.dart';
 import '../validation/smart_async_validator.dart';
+import '../validation/smart_validation_context.dart';
 import '../validation/smart_validator.dart';
+import '../validation/smart_validator_metadata.dart';
 import 'smart_field_controller.dart';
 
 /// Builds a custom field from its public state controller.
@@ -84,6 +86,7 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
   bool _isValidating = false;
   bool _isDirty = false;
   bool _isTouched = false;
+  bool _hasValidated = false;
   bool _wasFocused = false;
   int _validationGeneration = 0;
   late final AnimationController _errorAnimationController;
@@ -97,6 +100,12 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
 
   @override
   String? get errorText => _errorText;
+
+  @override
+  Set<String> get dependencies => dependenciesOfValidators(<Object>[
+    ...widget.validators,
+    ...widget.asyncValidators,
+  ]);
 
   @override
   bool get enabled => widget.enabled;
@@ -193,6 +202,7 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
       _value = widget.initialValue;
       _errorText = null;
       _isValidating = false;
+      _hasValidated = false;
     }
     final validatorsChanged =
         !listEquals(oldWidget.validators, widget.validators) ||
@@ -238,7 +248,9 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
   }
 
   @override
-  void didChange(T? value) {
+  void didChange(T? value) => _changeValue(value, notifyDependents: true);
+
+  void _changeValue(T? value, {required bool notifyDependents}) {
     final shouldRevalidateExistingError =
         _effectiveAutovalidateMode ==
             AutovalidateMode.onUserInteractionIfError &&
@@ -251,6 +263,9 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
       _isDirty = true;
       _isTouched = true;
     });
+    if (notifyDependents) {
+      _formScope?.registrar.fieldValueChanged(this);
+    }
     if (widget.enabled &&
         (_effectiveAutovalidateMode == AutovalidateMode.always ||
             _effectiveAutovalidateMode == AutovalidateMode.onUserInteraction ||
@@ -265,15 +280,36 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
   }
 
   @override
-  void setValue(T? value) => didChange(value);
+  void setValue(T? value, {bool notifyDependents = true}) {
+    _changeValue(value, notifyDependents: notifyDependents);
+  }
 
   @override
-  Future<bool> validate({bool animateError = true}) async {
+  Future<bool> validate({
+    bool animateError = true,
+    SmartValidationContext? context,
+  }) async {
     final generation = ++_validationGeneration;
     return _validateGeneration(
       generation,
       debounceAsync: false,
       animateError: animateError,
+      context: context ?? _validationContext,
+    );
+  }
+
+  @override
+  void dependencyDidChange(SmartValidationContext context) {
+    if (!widget.enabled || !_hasValidated) {
+      return;
+    }
+    _validationGeneration++;
+    unawaited(
+      _validateAutomatically(
+        debounceAsync: true,
+        reason: 'after a dependency changed',
+        context: context,
+      ),
     );
   }
 
@@ -295,6 +331,7 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
   Future<void> _validateAutomatically({
     bool debounceAsync = false,
     required String reason,
+    SmartValidationContext? context,
   }) async {
     final generation = _validationGeneration;
     try {
@@ -302,6 +339,7 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
         generation,
         debounceAsync: debounceAsync,
         animateError: true,
+        context: context ?? _validationContext,
       );
     } catch (error, stackTrace) {
       if (_isCurrentGeneration(generation)) {
@@ -324,6 +362,7 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
     int generation, {
     required bool debounceAsync,
     required bool animateError,
+    required SmartValidationContext context,
   }) async {
     final value = _value;
 
@@ -331,12 +370,13 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
       setState(() {
         _isTouched = true;
         _isValidating = false;
+        _hasValidated = true;
       });
     }
 
     try {
       for (final validator in widget.validators) {
-        final error = validator(value);
+        final error = runSmartValidator(validator, value, context);
         if (error != null) {
           _applyValidationResult(generation, error, animateError: animateError);
           return false;
@@ -360,7 +400,7 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
       }
 
       for (final validator in widget.asyncValidators) {
-        final error = await validator(value);
+        final error = await runSmartAsyncValidator(validator, value, context);
         if (!_isCurrentGeneration(generation)) {
           return isValid;
         }
@@ -421,6 +461,11 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
         AutovalidateMode.onUnfocus;
   }
 
+  SmartValidationContext get _validationContext {
+    return _formScope?.registrar.validationContext ??
+        SmartValidationContext(<String, Object?>{name: _value});
+  }
+
   @override
   void reset() {
     _validationGeneration++;
@@ -430,6 +475,7 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
       _isValidating = false;
       _isDirty = false;
       _isTouched = false;
+      _hasValidated = false;
     });
   }
 
@@ -449,6 +495,7 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
       _errorText = error;
       _isValidating = false;
       _isTouched = true;
+      _hasValidated = true;
     });
     if (animateError) {
       _animateError();

@@ -14,14 +14,7 @@ class RegistrationExamplePage extends StatefulWidget {
 
 class _RegistrationExamplePageState extends State<RegistrationExamplePage> {
   final SmartFormController _formController = SmartFormController();
-  late final List<SmartValidator<String>> _confirmationValidators;
   bool _isSubmitting = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _confirmationValidators = <SmartValidator<String>>[_confirmPassword];
-  }
 
   static String? _phone(String? value) {
     if (value == null || value.isEmpty) {
@@ -40,15 +33,6 @@ class _RegistrationExamplePageState extends State<RegistrationExamplePage> {
       return 'This email is already registered';
     }
     return null;
-  }
-
-  String? _confirmPassword(String? value) {
-    if (value == null || value.isEmpty) {
-      return null;
-    }
-    return value == _formController.valueOf<String>('password')
-        ? null
-        : 'Passwords do not match';
   }
 
   Future<void> _submit() async {
@@ -219,7 +203,12 @@ class _RegistrationExamplePageState extends State<RegistrationExamplePage> {
                           prefixIcon: Icon(Icons.lock_reset_outlined),
                         ),
                         textInputAction: TextInputAction.done,
-                        validators: _confirmationValidators,
+                        validators: <SmartValidator<String>>[
+                          SmartValidators.matchesField<String>(
+                            'password',
+                            message: 'Passwords do not match',
+                          ),
+                        ],
                         onSubmitted: (_) => unawaited(_submit()),
                       ),
                       const SizedBox(height: 16),

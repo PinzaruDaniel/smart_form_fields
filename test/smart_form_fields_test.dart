@@ -353,6 +353,9 @@ class _TestFieldState extends State<_TestField>
   String? get errorText => _error;
 
   @override
+  Set<String> get dependencies => const <String>{};
+
+  @override
   void initState() {
     super.initState();
     _value = widget.value;
@@ -391,17 +394,23 @@ class _TestFieldState extends State<_TestField>
   }
 
   @override
-  Future<bool> validate({bool animateError = true}) async {
+  Future<bool> validate({
+    bool animateError = true,
+    SmartValidationContext? context,
+  }) async {
     widget.validationOrder?.add(name);
     _error = widget.validationError;
     return isValid;
   }
 
   @override
-  void setValue(Object? value) {
+  void setValue(Object? value, {bool notifyDependents = true}) {
     _value = value;
     _error = null;
   }
+
+  @override
+  void dependencyDidChange(SmartValidationContext context) {}
 
   @override
   void reset() {

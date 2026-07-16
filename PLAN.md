@@ -358,12 +358,13 @@ use the package without reading internals.
 
 ## 5. Post-0.1 milestones
 
-### Version 0.2 - dependencies
+### Version 0.2 - dependencies (implemented)
 
 - Add validator context with read-only access to form values.
 - Add `matchesField` and `requiredWhen`.
 - Revalidate dependents when source fields change, with cycle detection.
-- Explore `SmartConditionalField` only after dependency invalidation is stable.
+- Keep `SmartConditionalField` deferred until dependency invalidation has been
+  exercised in applications.
 
 Do not implement dependencies by capturing a controller inside built-in
 validators; dependency metadata must be explicit so changes can trigger the

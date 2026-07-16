@@ -174,6 +174,69 @@ SmartEmailField(
 The debounce applies to automatic validation only. A submit-triggered
 `validate()` call starts immediately.
 
+## Cross-field dependencies
+
+Built-in dependent validators declare the source field explicitly. After a
+dependent field has been validated once, changing its source automatically
+revalidates it. Before its first validation, dependency changes do not expose
+premature errors.
+
+```dart
+SmartPasswordField(
+  name: 'confirm_password',
+  validators: [
+    SmartValidators.matchesField<String>(
+      'password',
+      message: 'Passwords do not match',
+    ),
+  ],
+);
+
+SmartTextField(
+  name: 'company_name',
+  validators: [
+    SmartValidators.requiredWhen<String>(
+      field: 'account_type',
+      equals: AccountType.business,
+      message: 'Company name is required',
+    ),
+  ],
+);
+```
+
+Create application-specific rules with a read-only value snapshot. Every field
+read from the context should be listed in `dependsOn` so changes can trigger
+revalidation:
+
+```dart
+SmartValidators.dependent<String>(
+  dependsOn: const ['country'],
+  validator: (value, context) {
+    final country = context.valueOf<String>('country');
+    return isCityAllowed(country, value) ? null : 'Invalid city';
+  },
+);
+```
+
+Async dependent validation uses the same contract and retains stale-result
+protection:
+
+```dart
+SmartAsyncValidators.dependent<String>(
+  dependsOn: const ['country'],
+  validator: (value, context) async {
+    return repository.validateCity(
+      country: context.valueOf<String>('country'),
+      city: value,
+    );
+  },
+);
+```
+
+Unknown dependency names and dependency cycles fail with descriptive errors
+before explicit validation runs. `patchValue` applies all values before
+revalidating dependents, so validators see the final snapshot.
+
 ## Keyboard and focus behavior
 
 `SmartForm` observes keyboard visibility through Flutter view-inset changes.
@@ -291,6 +354,37 @@ Built-in field types are `text`, `email`, `phone`, `password`, `date`, and
 `min_length`, `max_length`, `pattern`, `number`, `min`, and `max`; numeric or
 length limits use a `value` property.
 
+Dependent validator objects use snake_case types and properties:
+
+```json
+{
+  "type": "matches_field",
+  "field": "password",
+  "message": "Passwords do not match"
+}
+```
+
+```json
+{
+  "type": "required_when",
+  "field": "account_type",
+  "equals": "business",
+  "message": "Company name is required"
+}
+```
+
+Named async validators can declare JSON-owned dependency metadata while the
+application still supplies the executable Dart callback:
+
+```json
+"async_validators": [
+  {
+    "name": "username_available",
+    "depends_on": ["account_type"]
+  }
+]
+```
+
 All JSON property names use snake_case, including `scroll_to_first_error`,
 `label_text`, `initial_value`, `required_message`, and `async_validators`.
 Autovalidation values also use names such as `on_unfocus` and
@@ -372,4 +466,6 @@ built-in validators, error animations, and first-error navigation are
 implemented. The initial reusable field set now includes text, email, password,
 phone, date, and generic dropdown fields. Shared form behavior can be configured
 with `SmartFormTheme`, and `SmartJsonForm` can build the same fields from API
-schemas. Bundled validation-message localization is intentionally out of scope.
+schemas. Cross-field sync and async validators use explicit dependency metadata
+and read-only form snapshots. Bundled validation-message localization is
+intentionally out of scope.

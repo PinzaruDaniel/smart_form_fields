@@ -27,5 +27,11 @@ export 'src/fields/smart_password_field.dart' show SmartPasswordField;
 export 'src/fields/smart_phone_field.dart' show SmartPhoneField;
 export 'src/fields/smart_text_field.dart' show SmartTextField;
 export 'src/validation/smart_async_validator.dart' show SmartAsyncValidator;
+export 'src/validation/smart_async_validators.dart' show SmartAsyncValidators;
+export 'src/validation/smart_validation_context.dart'
+    show
+        SmartContextAsyncValidator,
+        SmartContextValidator,
+        SmartValidationContext;
 export 'src/validation/smart_validator.dart' show SmartValidator;
 export 'src/validation/smart_validators.dart' show SmartValidators;

@@ -1,10 +1,61 @@
 import 'smart_validator.dart';
+import 'smart_validation_context.dart';
+import 'smart_validator_metadata.dart';
 
 /// Factories for commonly used synchronous validators.
 ///
 /// Validators other than [required] allow `null` and blank strings. Add a
 /// [required] validator first when a field must contain a value.
 abstract final class SmartValidators {
+  /// Creates a validator with explicit [dependsOn] metadata.
+  ///
+  /// Every field read from [SmartValidationContext] should appear in
+  /// [dependsOn] so source changes can automatically revalidate this field.
+  static SmartValidator<T> dependent<T>({
+    required Iterable<String> dependsOn,
+    required SmartContextValidator<T> validator,
+  }) {
+    return createDependentValidator<T>(
+      dependsOn: dependsOn,
+      validator: validator,
+    );
+  }
+
+  /// Requires a non-empty value to equal another form [field].
+  ///
+  /// Empty values are allowed; add [required] when confirmation is mandatory.
+  static SmartValidator<T> matchesField<T>(
+    String field, {
+    String message = 'Values do not match.',
+  }) {
+    return dependent<T>(
+      dependsOn: <String>[field],
+      validator: (value, context) {
+        if (_isEmpty(value)) {
+          return null;
+        }
+        return value == context.values[field] ? null : message;
+      },
+    );
+  }
+
+  /// Requires this value when another [field] equals [equals].
+  static SmartValidator<T> requiredWhen<T>({
+    required String field,
+    required Object? equals,
+    String message = 'This field is required.',
+  }) {
+    return dependent<T>(
+      dependsOn: <String>[field],
+      validator: (value, context) {
+        if (context.values[field] != equals) {
+          return null;
+        }
+        return _isEmpty(value) ? message : null;
+      },
+    );
+  }
+
   /// Requires a non-null, non-empty value.
   ///
   /// Strings containing only whitespace and empty iterables or maps are

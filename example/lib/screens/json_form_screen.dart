@@ -55,6 +55,39 @@ class _JsonFormExamplePageState extends State<JsonFormExamplePage> {
         ],
       },
       <String, Object?>{
+        'type': 'text',
+        'name': 'company_name',
+        'label_text': 'Company name (required for managers)',
+        'validators': <Object?>[
+          <String, Object?>{
+            'type': 'required_when',
+            'field': 'role',
+            'equals': 'manager',
+            'message': 'Company name is required for managers',
+          },
+        ],
+      },
+      <String, Object?>{
+        'type': 'password',
+        'name': 'password',
+        'label_text': 'Password',
+        'required': true,
+        'min_length': 8,
+      },
+      <String, Object?>{
+        'type': 'password',
+        'name': 'confirm_password',
+        'label_text': 'Confirm password',
+        'required': true,
+        'validators': <Object?>[
+          <String, Object?>{
+            'type': 'matches_field',
+            'field': 'password',
+            'message': 'Passwords do not match',
+          },
+        ],
+      },
+      <String, Object?>{
         'type': 'agreement',
         'name': 'terms',
         'initial_value': false,
@@ -126,6 +159,9 @@ class _JsonFormExamplePageState extends State<JsonFormExamplePage> {
       'email': 'api@example.com',
       'display_name': 'API user',
       'role': 'developer',
+      'company_name': '',
+      'password': 'flutter123',
+      'confirm_password': 'flutter123',
       'terms': true,
     });
   }

@@ -2,6 +2,8 @@
 
 import 'dart:ui' show Offset;
 
+import '../validation/smart_validation_context.dart';
+
 /// Internal contract between a smart field and its containing form.
 abstract interface class SmartFieldHandle<T> {
   String get name;
@@ -14,9 +16,16 @@ abstract interface class SmartFieldHandle<T> {
 
   String? get errorText;
 
-  Future<bool> validate({bool animateError = true});
+  Set<String> get dependencies;
 
-  void setValue(T? value);
+  Future<bool> validate({
+    bool animateError = true,
+    SmartValidationContext? context,
+  });
+
+  void setValue(T? value, {bool notifyDependents = true});
+
+  void dependencyDidChange(SmartValidationContext context);
 
   void reset();
 
