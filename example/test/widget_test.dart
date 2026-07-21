@@ -84,6 +84,37 @@ void main() {
     );
   });
 
+  testWidgets('keeps both password errors visible after submission', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const SmartFormFieldsExampleApp());
+    await _openExample(tester, 'Registration form');
+
+    final fillButton = find.widgetWithText(TextButton, 'Fill sample');
+    await tester.ensureVisible(fillButton);
+    await tester.tap(fillButton);
+    await tester.pump();
+
+    final passwordField = find.widgetWithText(TextField, 'Password');
+    await tester.ensureVisible(passwordField);
+    await tester.enterText(passwordField, 'admin');
+
+    final confirmationField = find.widgetWithText(
+      TextField,
+      'Confirm password',
+    );
+    await tester.ensureVisible(confirmationField);
+    await tester.enterText(confirmationField, 'different');
+
+    final submitButton = find.widgetWithText(FilledButton, 'Create account');
+    await tester.ensureVisible(submitButton);
+    await tester.tap(submitButton);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Use at least 8 characters'), findsOneWidget);
+    expect(find.text('Passwords do not match'), findsOneWidget);
+  });
+
   testWidgets('builds and validates the JSON API example', (tester) async {
     await tester.pumpWidget(const SmartFormFieldsExampleApp());
     await _openExample(tester, 'JSON API form');

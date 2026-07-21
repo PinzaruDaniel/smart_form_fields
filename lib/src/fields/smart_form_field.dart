@@ -208,19 +208,18 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
         !listEquals(oldWidget.validators, widget.validators) ||
         !listEquals(oldWidget.asyncValidators, widget.asyncValidators) ||
         oldWidget.asyncValidationDebounce != widget.asyncValidationDebounce;
-    if (validatorsChanged) {
-      _validationGeneration++;
-      _errorText = null;
-      _isValidating = false;
-      if (_shouldAutovalidateNow) {
-        unawaited(_validateAutomatically(reason: 'after validators changed'));
-      }
-    } else if (oldWidget.enabled != widget.enabled) {
+    if (oldWidget.enabled != widget.enabled) {
       _validationGeneration++;
       _errorText = null;
       _isValidating = false;
       if (_shouldAutovalidateNow) {
         unawaited(_validateAutomatically(reason: 'after being enabled'));
+      }
+    } else if (validatorsChanged) {
+      _validationGeneration++;
+      _isValidating = false;
+      if (_shouldAutovalidateNow) {
+        unawaited(_validateAutomatically(reason: 'after validators changed'));
       }
     }
     final oldAutovalidateMode =

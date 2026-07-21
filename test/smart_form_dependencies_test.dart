@@ -51,6 +51,64 @@ void main() {
     expect(find.text('Passwords do not match'), findsNothing);
   });
 
+  testWidgets('parent rebuild preserves disabled dependent field errors', (
+    tester,
+  ) async {
+    final controller = SmartFormController();
+    late StateSetter rebuild;
+
+    await tester.pumpWidget(
+      _app(
+        StatefulBuilder(
+          builder: (context, setState) {
+            rebuild = setState;
+            return SmartForm(
+              controller: controller,
+              scrollToFirstError: false,
+              errorAnimation: SmartErrorAnimation.none,
+              children: <Widget>[
+                const SmartPasswordField(
+                  name: 'password',
+                  initialValue: 'admin',
+                  minLength: 8,
+                  minLengthMessage: 'Use at least 8 characters',
+                  autovalidateMode: AutovalidateMode.onUserInteractionIfError,
+                ),
+                SmartPasswordField(
+                  name: 'confirm_password',
+                  initialValue: 'different',
+                  minLength: null,
+                  autovalidateMode: AutovalidateMode.disabled,
+                  validators: <SmartValidator<String>>[
+                    SmartValidators.matchesField<String>(
+                      'password',
+                      message: 'Passwords do not match',
+                    ),
+                  ],
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+
+    final validation = controller.validate();
+    await tester.pumpAndSettle();
+    final result = await validation;
+
+    expect(result.errors['password'], 'Use at least 8 characters');
+    expect(result.errors['confirm_password'], 'Passwords do not match');
+    expect(find.text('Use at least 8 characters'), findsOneWidget);
+    expect(find.text('Passwords do not match'), findsOneWidget);
+
+    rebuild(() {});
+    await tester.pump();
+
+    expect(find.text('Use at least 8 characters'), findsOneWidget);
+    expect(find.text('Passwords do not match'), findsOneWidget);
+  });
+
   testWidgets('dependency changes do not show errors before first validation', (
     tester,
   ) async {

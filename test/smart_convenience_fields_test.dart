@@ -234,6 +234,94 @@ void main() {
     await tester.pump();
     expect(controller.valueOf<String>('country'), isNull);
   });
+
+  testWidgets('SmartDropdownField does not validate when its menu opens', (
+    tester,
+  ) async {
+    final controller = SmartFormController();
+    var validationCalls = 0;
+
+    await tester.pumpWidget(
+      _app(
+        SmartForm(
+          controller: controller,
+          errorAnimation: SmartErrorAnimation.none,
+          children: <Widget>[
+            SmartDropdownField<String>(
+              name: 'country',
+              items: const <String>['Blocked', 'Moldova'],
+              itemLabelBuilder: (country) => country,
+              required: true,
+              requiredMessage: 'Country is required',
+              decoration: const InputDecoration(labelText: 'Country'),
+              validators: <SmartValidator<String>>[
+                (value) {
+                  validationCalls++;
+                  return value == 'Blocked' ? 'Country is unavailable' : null;
+                },
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+
+    await tester.tap(find.byType(DropdownButton<String>));
+    await tester.pumpAndSettle();
+
+    expect(validationCalls, 0);
+    expect(find.text('Country is required'), findsNothing);
+    expect(find.text('Blocked'), findsOneWidget);
+
+    await tester.tap(find.text('Blocked'));
+    await tester.pumpAndSettle();
+
+    expect(validationCalls, 1);
+    expect(find.text('Country is unavailable'), findsOneWidget);
+  });
+
+  testWidgets(
+    'SmartDropdownField validates and unfocuses when its menu is dismissed',
+    (tester) async {
+      final focusNode = FocusNode();
+      addTearDown(focusNode.dispose);
+
+      await tester.pumpWidget(
+        _app(
+          SmartForm(
+            errorAnimation: SmartErrorAnimation.none,
+            children: <Widget>[
+              SmartDropdownField<String>(
+                name: 'country',
+                items: const <String>['Moldova', 'Romania'],
+                itemLabelBuilder: (country) => country,
+                focusNode: focusNode,
+                required: true,
+                requiredMessage: 'Country is required',
+              ),
+            ],
+          ),
+        ),
+      );
+
+      await tester.tap(find.byType(DropdownButton<String>));
+      await tester.pumpAndSettle();
+
+      expect(focusNode.hasFocus, isFalse);
+      expect(find.text('Country is required'), findsNothing);
+
+      await tester.tapAt(const Offset(790, 590));
+      await tester.pumpAndSettle();
+
+      expect(focusNode.hasFocus, isFalse);
+      expect(find.text('Country is required'), findsOneWidget);
+
+      await tester.tap(find.byType(DropdownButton<String>));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Moldova'), findsOneWidget);
+    },
+  );
 }
 
 Widget _app(Widget child) {

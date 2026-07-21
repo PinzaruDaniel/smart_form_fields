@@ -1,3 +1,24 @@
+## 0.2.3
+
+* Preserve existing validation errors when a parent rebuild supplies new
+  validator function instances, including disabled dependent fields.
+* Keep password and confirmation errors visible while first-error navigation
+  focuses the password field after submission.
+
+## 0.2.2
+
+* Validate an `onUnfocus` `SmartDropdownField` when its menu is dismissed
+  without a selection.
+* Release dropdown focus after dismissal so the next field responds to its
+  first tap.
+
+## 0.2.1
+
+* Prevent opening a `SmartDropdownField` menu from being treated as a real
+  focus-loss validation event.
+* In the default `onUnfocus` mode, validate dropdowns after the user selects an
+  item so the menu opens and responds on the first tap.
+
 ## 0.2.0
 
 * Add read-only `SmartValidationContext` snapshots and explicit dependency

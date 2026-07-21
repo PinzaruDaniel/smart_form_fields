@@ -72,6 +72,12 @@ An individual field can still override the form default with its own
 the snake_case field property `autovalidate_mode` remains available for a JSON
 field override.
 
+Dropdown menus temporarily move focus while opening. To avoid showing a
+required error or interrupting the first tap, dropdowns interpret the default
+`onUnfocus` mode as validation after selection or after dismissing the menu.
+Dismissal also releases the dropdown's restored focus, so the next control
+responds to its first tap.
+
 Change-time validation remains available per field:
 
 ```dart

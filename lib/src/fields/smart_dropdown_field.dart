@@ -1,9 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../animation/smart_error_animation.dart';
+import '../form/smart_form_scope.dart';
 import '../validation/smart_async_validator.dart';
 import '../validation/smart_validator.dart';
 import '../validation/smart_validators.dart';
+import 'smart_field_controller.dart';
 import 'smart_form_field.dart';
 
 /// Produces the fallback text label for a dropdown item.
@@ -102,6 +106,12 @@ class SmartDropdownField<T> extends StatefulWidget {
 
 class _SmartDropdownFieldState<T> extends State<SmartDropdownField<T>> {
   late List<SmartValidator<T>> _validators;
+  FocusNode? _observedFocusNode;
+  SmartFieldController<T>? _fieldController;
+  bool _menuIsOpen = false;
+  bool _menuMovedFocusToRoute = false;
+  bool _validateWhenMenuCloses = false;
+  int _menuSession = 0;
 
   @override
   void initState() {
@@ -119,6 +129,12 @@ class _SmartDropdownFieldState<T> extends State<SmartDropdownField<T>> {
     }
   }
 
+  @override
+  void dispose() {
+    _observedFocusNode?.removeListener(_handleFocusChanged);
+    super.dispose();
+  }
+
   void _rebuildValidators() {
     _validators = <SmartValidator<T>>[
       if (widget.required)
@@ -127,18 +143,77 @@ class _SmartDropdownFieldState<T> extends State<SmartDropdownField<T>> {
     ];
   }
 
+  void _observeField(SmartFieldController<T> field) {
+    _fieldController = field;
+    if (identical(_observedFocusNode, field.focusNode)) {
+      return;
+    }
+    _observedFocusNode?.removeListener(_handleFocusChanged);
+    _observedFocusNode = field.focusNode..addListener(_handleFocusChanged);
+  }
+
+  void _handleMenuOpened({required bool validateWhenMenuCloses}) {
+    _menuSession++;
+    _menuIsOpen = true;
+    _menuMovedFocusToRoute = false;
+    _validateWhenMenuCloses = validateWhenMenuCloses;
+  }
+
+  void _handleSelection(SmartFieldController<T> field, T? value) {
+    _menuSession++;
+    _menuIsOpen = false;
+    field.didChange(value);
+    widget.onChanged?.call(value);
+  }
+
+  void _handleFocusChanged() {
+    final focusNode = _observedFocusNode;
+    if (!_menuIsOpen || focusNode == null) {
+      return;
+    }
+    if (!focusNode.hasFocus) {
+      _menuMovedFocusToRoute = true;
+      return;
+    }
+    if (!_menuMovedFocusToRoute) {
+      return;
+    }
+
+    final session = _menuSession;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_menuIsOpen || session != _menuSession) {
+        return;
+      }
+
+      _menuIsOpen = false;
+      focusNode.unfocus();
+      final field = _fieldController;
+      if (_validateWhenMenuCloses && field != null && field.enabled) {
+        unawaited(field.validate());
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final configuredMode =
+        widget.autovalidateMode ?? SmartFormScope.of(context).autovalidateMode;
+    final dropdownAutovalidateMode =
+        configuredMode == AutovalidateMode.onUnfocus
+        ? AutovalidateMode.onUserInteraction
+        : widget.autovalidateMode;
+
     return SmartFormField<T>(
       name: widget.name,
       initialValue: widget.initialValue,
       validators: _validators,
       asyncValidators: widget.asyncValidators,
-      autovalidateMode: widget.autovalidateMode,
+      autovalidateMode: dropdownAutovalidateMode,
       errorAnimation: widget.errorAnimation,
       enabled: widget.enabled,
       focusNode: widget.focusNode,
       builder: (context, field) {
+        _observeField(field);
         return DropdownButtonFormField<T>(
           key: ValueKey<Object?>(field.value),
           initialValue: field.value,
@@ -157,11 +232,12 @@ class _SmartDropdownFieldState<T> extends State<SmartDropdownField<T>> {
           disabledHint: widget.disabledHint,
           isExpanded: widget.isExpanded,
           menuMaxHeight: widget.menuMaxHeight,
+          onTap: () => _handleMenuOpened(
+            validateWhenMenuCloses:
+                configuredMode == AutovalidateMode.onUnfocus,
+          ),
           onChanged: field.enabled
-              ? (value) {
-                  field.didChange(value);
-                  widget.onChanged?.call(value);
-                }
+              ? (value) => _handleSelection(field, value)
               : null,
         );
       },
