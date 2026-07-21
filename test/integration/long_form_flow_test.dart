@@ -27,8 +27,8 @@ void main() {
                         name: 'field_$index',
                         initialValue: index < 9 ? 'Value $index' : null,
                         decoration: InputDecoration(labelText: 'Field $index'),
-                        validators: <SmartValidator<String>>[
-                          SmartValidators.required<String>(
+                        validators: <SmartValidator>[
+                          SmartValidators.required(
                             message: 'Field $index is required',
                           ),
                         ],

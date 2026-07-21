@@ -25,9 +25,7 @@ void main() {
                     const SizedBox(height: 500),
                     SmartTextField(
                       name: 'email',
-                      validators: <SmartValidator<String>>[
-                        SmartValidators.required<String>(),
-                      ],
+                      validators: <SmartValidator>[SmartValidators.required()],
                     ),
                   ],
                 ),
@@ -65,9 +63,7 @@ void main() {
               children: <Widget>[
                 SmartTextField(
                   name: 'email',
-                  validators: <SmartValidator<String>>[
-                    SmartValidators.required<String>(),
-                  ],
+                  validators: <SmartValidator>[SmartValidators.required()],
                 ),
               ],
             ),

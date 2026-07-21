@@ -18,22 +18,25 @@ import '../validation/smart_validators.dart';
 import 'smart_form_schema.dart';
 
 /// Builds an application-specific JSON field type.
-typedef SmartJsonFieldBuilder =
+typedef SmartFieldDefinitionBuilder =
     Widget Function(
       BuildContext context,
-      SmartJsonFieldDefinition definition,
-      List<SmartValidator<Object?>> validators,
+      SmartFieldDefinition definition,
+      List<SmartValueValidator<Object?>> validators,
       List<SmartAsyncValidator<Object?>> asyncValidators,
     );
 
 /// Converts application-specific JSON validator configuration into code.
-typedef SmartJsonValidatorBuilder =
-    SmartValidator<Object?> Function(SmartJsonValidatorDefinition definition);
+typedef SmartValidatorDefinitionBuilder =
+    SmartValueValidator<Object?> Function(SmartValidatorDefinition definition);
+
+/// Converts an application or API model into a package field definition.
+typedef SmartClassFieldMapper<T> = SmartFieldDefinition Function(T model);
 
 /// Builds a [SmartForm] from an API-provided JSON schema.
-class SmartJsonForm extends StatelessWidget {
+class SmartSchemaForm extends StatelessWidget {
   /// Creates a form from an already parsed [schema].
-  const SmartJsonForm({
+  const SmartSchemaForm({
     required this.schema,
     this.controller,
     this.formKey,
@@ -52,12 +55,13 @@ class SmartJsonForm extends StatelessWidget {
   });
 
   /// Parses [json] and creates a form from the resulting schema.
-  factory SmartJsonForm.fromJson({
+  factory SmartSchemaForm.fromJson({
     required Map<String, Object?> json,
     SmartFormController? controller,
     SmartFormKey? formKey,
-    Map<String, SmartJsonFieldBuilder> customFieldBuilders = const {},
-    Map<String, SmartJsonValidatorBuilder> customValidatorBuilders = const {},
+    Map<String, SmartFieldDefinitionBuilder> customFieldBuilders = const {},
+    Map<String, SmartValidatorDefinitionBuilder> customValidatorBuilders =
+        const {},
     Map<String, SmartAsyncValidator<Object?>> asyncValidators = const {},
     double spacing = 16,
     bool? scrollToFirstError,
@@ -69,7 +73,7 @@ class SmartJsonForm extends StatelessWidget {
     AutovalidateMode autovalidateMode = AutovalidateMode.onUnfocus,
     Key? key,
   }) {
-    return SmartJsonForm(
+    return SmartSchemaForm(
       key: key,
       schema: SmartFormSchema.fromJson(json),
       controller: controller,
@@ -88,6 +92,54 @@ class SmartJsonForm extends StatelessWidget {
     );
   }
 
+  /// Creates a generated form from application or API model [fields].
+  ///
+  /// Flutter does not support runtime reflection over arbitrary model classes,
+  /// so [fieldMapper] explicitly describes how one model becomes a package
+  /// field definition. Heterogeneous lists can use a sealed base type and a
+  /// switch expression in the mapper.
+  factory SmartSchemaForm.fromClasses<T>({
+    required Iterable<T> fields,
+    required SmartClassFieldMapper<T> fieldMapper,
+    SmartFormController? controller,
+    SmartFormKey? formKey,
+    Map<String, SmartFieldDefinitionBuilder> customFieldBuilders = const {},
+    Map<String, SmartValidatorDefinitionBuilder> customValidatorBuilders =
+        const {},
+    Map<String, SmartAsyncValidator<Object?>> asyncValidators = const {},
+    double spacing = 16,
+    bool? scrollToFirstError,
+    bool? focusFirstError,
+    SmartErrorAnimation? errorAnimation,
+    bool dismissKeyboardOnTapOutside = true,
+    bool unfocusOnKeyboardDismiss = true,
+    ValueChanged<bool>? onKeyboardVisibilityChanged,
+    AutovalidateMode autovalidateMode = AutovalidateMode.onUnfocus,
+    Key? key,
+  }) {
+    return SmartSchemaForm(
+      key: key,
+      schema: SmartFormSchema(
+        fields: <SmartFieldDefinition>[
+          for (final field in fields) fieldMapper(field),
+        ],
+        scrollToFirstError: scrollToFirstError,
+        focusFirstError: focusFirstError,
+        errorAnimation: errorAnimation,
+      ),
+      controller: controller,
+      formKey: formKey,
+      customFieldBuilders: customFieldBuilders,
+      customValidatorBuilders: customValidatorBuilders,
+      asyncValidators: asyncValidators,
+      spacing: spacing,
+      dismissKeyboardOnTapOutside: dismissKeyboardOnTapOutside,
+      unfocusOnKeyboardDismiss: unfocusOnKeyboardDismiss,
+      onKeyboardVisibilityChanged: onKeyboardVisibilityChanged,
+      autovalidateMode: autovalidateMode,
+    );
+  }
+
   /// Parsed schema that defines the form.
   final SmartFormSchema schema;
 
@@ -98,10 +150,10 @@ class SmartJsonForm extends StatelessWidget {
   final SmartFormKey? formKey;
 
   /// Builders keyed by application-specific JSON field type.
-  final Map<String, SmartJsonFieldBuilder> customFieldBuilders;
+  final Map<String, SmartFieldDefinitionBuilder> customFieldBuilders;
 
   /// Builders keyed by application-specific validator type.
-  final Map<String, SmartJsonValidatorBuilder> customValidatorBuilders;
+  final Map<String, SmartValidatorDefinitionBuilder> customValidatorBuilders;
 
   /// Executable asynchronous validators keyed by schema name.
   final Map<String, SmartAsyncValidator<Object?>> asyncValidators;
@@ -154,10 +206,7 @@ class SmartJsonForm extends StatelessWidget {
     );
   }
 
-  Widget _buildField(
-    BuildContext context,
-    SmartJsonFieldDefinition definition,
-  ) {
+  Widget _buildField(BuildContext context, SmartFieldDefinition definition) {
     final validators = _validatorsFor(definition);
     final asyncValidators = _asyncValidatorsFor(definition);
     final decoration = InputDecoration(
@@ -180,9 +229,8 @@ class SmartJsonForm extends StatelessWidget {
           decoration: decoration,
           maxLines: definition.intValue('max_lines') ?? 1,
           autovalidateMode: autovalidateMode,
-          validators: <SmartValidator<String>>[
-            if (required)
-              SmartValidators.required<String>(message: requiredMessage),
+          validators: <SmartValidator>[
+            if (required) SmartValidators.required(message: requiredMessage),
             ..._adaptValidators<String>(validators),
           ],
           asyncValidators: _adaptAsyncValidators<String>(asyncValidators),
@@ -274,27 +322,29 @@ class SmartJsonForm extends StatelessWidget {
             '"${definition.type}".',
           );
         }
-        return builder(context, definition, <SmartValidator<Object?>>[
+        return builder(context, definition, <SmartValueValidator<Object?>>[
           if (required)
-            SmartValidators.required<Object?>(message: requiredMessage),
+            SmartValueValidators.required<Object?>(message: requiredMessage),
           ...validators,
         ], asyncValidators);
     }
   }
 
-  List<SmartValidator<Object?>> _validatorsFor(SmartJsonFieldDefinition field) {
-    return <SmartValidator<Object?>>[
+  List<SmartValueValidator<Object?>> _validatorsFor(
+    SmartFieldDefinition field,
+  ) {
+    return <SmartValueValidator<Object?>>[
       for (final definition in field.validators)
         _validatorFromDefinition(definition),
     ];
   }
 
-  SmartValidator<Object?> _validatorFromDefinition(
-    SmartJsonValidatorDefinition definition,
+  SmartValueValidator<Object?> _validatorFromDefinition(
+    SmartValidatorDefinition definition,
   ) {
     switch (definition.type) {
       case 'required':
-        return SmartValidators.required<Object?>(
+        return SmartValueValidators.required<Object?>(
           message: definition.message ?? 'This field is required.',
         );
       case 'email':
@@ -303,19 +353,19 @@ class SmartJsonForm extends StatelessWidget {
         );
         return (value) => validator(value as String?);
       case 'length':
-        return SmartValidators.length<Object?>(
+        return SmartValueValidators.length<Object?>(
           definition.requireInt('value'),
           message: definition.message,
         );
       case 'min_length':
       case 'minLength':
-        return SmartValidators.minLength<Object?>(
+        return SmartValueValidators.minLength<Object?>(
           definition.requireInt('value'),
           message: definition.message,
         );
       case 'max_length':
       case 'maxLength':
-        return SmartValidators.maxLength<Object?>(
+        return SmartValueValidators.maxLength<Object?>(
           definition.requireInt('value'),
           message: definition.message,
         );
@@ -327,21 +377,21 @@ class SmartJsonForm extends StatelessWidget {
         );
         return (value) => validator(value as String?);
       case 'number':
-        return SmartValidators.number<Object?>(
+        return SmartValueValidators.number<Object?>(
           message: definition.message ?? 'Enter a valid number.',
         );
       case 'min':
-        return SmartValidators.min<Object?>(
+        return SmartValueValidators.min<Object?>(
           definition.requireNum('value'),
           message: definition.message,
         );
       case 'max':
-        return SmartValidators.max<Object?>(
+        return SmartValueValidators.max<Object?>(
           definition.requireNum('value'),
           message: definition.message,
         );
       case 'matches_field':
-        return SmartValidators.matchesField<Object?>(
+        return SmartValueValidators.matchesField<Object?>(
           definition.requireString('field'),
           message: definition.message ?? 'Values do not match.',
         );
@@ -349,7 +399,7 @@ class SmartJsonForm extends StatelessWidget {
         if (!definition.properties.containsKey('equals')) {
           throw const FormatException('required_when.equals is required.');
         }
-        return SmartValidators.requiredWhen<Object?>(
+        return SmartValueValidators.requiredWhen<Object?>(
           field: definition.requireString('field'),
           equals: definition.properties['equals'],
           message: definition.message ?? 'This field is required.',
@@ -367,7 +417,7 @@ class SmartJsonForm extends StatelessWidget {
   }
 
   List<SmartAsyncValidator<Object?>> _asyncValidatorsFor(
-    SmartJsonFieldDefinition field,
+    SmartFieldDefinition field,
   ) {
     return <SmartAsyncValidator<Object?>>[
       for (final name in field.asyncValidators) _asyncValidator(field, name),
@@ -375,7 +425,7 @@ class SmartJsonForm extends StatelessWidget {
   }
 
   SmartAsyncValidator<Object?> _asyncValidator(
-    SmartJsonFieldDefinition field,
+    SmartFieldDefinition field,
     String name,
   ) {
     final validator =
@@ -396,7 +446,7 @@ class SmartJsonForm extends StatelessWidget {
     );
   }
 
-  AutovalidateMode? _autovalidateMode(SmartJsonFieldDefinition field) {
+  AutovalidateMode? _autovalidateMode(SmartFieldDefinition field) {
     final value = field.stringValue('autovalidate_mode');
     if (value == null) {
       return null;
@@ -419,7 +469,7 @@ class SmartJsonForm extends StatelessWidget {
     );
   }
 
-  DateTime? _dateValue(SmartJsonFieldDefinition field, String key) {
+  DateTime? _dateValue(SmartFieldDefinition field, String key) {
     final value = field.stringValue(key);
     if (value == null) {
       return null;
@@ -429,10 +479,19 @@ class SmartJsonForm extends StatelessWidget {
   }
 }
 
-List<SmartValidator<T>> _adaptValidators<T>(
-  List<SmartValidator<Object?>> validators,
+/// Backwards-compatible JSON-oriented name for [SmartSchemaForm].
+typedef SmartJsonForm = SmartSchemaForm;
+
+/// Backwards-compatible JSON-oriented field builder name.
+typedef SmartJsonFieldBuilder = SmartFieldDefinitionBuilder;
+
+/// Backwards-compatible JSON-oriented validator builder name.
+typedef SmartJsonValidatorBuilder = SmartValidatorDefinitionBuilder;
+
+List<SmartValueValidator<T>> _adaptValidators<T>(
+  List<SmartValueValidator<Object?>> validators,
 ) {
-  return <SmartValidator<T>>[
+  return <SmartValueValidator<T>>[
     for (final validator in validators) adaptSmartValidator<T>(validator),
   ];
 }

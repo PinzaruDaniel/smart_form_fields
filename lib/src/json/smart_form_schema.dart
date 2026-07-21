@@ -1,16 +1,18 @@
 import 'dart:collection';
 
+import 'package:flutter/widgets.dart';
+
 import '../animation/smart_error_animation.dart';
 
-/// A parsed, immutable form definition received from JSON.
+/// An immutable form definition created in Dart or parsed from JSON.
 final class SmartFormSchema {
   /// Creates an immutable schema from parsed field definitions and behavior.
   SmartFormSchema({
-    required List<SmartJsonFieldDefinition> fields,
+    required List<SmartFieldDefinition> fields,
     this.scrollToFirstError,
     this.focusFirstError,
     this.errorAnimation,
-  }) : fields = List<SmartJsonFieldDefinition>.unmodifiable(fields);
+  }) : fields = List<SmartFieldDefinition>.unmodifiable(fields);
 
   /// Parses a snake_case JSON object into a validated schema.
   factory SmartFormSchema.fromJson(Map<String, Object?> json) {
@@ -22,9 +24,9 @@ final class SmartFormSchema {
     }
 
     return SmartFormSchema(
-      fields: <SmartJsonFieldDefinition>[
+      fields: <SmartFieldDefinition>[
         for (var index = 0; index < rawFields.length; index++)
-          SmartJsonFieldDefinition.fromJson(
+          SmartFieldDefinition.fromJson(
             _objectMap(rawFields[index], 'fields[$index]'),
             path: 'fields[$index]',
           ),
@@ -42,7 +44,7 @@ final class SmartFormSchema {
   }
 
   /// Field definitions in display and validation order.
-  final List<SmartJsonFieldDefinition> fields;
+  final List<SmartFieldDefinition> fields;
 
   /// Optional schema-level first-error scrolling override.
   final bool? scrollToFirstError;
@@ -55,25 +57,259 @@ final class SmartFormSchema {
 }
 
 /// One field in a [SmartFormSchema].
-final class SmartJsonFieldDefinition {
-  /// Creates an immutable JSON field definition.
-  SmartJsonFieldDefinition({
+final class SmartFieldDefinition {
+  /// Creates an immutable field definition for a built-in or custom [type].
+  SmartFieldDefinition({
     required this.name,
     required this.type,
-    required Map<String, Object?> properties,
-    required List<SmartJsonValidatorDefinition> validators,
-    required List<String> asyncValidators,
+    Map<String, Object?> properties = const {},
+    List<SmartValidatorDefinition> validators = const [],
+    List<String> asyncValidators = const [],
     Map<String, List<String>> asyncValidatorDependencies = const {},
-  }) : properties = UnmodifiableMapView(Map<String, Object?>.of(properties)),
-       validators = List<SmartJsonValidatorDefinition>.unmodifiable(validators),
+  }) : properties = UnmodifiableMapView(<String, Object?>{
+         'name': name,
+         'type': type,
+         ...properties,
+       }),
+       validators = List<SmartValidatorDefinition>.unmodifiable(validators),
        asyncValidators = List<String>.unmodifiable(asyncValidators),
        asyncValidatorDependencies = UnmodifiableMapView(<String, List<String>>{
          for (final entry in asyncValidatorDependencies.entries)
            entry.key: List<String>.unmodifiable(entry.value),
        });
 
+  /// Creates a text field definition directly in Dart.
+  factory SmartFieldDefinition.text({
+    required String name,
+    String? labelText,
+    String? hintText,
+    String? helperText,
+    String? initialValue,
+    bool enabled = true,
+    bool required = false,
+    String? requiredMessage,
+    int maxLines = 1,
+    AutovalidateMode? autovalidateMode,
+    List<SmartValidatorDefinition> validators = const [],
+    List<String> asyncValidators = const [],
+    Map<String, List<String>> asyncValidatorDependencies = const {},
+  }) {
+    return SmartFieldDefinition(
+      name: name,
+      type: 'text',
+      properties: _standardFieldProperties(
+        labelText: labelText,
+        hintText: hintText,
+        helperText: helperText,
+        initialValue: initialValue,
+        enabled: enabled,
+        required: required,
+        requiredMessage: requiredMessage,
+        autovalidateMode: autovalidateMode,
+        extra: <String, Object?>{'max_lines': maxLines},
+      ),
+      validators: validators,
+      asyncValidators: asyncValidators,
+      asyncValidatorDependencies: asyncValidatorDependencies,
+    );
+  }
+
+  /// Creates an email field definition directly in Dart.
+  factory SmartFieldDefinition.email({
+    required String name,
+    String? labelText,
+    String? hintText,
+    String? helperText,
+    String? initialValue,
+    bool enabled = true,
+    bool required = false,
+    String? requiredMessage,
+    String? invalidEmailMessage,
+    AutovalidateMode? autovalidateMode,
+    List<SmartValidatorDefinition> validators = const [],
+    List<String> asyncValidators = const [],
+    Map<String, List<String>> asyncValidatorDependencies = const {},
+  }) {
+    return SmartFieldDefinition(
+      name: name,
+      type: 'email',
+      properties: _standardFieldProperties(
+        labelText: labelText,
+        hintText: hintText,
+        helperText: helperText,
+        initialValue: initialValue,
+        enabled: enabled,
+        required: required,
+        requiredMessage: requiredMessage,
+        autovalidateMode: autovalidateMode,
+        extra: <String, Object?>{'invalid_email_message': ?invalidEmailMessage},
+      ),
+      validators: validators,
+      asyncValidators: asyncValidators,
+      asyncValidatorDependencies: asyncValidatorDependencies,
+    );
+  }
+
+  /// Creates a phone field definition directly in Dart.
+  factory SmartFieldDefinition.phone({
+    required String name,
+    String? labelText,
+    String? hintText,
+    String? helperText,
+    String? initialValue,
+    String? countryCode,
+    bool enabled = true,
+    bool required = false,
+    String? requiredMessage,
+    AutovalidateMode? autovalidateMode,
+    List<SmartValidatorDefinition> validators = const [],
+    List<String> asyncValidators = const [],
+    Map<String, List<String>> asyncValidatorDependencies = const {},
+  }) {
+    return SmartFieldDefinition(
+      name: name,
+      type: 'phone',
+      properties: _standardFieldProperties(
+        labelText: labelText,
+        hintText: hintText,
+        helperText: helperText,
+        initialValue: initialValue,
+        enabled: enabled,
+        required: required,
+        requiredMessage: requiredMessage,
+        autovalidateMode: autovalidateMode,
+        extra: <String, Object?>{'country_code': ?countryCode},
+      ),
+      validators: validators,
+      asyncValidators: asyncValidators,
+      asyncValidatorDependencies: asyncValidatorDependencies,
+    );
+  }
+
+  /// Creates a password field definition directly in Dart.
+  factory SmartFieldDefinition.password({
+    required String name,
+    String? labelText,
+    String? hintText,
+    String? helperText,
+    String? initialValue,
+    bool enabled = true,
+    bool required = false,
+    String? requiredMessage,
+    int? minLength = 8,
+    String? minLengthMessage,
+    bool showVisibilityToggle = true,
+    AutovalidateMode? autovalidateMode,
+    List<SmartValidatorDefinition> validators = const [],
+    List<String> asyncValidators = const [],
+    Map<String, List<String>> asyncValidatorDependencies = const {},
+  }) {
+    return SmartFieldDefinition(
+      name: name,
+      type: 'password',
+      properties: _standardFieldProperties(
+        labelText: labelText,
+        hintText: hintText,
+        helperText: helperText,
+        initialValue: initialValue,
+        enabled: enabled,
+        required: required,
+        requiredMessage: requiredMessage,
+        autovalidateMode: autovalidateMode,
+        extra: <String, Object?>{
+          'min_length': ?minLength,
+          'min_length_message': ?minLengthMessage,
+          'show_visibility_toggle': showVisibilityToggle,
+        },
+      ),
+      validators: validators,
+      asyncValidators: asyncValidators,
+      asyncValidatorDependencies: asyncValidatorDependencies,
+    );
+  }
+
+  /// Creates a date field definition directly in Dart.
+  factory SmartFieldDefinition.date({
+    required String name,
+    String? labelText,
+    String? hintText,
+    String? helperText,
+    DateTime? initialValue,
+    DateTime? firstDate,
+    DateTime? lastDate,
+    bool enabled = true,
+    bool required = false,
+    String? requiredMessage,
+    AutovalidateMode? autovalidateMode,
+    List<SmartValidatorDefinition> validators = const [],
+    List<String> asyncValidators = const [],
+    Map<String, List<String>> asyncValidatorDependencies = const {},
+  }) {
+    return SmartFieldDefinition(
+      name: name,
+      type: 'date',
+      properties: _standardFieldProperties(
+        labelText: labelText,
+        hintText: hintText,
+        helperText: helperText,
+        initialValue: initialValue?.toIso8601String(),
+        enabled: enabled,
+        required: required,
+        requiredMessage: requiredMessage,
+        autovalidateMode: autovalidateMode,
+        extra: <String, Object?>{
+          if (firstDate != null) 'first_date': firstDate.toIso8601String(),
+          if (lastDate != null) 'last_date': lastDate.toIso8601String(),
+        },
+      ),
+      validators: validators,
+      asyncValidators: asyncValidators,
+      asyncValidatorDependencies: asyncValidatorDependencies,
+    );
+  }
+
+  /// Creates a dropdown field definition directly in Dart.
+  factory SmartFieldDefinition.dropdown({
+    required String name,
+    required List<SmartOptionDefinition> options,
+    String? labelText,
+    String? hintText,
+    String? helperText,
+    Object? initialValue,
+    bool enabled = true,
+    bool required = false,
+    String? requiredMessage,
+    AutovalidateMode? autovalidateMode,
+    List<SmartValidatorDefinition> validators = const [],
+    List<String> asyncValidators = const [],
+    Map<String, List<String>> asyncValidatorDependencies = const {},
+  }) {
+    return SmartFieldDefinition(
+      name: name,
+      type: 'dropdown',
+      properties: _standardFieldProperties(
+        labelText: labelText,
+        hintText: hintText,
+        helperText: helperText,
+        initialValue: initialValue,
+        enabled: enabled,
+        required: required,
+        requiredMessage: requiredMessage,
+        autovalidateMode: autovalidateMode,
+        extra: <String, Object?>{
+          'options': <Map<String, Object?>>[
+            for (final option in options) option.toMap(),
+          ],
+        },
+      ),
+      validators: validators,
+      asyncValidators: asyncValidators,
+      asyncValidatorDependencies: asyncValidatorDependencies,
+    );
+  }
+
   /// Parses one JSON field object.
-  factory SmartJsonFieldDefinition.fromJson(
+  factory SmartFieldDefinition.fromJson(
     Map<String, Object?> json, {
     String path = 'field',
   }) {
@@ -116,13 +352,13 @@ final class SmartJsonFieldDefinition {
       ];
     }
 
-    return SmartJsonFieldDefinition(
+    return SmartFieldDefinition(
       name: name,
       type: type,
       properties: json,
-      validators: <SmartJsonValidatorDefinition>[
+      validators: <SmartValidatorDefinition>[
         for (var index = 0; index < rawValidators.length; index++)
-          SmartJsonValidatorDefinition.fromJson(
+          SmartValidatorDefinition.fromJson(
             _objectMap(rawValidators[index], '$path.validators[$index]'),
             path: '$path.validators[$index]',
           ),
@@ -142,7 +378,7 @@ final class SmartJsonFieldDefinition {
   final Map<String, Object?> properties;
 
   /// Parsed synchronous validator definitions.
-  final List<SmartJsonValidatorDefinition> validators;
+  final List<SmartValidatorDefinition> validators;
 
   /// Names of application-registered asynchronous validators.
   final List<String> asyncValidators;
@@ -178,19 +414,142 @@ final class SmartJsonFieldDefinition {
 }
 
 /// Configuration for one synchronous validator in JSON.
-final class SmartJsonValidatorDefinition {
+final class SmartValidatorDefinition {
   /// Creates an immutable validator definition.
-  SmartJsonValidatorDefinition({
+  SmartValidatorDefinition({
     required this.type,
-    required Map<String, Object?> properties,
-  }) : properties = UnmodifiableMapView(Map<String, Object?>.of(properties));
+    Map<String, Object?> properties = const {},
+  }) : properties = UnmodifiableMapView(<String, Object?>{
+         'type': type,
+         ...properties,
+       });
+
+  /// Creates a required validator definition.
+  factory SmartValidatorDefinition.required({String? message}) {
+    return SmartValidatorDefinition(
+      type: 'required',
+      properties: _messageProperties(message),
+    );
+  }
+
+  /// Creates an email validator definition.
+  factory SmartValidatorDefinition.email({String? message}) {
+    return SmartValidatorDefinition(
+      type: 'email',
+      properties: _messageProperties(message),
+    );
+  }
+
+  /// Creates an exact-length validator definition.
+  factory SmartValidatorDefinition.length(int value, {String? message}) {
+    return SmartValidatorDefinition(
+      type: 'length',
+      properties: <String, Object?>{
+        'value': value,
+        ..._messageProperties(message),
+      },
+    );
+  }
+
+  /// Creates a minimum-length validator definition.
+  factory SmartValidatorDefinition.minLength(int value, {String? message}) {
+    return SmartValidatorDefinition(
+      type: 'min_length',
+      properties: <String, Object?>{
+        'value': value,
+        ..._messageProperties(message),
+      },
+    );
+  }
+
+  /// Creates a maximum-length validator definition.
+  factory SmartValidatorDefinition.maxLength(int value, {String? message}) {
+    return SmartValidatorDefinition(
+      type: 'max_length',
+      properties: <String, Object?>{
+        'value': value,
+        ..._messageProperties(message),
+      },
+    );
+  }
+
+  /// Creates a regular-expression validator definition.
+  factory SmartValidatorDefinition.pattern(String pattern, {String? message}) {
+    return SmartValidatorDefinition(
+      type: 'pattern',
+      properties: <String, Object?>{
+        'pattern': pattern,
+        ..._messageProperties(message),
+      },
+    );
+  }
+
+  /// Creates a finite-number validator definition.
+  factory SmartValidatorDefinition.number({String? message}) {
+    return SmartValidatorDefinition(
+      type: 'number',
+      properties: _messageProperties(message),
+    );
+  }
+
+  /// Creates a minimum numeric-value validator definition.
+  factory SmartValidatorDefinition.min(num value, {String? message}) {
+    return SmartValidatorDefinition(
+      type: 'min',
+      properties: <String, Object?>{
+        'value': value,
+        ..._messageProperties(message),
+      },
+    );
+  }
+
+  /// Creates a maximum numeric-value validator definition.
+  factory SmartValidatorDefinition.max(num value, {String? message}) {
+    return SmartValidatorDefinition(
+      type: 'max',
+      properties: <String, Object?>{
+        'value': value,
+        ..._messageProperties(message),
+      },
+    );
+  }
+
+  /// Creates a cross-field equality validator definition.
+  factory SmartValidatorDefinition.matchesField(
+    String field, {
+    String? message,
+  }) {
+    return SmartValidatorDefinition(
+      type: 'matches_field',
+      properties: <String, Object?>{
+        'field': field,
+        ..._messageProperties(message),
+      },
+    );
+  }
+
+  /// Creates a conditionally required validator definition.
+  factory SmartValidatorDefinition.requiredWhen({
+    required String field,
+    required Object? equals,
+    String? message,
+  }) {
+    return SmartValidatorDefinition(
+      type: 'required_when',
+      properties: <String, Object?>{
+        'field': field,
+        'equals': equals,
+        ..._messageProperties(message),
+      },
+    );
+  }
 
   /// Parses one JSON validator object.
-  factory SmartJsonValidatorDefinition.fromJson(
+  factory SmartValidatorDefinition.fromJson(
     Map<String, Object?> json, {
     String path = 'validator',
   }) {
-    return SmartJsonValidatorDefinition(
+    return SmartValidatorDefinition(
       type: _requiredString(json['type'], '$path.type'),
       properties: json,
     );
@@ -221,6 +580,70 @@ final class SmartJsonValidatorDefinition {
     return _optionalNum(properties[key], '$type.$key') ??
         (throw FormatException('$type.$key is required.'));
   }
+}
+
+/// A value and label used by a class-defined dropdown field.
+final class SmartOptionDefinition {
+  /// Creates a dropdown option.
+  const SmartOptionDefinition({required this.value, required this.label});
+
+  /// Value stored in the form result.
+  final Object? value;
+
+  /// Human-readable menu label.
+  final String label;
+
+  /// Converts this option to the schema representation used by the renderer.
+  Map<String, Object?> toMap() => <String, Object?>{
+    'value': value,
+    'label': label,
+  };
+}
+
+/// Backwards-compatible name for JSON-oriented integrations.
+typedef SmartJsonFieldDefinition = SmartFieldDefinition;
+
+/// Backwards-compatible name for JSON-oriented integrations.
+typedef SmartJsonValidatorDefinition = SmartValidatorDefinition;
+
+Map<String, Object?> _standardFieldProperties({
+  required String? labelText,
+  required String? hintText,
+  required String? helperText,
+  required Object? initialValue,
+  required bool enabled,
+  required bool required,
+  required String? requiredMessage,
+  required AutovalidateMode? autovalidateMode,
+  Map<String, Object?> extra = const {},
+}) {
+  return <String, Object?>{
+    'label_text': ?labelText,
+    'hint_text': ?hintText,
+    'helper_text': ?helperText,
+    'initial_value': ?initialValue,
+    'enabled': enabled,
+    'required': required,
+    'required_message': ?requiredMessage,
+    'autovalidate_mode': ?autovalidateMode == null
+        ? null
+        : _autovalidateModeName(autovalidateMode),
+    ...extra,
+  };
+}
+
+String _autovalidateModeName(AutovalidateMode mode) {
+  return switch (mode) {
+    AutovalidateMode.disabled => 'disabled',
+    AutovalidateMode.always => 'always',
+    AutovalidateMode.onUserInteraction => 'on_user_interaction',
+    AutovalidateMode.onUnfocus => 'on_unfocus',
+    AutovalidateMode.onUserInteractionIfError => 'on_user_interaction_if_error',
+  };
+}
+
+Map<String, Object?> _messageProperties(String? message) {
+  return <String, Object?>{'message': ?message};
 }
 
 Map<String, Object?> _objectMap(Object? value, String path) {

@@ -25,9 +25,7 @@ void main() {
                   SmartTextField(
                     name: 'valid',
                     initialValue: 'Ready',
-                    validators: <SmartValidator<String>>[
-                      SmartValidators.required<String>(),
-                    ],
+                    validators: <SmartValidator>[SmartValidators.required()],
                   ),
                   const SizedBox(height: 500),
                   SizedBox(
@@ -42,8 +40,8 @@ void main() {
                             decoration: const InputDecoration(
                               labelText: 'Nested field',
                             ),
-                            validators: <SmartValidator<String>>[
-                              SmartValidators.required<String>(),
+                            validators: <SmartValidator>[
+                              SmartValidators.required(),
                             ],
                           ),
                         ],
@@ -190,7 +188,7 @@ void main() {
                   const SizedBox(height: 500),
                   SmartFormField<String>(
                     name: 'deferred',
-                    validators: <SmartValidator<String>>[(_) => 'Invalid'],
+                    validators: <SmartValidator>[(_) => 'Invalid'],
                     builder: (context, field) =>
                         const SizedBox(key: fieldKey, width: 100, height: 40),
                   ),
@@ -294,7 +292,7 @@ Widget _animationApp({
         children: <Widget>[
           SmartFormField<String>(
             name: 'animated',
-            validators: <SmartValidator<String>>[(value) => 'Invalid'],
+            validators: <SmartValidator>[(value) => 'Invalid'],
             builder: (context, field) {
               return SizedBox(key: fieldKey, width: 100, height: 40);
             },

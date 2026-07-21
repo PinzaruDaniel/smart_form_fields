@@ -2,8 +2,17 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:smart_form_fields/smart_form_fields.dart';
 
 void main() {
+  test('uses a string-first API and an explicit typed-value API', () {
+    final SmartValidator stringValidator = SmartValidators.minLength(3);
+    final SmartValueValidator<DateTime> dateValidator =
+        SmartValueValidators.required<DateTime>();
+
+    expect(stringValidator('abc'), isNull);
+    expect(dateValidator(DateTime(2020)), isNull);
+  });
+
   group('SmartValidators.required', () {
-    final validator = SmartValidators.required<Object>();
+    final validator = SmartValueValidators.required<Object>();
 
     test('rejects null and empty values', () {
       expect(validator(null), 'This field is required.');
@@ -15,10 +24,7 @@ void main() {
     test('accepts non-empty values and supports a custom message', () {
       expect(validator('value'), isNull);
       expect(validator(0), isNull);
-      expect(
-        SmartValidators.required<String>(message: 'Required')(''),
-        'Required',
-      );
+      expect(SmartValidators.required(message: 'Required')(''), 'Required');
     });
   });
 
@@ -40,35 +46,35 @@ void main() {
 
   group('SmartValidators length rules', () {
     test('validates exact, minimum, and maximum lengths', () {
-      expect(SmartValidators.length<String>(3)('abc'), isNull);
+      expect(SmartValidators.length(3)('abc'), isNull);
       expect(
-        SmartValidators.length<String>(3)('ab'),
+        SmartValidators.length(3)('ab'),
         'Must contain exactly 3 characters.',
       );
-      expect(SmartValidators.minLength<List<int>>(2)(<int>[1, 2]), isNull);
+      expect(SmartValueValidators.minLength<List<int>>(2)(<int>[1, 2]), isNull);
       expect(
-        SmartValidators.minLength<String>(3)('ab'),
+        SmartValidators.minLength(3)('ab'),
         'Must contain at least 3 characters.',
       );
-      expect(SmartValidators.maxLength<String>(3)('abc'), isNull);
+      expect(SmartValidators.maxLength(3)('abc'), isNull);
       expect(
-        SmartValidators.maxLength<String>(3)('abcd'),
+        SmartValidators.maxLength(3)('abcd'),
         'Must contain at most 3 characters.',
       );
     });
 
     test('allows blank values and rejects unsupported value types', () {
-      expect(SmartValidators.length<String>(2)(null), isNull);
+      expect(SmartValidators.length(2)(null), isNull);
       expect(
-        SmartValidators.length<int>(2)(12),
+        SmartValueValidators.length<int>(2)(12),
         'Must contain exactly 2 characters.',
       );
     });
 
     test('rejects negative limits immediately', () {
-      expect(() => SmartValidators.length<String>(-1), throwsArgumentError);
-      expect(() => SmartValidators.minLength<String>(-1), throwsArgumentError);
-      expect(() => SmartValidators.maxLength<String>(-1), throwsArgumentError);
+      expect(() => SmartValidators.length(-1), throwsArgumentError);
+      expect(() => SmartValidators.minLength(-1), throwsArgumentError);
+      expect(() => SmartValidators.maxLength(-1), throwsArgumentError);
     });
   });
 
@@ -91,7 +97,7 @@ void main() {
 
   group('SmartValidators numeric rules', () {
     test('number accepts finite numbers and numeric strings', () {
-      final validator = SmartValidators.number<Object>();
+      final validator = SmartValueValidators.number<Object>();
       expect(validator(12.5), isNull);
       expect(validator(' -12.5 '), isNull);
       expect(validator(null), isNull);
@@ -101,8 +107,8 @@ void main() {
     });
 
     test('min and max are inclusive and parse strings', () {
-      final minimum = SmartValidators.min<Object>(18);
-      final maximum = SmartValidators.max<Object>(65);
+      final minimum = SmartValueValidators.min<Object>(18);
+      final maximum = SmartValueValidators.max<Object>(65);
 
       expect(minimum(18), isNull);
       expect(minimum('17.9'), 'Enter a value greater than or equal to 18.');

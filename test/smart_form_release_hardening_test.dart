@@ -22,8 +22,8 @@ void main() {
                   SmartTextField(
                     name: 'email',
                     decoration: const InputDecoration(labelText: 'Email'),
-                    validators: <SmartValidator<String>>[
-                      SmartValidators.required<String>(message: 'Required'),
+                    validators: <SmartValidator>[
+                      SmartValidators.required(message: 'Required'),
                     ],
                   ),
                 ],
@@ -75,8 +75,8 @@ void main() {
                 SmartTextField(
                   name: 'display_name',
                   decoration: const InputDecoration(labelText: 'Display name'),
-                  validators: <SmartValidator<String>>[
-                    SmartValidators.required<String>(
+                  validators: <SmartValidator>[
+                    SmartValidators.required(
                       message: 'Display name is required',
                     ),
                   ],
@@ -197,9 +197,7 @@ void main() {
               SmartTextField(
                 name: 'name',
                 initialValue: 'Initial',
-                validators: <SmartValidator<String>>[
-                  SmartValidators.required<String>(),
-                ],
+                validators: <SmartValidator>[SmartValidators.required()],
               ),
               const SmartTextField(name: 'city', initialValue: 'Chisinau'),
             ],
@@ -368,9 +366,7 @@ void main() {
                   children: <Widget>[
                     SmartTextField(
                       name: 'required',
-                      validators: <SmartValidator<String>>[
-                        SmartValidators.required<String>(),
-                      ],
+                      validators: <SmartValidator>[SmartValidators.required()],
                     ),
                   ],
                 ),

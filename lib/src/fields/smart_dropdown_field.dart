@@ -68,7 +68,7 @@ class SmartDropdownField<T> extends StatefulWidget {
   final String requiredMessage;
 
   /// Additional synchronous validators run after required validation.
-  final List<SmartValidator<T>> validators;
+  final List<SmartValueValidator<T>> validators;
 
   /// Asynchronous validators run after synchronous validators pass.
   final List<SmartAsyncValidator<T>> asyncValidators;
@@ -105,7 +105,7 @@ class SmartDropdownField<T> extends StatefulWidget {
 }
 
 class _SmartDropdownFieldState<T> extends State<SmartDropdownField<T>> {
-  late List<SmartValidator<T>> _validators;
+  late List<SmartValueValidator<T>> _validators;
   FocusNode? _observedFocusNode;
   SmartFieldController<T>? _fieldController;
   bool _menuIsOpen = false;
@@ -136,9 +136,9 @@ class _SmartDropdownFieldState<T> extends State<SmartDropdownField<T>> {
   }
 
   void _rebuildValidators() {
-    _validators = <SmartValidator<T>>[
+    _validators = <SmartValueValidator<T>>[
       if (widget.required)
-        SmartValidators.required<T>(message: widget.requiredMessage),
+        SmartValueValidators.required<T>(message: widget.requiredMessage),
       ...widget.validators,
     ];
   }

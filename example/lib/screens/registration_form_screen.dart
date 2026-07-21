@@ -175,7 +175,7 @@ class _RegistrationExamplePageState extends State<RegistrationExamplePage> {
                             RegExp(r'[\d\s+()-]'),
                           ),
                         ],
-                        validators: <SmartValidator<String>>[_phone],
+                        validators: <SmartValidator>[_phone],
                       ),
                       const SizedBox(height: 16),
                       SmartPasswordField(
@@ -203,8 +203,8 @@ class _RegistrationExamplePageState extends State<RegistrationExamplePage> {
                           prefixIcon: Icon(Icons.lock_reset_outlined),
                         ),
                         textInputAction: TextInputAction.done,
-                        validators: <SmartValidator<String>>[
-                          SmartValidators.matchesField<String>(
+                        validators: <SmartValidator>[
+                          SmartValidators.matchesField(
                             'password',
                             message: 'Passwords do not match',
                           ),
@@ -310,8 +310,8 @@ class _NameFields extends StatelessWidget {
           decoration: const InputDecoration(labelText: 'First name'),
           textCapitalization: TextCapitalization.words,
           textInputAction: TextInputAction.next,
-          validators: <SmartValidator<String>>[
-            SmartValidators.required<String>(message: 'First name is required'),
+          validators: <SmartValidator>[
+            SmartValidators.required(message: 'First name is required'),
           ],
         );
         final lastName = SmartTextField(
@@ -319,8 +319,8 @@ class _NameFields extends StatelessWidget {
           decoration: const InputDecoration(labelText: 'Last name'),
           textCapitalization: TextCapitalization.words,
           textInputAction: TextInputAction.next,
-          validators: <SmartValidator<String>>[
-            SmartValidators.required<String>(message: 'Last name is required'),
+          validators: <SmartValidator>[
+            SmartValidators.required(message: 'Last name is required'),
           ],
         );
 

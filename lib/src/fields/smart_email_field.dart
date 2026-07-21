@@ -52,7 +52,7 @@ class SmartEmailField extends StatefulWidget {
   final String invalidEmailMessage;
 
   /// Additional synchronous validators run after built-in validators.
-  final List<SmartValidator<String>> validators;
+  final List<SmartValidator> validators;
 
   /// Asynchronous validators run after synchronous validators pass.
   final List<SmartAsyncValidator<String>> asyncValidators;
@@ -86,7 +86,7 @@ class SmartEmailField extends StatefulWidget {
 }
 
 class _SmartEmailFieldState extends State<SmartEmailField> {
-  late List<SmartValidator<String>> _validators;
+  late List<SmartValidator> _validators;
 
   @override
   void initState() {
@@ -106,9 +106,9 @@ class _SmartEmailFieldState extends State<SmartEmailField> {
   }
 
   void _rebuildValidators() {
-    _validators = <SmartValidator<String>>[
+    _validators = <SmartValidator>[
       if (widget.required)
-        SmartValidators.required<String>(message: widget.requiredMessage),
+        SmartValidators.required(message: widget.requiredMessage),
       SmartValidators.email(message: widget.invalidEmailMessage),
       ...widget.validators,
     ];

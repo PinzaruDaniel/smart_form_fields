@@ -51,7 +51,7 @@ void main() {
             SmartTextField(
               name: 'email',
               decoration: const InputDecoration(labelText: 'Email'),
-              validators: <SmartValidator<String>>[
+              validators: <SmartValidator>[
                 (value) => value == null || value.trim().isEmpty
                     ? 'Email is required'
                     : null,
@@ -230,7 +230,7 @@ void main() {
             SmartTextField(
               name: 'email',
               decoration: const InputDecoration(labelText: 'Email'),
-              validators: <SmartValidator<String>>[
+              validators: <SmartValidator>[
                 SmartValidators.email(message: 'Invalid email'),
               ],
             ),
@@ -269,8 +269,8 @@ void main() {
             SmartTextField(
               name: 'password',
               decoration: const InputDecoration(labelText: 'Password'),
-              validators: <SmartValidator<String>>[
-                SmartValidators.minLength<String>(
+              validators: <SmartValidator>[
+                SmartValidators.minLength(
                   8,
                   message: 'Use at least 8 characters',
                 ),
@@ -313,7 +313,7 @@ void main() {
                 SmartTextField(
                   name: 'phone',
                   decoration: const InputDecoration(labelText: 'Phone'),
-                  validators: <SmartValidator<String>>[(value) => error],
+                  validators: <SmartValidator>[(value) => error],
                 ),
                 const SmartTextField(
                   name: 'next',
@@ -495,7 +495,7 @@ void main() {
           children: <Widget>[
             SmartFormField<String>(
               name: 'value',
-              validators: <SmartValidator<String>>[(value) => error],
+              validators: <SmartValidator>[(value) => error],
               builder: (context, field) => Text(field.errorText ?? 'Valid'),
             ),
           ],
@@ -527,7 +527,7 @@ void main() {
               name: 'value',
               initialValue: 'preserved',
               enabled: enabled,
-              validators: <SmartValidator<String>>[(value) => 'Invalid value'],
+              validators: <SmartValidator>[(value) => 'Invalid value'],
               builder: (context, field) => Text(field.errorText ?? 'No error'),
             ),
           ],

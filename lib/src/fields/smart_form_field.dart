@@ -41,7 +41,7 @@ class SmartFormField<T> extends StatefulWidget {
   final T? initialValue;
 
   /// Synchronous validators run in declaration order.
-  final List<SmartValidator<T>> validators;
+  final List<SmartValueValidator<T>> validators;
 
   /// Asynchronous validators run after synchronous validation succeeds.
   final List<SmartAsyncValidator<T>> asyncValidators;

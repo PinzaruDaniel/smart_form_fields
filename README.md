@@ -68,7 +68,7 @@ final result = await formController.validate();
 ```
 
 An individual field can still override the form default with its own
-`autovalidateMode`. `SmartJsonForm` provides the same form-level option, while
+`autovalidateMode`. `SmartSchemaForm` provides the same form-level option, while
 the snake_case field property `autovalidate_mode` remains available for a JSON
 field override.
 
@@ -93,6 +93,20 @@ Built-in validators include `required`, `email`, exact/minimum/maximum length,
 `pattern`, `number`, `min`, and `max`. Every validator accepts a message
 override, and optional fields can omit `required`.
 
+`SmartValidator` is string-first, so normal fields do not need a generic type:
+
+```dart
+final SmartValidator validator = SmartValidators.minLength(8);
+```
+
+Dates, typed dropdowns, and custom value fields use
+`SmartValueValidator<T>` with `SmartValueValidators`:
+
+```dart
+final SmartValueValidator<DateTime> validator =
+    SmartValueValidators.required<DateTime>();
+```
+
 The first release will provide:
 
 - automatic field registration and lifecycle handling;
@@ -105,7 +119,8 @@ The first release will provide:
 - server-side field error injection.
 
 See [PLAN.md](PLAN.md) for the implementation phases, API decisions, test
-matrix, and release gates.
+matrix, and release gates. Existing users should also see
+[MIGRATION.md](MIGRATION.md) for the 1.0 validator and schema naming changes.
 
 ### Form behavior theme
 
@@ -191,7 +206,7 @@ premature errors.
 SmartPasswordField(
   name: 'confirm_password',
   validators: [
-    SmartValidators.matchesField<String>(
+    SmartValidators.matchesField(
       'password',
       message: 'Passwords do not match',
     ),
@@ -201,7 +216,7 @@ SmartPasswordField(
 SmartTextField(
   name: 'company_name',
   validators: [
-    SmartValidators.requiredWhen<String>(
+    SmartValidators.requiredWhen(
       field: 'account_type',
       equals: AccountType.business,
       message: 'Company name is required',
@@ -215,7 +230,7 @@ read from the context should be listed in `dependsOn` so changes can trigger
 revalidation:
 
 ```dart
-SmartValidators.dependent<String>(
+SmartValidators.dependent(
   dependsOn: const ['country'],
   validator: (value, context) {
     final country = context.valueOf<String>('country');
@@ -265,7 +280,7 @@ SmartForm(
 ```
 
 Set either behavior flag to `false` when a screen manages focus itself. The
-same options are available on `SmartJsonForm`.
+same options are available on `SmartSchemaForm`.
 
 ## Custom fields
 
@@ -296,9 +311,57 @@ Render `field.errorText` in a custom widget and call `field.didChange` whenever
 its value changes. Use `field.isValidating` when the UI should expose async
 validation progress.
 
+## Forms from Dart classes
+
+Use `SmartFormSchema`, `SmartFieldDefinition`, and
+`SmartValidatorDefinition` when a form is declarative but already defined in
+Dart. This uses the same renderer as JSON without maps or decoding:
+
+```dart
+final schema = SmartFormSchema(
+  fields: [
+    SmartFieldDefinition.email(
+      name: 'email',
+      labelText: 'Email',
+      required: true,
+    ),
+    SmartFieldDefinition.password(
+      name: 'password',
+      labelText: 'Password',
+      required: true,
+    ),
+    SmartFieldDefinition.password(
+      name: 'confirm_password',
+      labelText: 'Confirm password',
+      minLength: null,
+      validators: [
+        SmartValidatorDefinition.matchesField(
+          'password',
+          message: 'Passwords do not match',
+        ),
+      ],
+    ),
+    SmartFieldDefinition.dropdown(
+      name: 'country',
+      labelText: 'Country',
+      options: const [
+        SmartOptionDefinition(value: 'md', label: 'Moldova'),
+        SmartOptionDefinition(value: 'ro', label: 'Romania'),
+      ],
+    ),
+  ],
+);
+
+SmartSchemaForm(schema: schema, controller: formController);
+```
+
+Built-in class constructors cover text, email, phone, password, date, and
+dropdown fields. The general `SmartFieldDefinition` constructor remains
+available for application-registered field types.
+
 ## Forms from API JSON
 
-Use `SmartJsonForm.fromJson` when an API returns a form definition. The JSON
+Use `SmartSchemaForm.fromJson` when an API returns a form definition. The JSON
 layer builds the same smart field widgets, so values, validation timing, async
 race handling, reset, server errors, and first-error navigation behave exactly
 like a widget-authored form.
@@ -307,7 +370,7 @@ like a widget-authored form.
 final schema = jsonDecode(response.body) as Map<String, Object?>;
 final controller = SmartFormController();
 
-SmartJsonForm.fromJson(
+SmartSchemaForm.fromJson(
   json: schema,
   controller: controller,
   asyncValidators: {
@@ -453,11 +516,12 @@ final birthDate = result.values['birthDate'] as DateTime?;
 
 ## Example application
 
-The [example](example/) directory contains three Material 3 screens: a complete
-registration flow, a snake_case JSON/API form, and an imperative controller
-playground. Together they demonstrate reusable and custom fields, sync/async
-validation, bottom-sheet selection, value updates, dynamic and disabled fields,
-reset, server errors, focus/scroll commands, and first-error navigation.
+The [example](example/) directory contains four Material 3 screens: a complete
+registration flow, a Dart class-defined form, a snake_case JSON/API form, and
+an imperative controller playground. Together they demonstrate reusable and
+custom fields, sync/async validation, bottom-sheet selection, value updates,
+dynamic and disabled fields, reset, server errors, focus/scroll commands, and
+first-error navigation.
 
 ```sh
 cd example
@@ -471,7 +535,7 @@ registry, generic custom field, text field, core sync/async validation,
 built-in validators, error animations, and first-error navigation are
 implemented. The initial reusable field set now includes text, email, password,
 phone, date, and generic dropdown fields. Shared form behavior can be configured
-with `SmartFormTheme`, and `SmartJsonForm` can build the same fields from API
-schemas. Cross-field sync and async validators use explicit dependency metadata
-and read-only form snapshots. Bundled validation-message localization is
-intentionally out of scope.
+with `SmartFormTheme`, and `SmartSchemaForm` can build the same fields from API
+JSON or Dart definition classes. Cross-field sync and async validators use
+explicit dependency metadata and read-only form snapshots. Bundled
+validation-message localization is intentionally out of scope.

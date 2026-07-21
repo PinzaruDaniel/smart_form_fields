@@ -90,8 +90,8 @@ class _ControllerPlaygroundPageState extends State<ControllerPlaygroundPage> {
                       decoration: const InputDecoration(
                         labelText: 'Project name',
                       ),
-                      validators: <SmartValidator<String>>[
-                        SmartValidators.required<String>(
+                      validators: <SmartValidator>[
+                        SmartValidators.required(
                           message: 'Project name is required',
                         ),
                       ],
@@ -114,11 +114,11 @@ class _ControllerPlaygroundPageState extends State<ControllerPlaygroundPage> {
                         labelText: 'Budget',
                         prefixText: '€ ',
                       ),
-                      validators: <SmartValidator<String>>[
-                        SmartValidators.number<String>(
+                      validators: <SmartValidator>[
+                        SmartValidators.number(
                           message: 'Enter a numeric budget',
                         ),
-                        SmartValidators.min<String>(
+                        SmartValidators.min(
                           100,
                           message: 'Budget must be at least 100',
                         ),
@@ -218,8 +218,8 @@ class _BottomSheetSelectionField extends StatelessWidget {
   Widget build(BuildContext context) {
     return SmartFormField<String>(
       name: name,
-      validators: <SmartValidator<String>>[
-        SmartValidators.required<String>(message: 'Choose a delivery schedule'),
+      validators: <SmartValidator>[
+        SmartValidators.required(message: 'Choose a delivery schedule'),
       ],
       builder: (context, field) {
         return InkWell(

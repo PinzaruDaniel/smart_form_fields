@@ -58,7 +58,7 @@ class SmartPasswordField extends StatefulWidget {
   final String? minLengthMessage;
 
   /// Additional synchronous validators run after built-in validators.
-  final List<SmartValidator<String>> validators;
+  final List<SmartValidator> validators;
 
   /// Asynchronous validators run after synchronous validators pass.
   final List<SmartAsyncValidator<String>> asyncValidators;
@@ -99,7 +99,7 @@ class SmartPasswordField extends StatefulWidget {
 
 class _SmartPasswordFieldState extends State<SmartPasswordField> {
   late bool _obscured;
-  late List<SmartValidator<String>> _validators;
+  late List<SmartValidator> _validators;
 
   @override
   void initState() {
@@ -121,14 +121,11 @@ class _SmartPasswordFieldState extends State<SmartPasswordField> {
   }
 
   void _rebuildValidators() {
-    _validators = <SmartValidator<String>>[
+    _validators = <SmartValidator>[
       if (widget.required)
-        SmartValidators.required<String>(message: widget.requiredMessage),
+        SmartValidators.required(message: widget.requiredMessage),
       if (widget.minLength case final minimum?)
-        SmartValidators.minLength<String>(
-          minimum,
-          message: widget.minLengthMessage,
-        ),
+        SmartValidators.minLength(minimum, message: widget.minLengthMessage),
       ...widget.validators,
     ];
   }

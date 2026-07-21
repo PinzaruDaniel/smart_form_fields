@@ -52,7 +52,7 @@ class SmartTextField extends StatefulWidget {
   final FocusNode? focusNode;
 
   /// Synchronous validators run in order.
-  final List<SmartValidator<String>> validators;
+  final List<SmartValidator> validators;
 
   /// Asynchronous validators run after synchronous validators pass.
   final List<SmartAsyncValidator<String>> asyncValidators;

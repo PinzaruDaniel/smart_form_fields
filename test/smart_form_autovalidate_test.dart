@@ -20,10 +20,8 @@ void main() {
               SmartTextField(
                 name: 'first_name',
                 decoration: const InputDecoration(labelText: 'First name'),
-                validators: <SmartValidator<String>>[
-                  SmartValidators.required<String>(
-                    message: 'First name is required',
-                  ),
+                validators: <SmartValidator>[
+                  SmartValidators.required(message: 'First name is required'),
                 ],
               ),
               const SmartTextField(
@@ -64,10 +62,8 @@ void main() {
                 name: 'first_name',
                 autovalidateMode: AutovalidateMode.onUnfocus,
                 decoration: const InputDecoration(labelText: 'First name'),
-                validators: <SmartValidator<String>>[
-                  SmartValidators.required<String>(
-                    message: 'First name is required',
-                  ),
+                validators: <SmartValidator>[
+                  SmartValidators.required(message: 'First name is required'),
                 ],
               ),
               const SmartTextField(

@@ -1,3 +1,16 @@
+## 1.0.0
+
+* Make `SmartValidator` string-first so text, email, phone, and password
+  validators no longer require `<String>`.
+* Add `SmartValueValidator<T>` and `SmartValueValidators` for dates, typed
+  dropdowns, and custom value fields.
+* Add class-based form construction with `SmartSchemaForm`,
+  `SmartFieldDefinition`, `SmartValidatorDefinition`, and typed constructors
+  for every built-in generated field.
+* Keep snake_case JSON construction through `SmartSchemaForm.fromJson` and
+  backwards-compatible `SmartJson*` aliases.
+* Add a complete class-defined form example and 1.0 migration guide.
+
 ## 0.2.3
 
 * Preserve existing validation errors when a parent rebuild supplies new

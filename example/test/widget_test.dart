@@ -9,6 +9,12 @@ void main() {
     expect(find.text('Package examples'), findsOneWidget);
     expect(find.text('Registration form'), findsOneWidget);
     expect(find.text('JSON API form'), findsOneWidget);
+    expect(find.text('Class-defined form'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Controller playground'),
+      250,
+      scrollable: _pageScrollable(),
+    );
     expect(find.text('Controller playground'), findsOneWidget);
   });
 
@@ -150,6 +156,35 @@ void main() {
     expect(find.textContaining('JSON values:'), findsOneWidget);
   });
 
+  testWidgets('builds and validates the Dart class schema example', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const SmartFormFieldsExampleApp());
+    await _openExample(tester, 'Class-defined form');
+
+    expect(find.text('Rendered from Dart definition classes'), findsOneWidget);
+    expect(find.widgetWithText(TextField, 'Display name'), findsOneWidget);
+    expect(find.widgetWithText(TextField, 'Confirm password'), findsOneWidget);
+
+    final fillButton = find.widgetWithText(TextButton, 'Fill class sample');
+    await tester.scrollUntilVisible(
+      fillButton,
+      300,
+      scrollable: _pageScrollable(),
+    );
+    await tester.tap(fillButton);
+    await tester.pump();
+
+    final validateButton = find.widgetWithText(
+      FilledButton,
+      'Validate class form',
+    );
+    await tester.tap(validateButton);
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Class schema values:'), findsOneWidget);
+  });
+
   testWidgets('demonstrates controller and bottom-sheet operations', (
     tester,
   ) async {
@@ -197,7 +232,7 @@ void main() {
 
 Future<void> _openExample(WidgetTester tester, String title) async {
   final link = find.text(title);
-  await tester.ensureVisible(link);
+  await tester.scrollUntilVisible(link, 250, scrollable: _pageScrollable());
   await tester.tap(link);
   await tester.pumpAndSettle();
 }

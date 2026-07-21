@@ -28,8 +28,8 @@ void main() {
               name: 'confirm_password',
               initialValue: 'secret',
               minLength: null,
-              validators: <SmartValidator<String>>[
-                SmartValidators.matchesField<String>(
+              validators: <SmartValidator>[
+                SmartValidators.matchesField(
                   'password',
                   message: 'Passwords do not match',
                 ),
@@ -79,8 +79,8 @@ void main() {
                   initialValue: 'different',
                   minLength: null,
                   autovalidateMode: AutovalidateMode.disabled,
-                  validators: <SmartValidator<String>>[
-                    SmartValidators.matchesField<String>(
+                  validators: <SmartValidator>[
+                    SmartValidators.matchesField(
                       'password',
                       message: 'Passwords do not match',
                     ),
@@ -124,8 +124,8 @@ void main() {
             SmartTextField(
               name: 'dependent',
               initialValue: 'different',
-              validators: <SmartValidator<String>>[
-                SmartValidators.matchesField<String>('source'),
+              validators: <SmartValidator>[
+                SmartValidators.matchesField('source'),
               ],
             ),
           ],
@@ -158,8 +158,8 @@ void main() {
             ),
             SmartTextField(
               name: 'company_name',
-              validators: <SmartValidator<String>>[
-                SmartValidators.requiredWhen<String>(
+              validators: <SmartValidator>[
+                SmartValidators.requiredWhen(
                   field: 'account_type',
                   equals: _AccountType.business,
                   message: 'Company name is required',
@@ -196,8 +196,8 @@ void main() {
             SmartTextField(
               name: 'city',
               initialValue: 'Chisinau',
-              validators: <SmartValidator<String>>[
-                SmartValidators.dependent<String>(
+              validators: <SmartValidator>[
+                SmartValidators.dependent(
                   dependsOn: const <String>['country'],
                   validator: (value, context) {
                     try {
@@ -303,8 +303,8 @@ void main() {
             SmartTextField(
               name: 'summary',
               initialValue: 'ab',
-              validators: <SmartValidator<String>>[
-                SmartValidators.dependent<String>(
+              validators: <SmartValidator>[
+                SmartValidators.dependent(
                   dependsOn: const <String>['first', 'second'],
                   validator: (value, context) {
                     validations++;
@@ -347,8 +347,8 @@ void main() {
           children: <Widget>[
             SmartTextField(
               name: 'dependent',
-              validators: <SmartValidator<String>>[
-                SmartValidators.matchesField<String>('missing'),
+              validators: <SmartValidator>[
+                SmartValidators.matchesField('missing'),
               ],
             ),
           ],
@@ -379,14 +379,14 @@ void main() {
           children: <Widget>[
             SmartTextField(
               name: 'first',
-              validators: <SmartValidator<String>>[
-                SmartValidators.matchesField<String>('second'),
+              validators: <SmartValidator>[
+                SmartValidators.matchesField('second'),
               ],
             ),
             SmartTextField(
               name: 'second',
-              validators: <SmartValidator<String>>[
-                SmartValidators.matchesField<String>('first'),
+              validators: <SmartValidator>[
+                SmartValidators.matchesField('first'),
               ],
             ),
           ],
@@ -423,7 +423,7 @@ void main() {
 
     await tester.pumpWidget(
       _app(
-        SmartJsonForm.fromJson(
+        SmartSchemaForm.fromJson(
           controller: controller,
           autovalidateMode: AutovalidateMode.disabled,
           json: const <String, Object?>{

@@ -26,7 +26,7 @@ final class _AsyncMetadata {
 final Expando<_SyncMetadata> _syncMetadata = Expando<_SyncMetadata>();
 final Expando<_AsyncMetadata> _asyncMetadata = Expando<_AsyncMetadata>();
 
-SmartValidator<T> createDependentValidator<T>({
+SmartValueValidator<T> createDependentValidator<T>({
   required Iterable<String> dependsOn,
   required SmartContextValidator<T> validator,
 }) {
@@ -74,7 +74,7 @@ Set<String> dependenciesOfValidators(Iterable<Object> validators) {
 }
 
 String? runSmartValidator<T>(
-  SmartValidator<T> validator,
+  SmartValueValidator<T> validator,
   T? value,
   SmartValidationContext context,
 ) {
@@ -91,7 +91,9 @@ Future<String?> runSmartAsyncValidator<T>(
   return metadata == null ? validator(value) : metadata.run(value, context);
 }
 
-SmartValidator<T> adaptSmartValidator<T>(SmartValidator<Object?> validator) {
+SmartValueValidator<T> adaptSmartValidator<T>(
+  SmartValueValidator<Object?> validator,
+) {
   final metadata = _syncMetadata[validator];
   if (metadata == null) {
     return (value) => validator(value);

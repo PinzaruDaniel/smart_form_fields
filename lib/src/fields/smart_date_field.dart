@@ -66,7 +66,7 @@ class SmartDateField extends StatefulWidget {
   final String requiredMessage;
 
   /// Additional synchronous validators run after required validation.
-  final List<SmartValidator<DateTime>> validators;
+  final List<SmartValueValidator<DateTime>> validators;
 
   /// Asynchronous validators run after synchronous validators pass.
   final List<SmartAsyncValidator<DateTime>> asyncValidators;
@@ -116,7 +116,7 @@ class SmartDateField extends StatefulWidget {
 
 class _SmartDateFieldState extends State<SmartDateField> {
   final TextEditingController _textController = TextEditingController();
-  late List<SmartValidator<DateTime>> _validators;
+  late List<SmartValueValidator<DateTime>> _validators;
 
   @override
   void initState() {
@@ -141,9 +141,11 @@ class _SmartDateFieldState extends State<SmartDateField> {
   }
 
   void _rebuildValidators() {
-    _validators = <SmartValidator<DateTime>>[
+    _validators = <SmartValueValidator<DateTime>>[
       if (widget.required)
-        SmartValidators.required<DateTime>(message: widget.requiredMessage),
+        SmartValueValidators.required<DateTime>(
+          message: widget.requiredMessage,
+        ),
       ...widget.validators,
     ];
   }

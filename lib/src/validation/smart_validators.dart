@@ -2,16 +2,97 @@ import 'smart_validator.dart';
 import 'smart_validation_context.dart';
 import 'smart_validator_metadata.dart';
 
-/// Factories for commonly used synchronous validators.
+/// String-first factories for commonly used synchronous validators.
 ///
 /// Validators other than [required] allow `null` and blank strings. Add a
 /// [required] validator first when a field must contain a value.
 abstract final class SmartValidators {
+  /// Creates a string validator with explicit [dependsOn] metadata.
+  static SmartValidator dependent({
+    required Iterable<String> dependsOn,
+    required SmartContextValidator<String> validator,
+  }) {
+    return SmartValueValidators.dependent<String>(
+      dependsOn: dependsOn,
+      validator: validator,
+    );
+  }
+
+  /// Requires a non-empty string to equal another form [field].
+  static SmartValidator matchesField(
+    String field, {
+    String message = 'Values do not match.',
+  }) {
+    return SmartValueValidators.matchesField<String>(field, message: message);
+  }
+
+  /// Requires this string when another [field] equals [equals].
+  static SmartValidator requiredWhen({
+    required String field,
+    required Object? equals,
+    String message = 'This field is required.',
+  }) {
+    return SmartValueValidators.requiredWhen<String>(
+      field: field,
+      equals: equals,
+      message: message,
+    );
+  }
+
+  /// Requires a non-null, non-empty string.
+  static SmartValidator required({
+    String message = 'This field is required.',
+  }) => SmartValueValidators.required<String>(message: message);
+
+  /// Requires a syntactically plausible email address when present.
+  static SmartValidator email({
+    String message = 'Enter a valid email address.',
+  }) => SmartValueValidators.email(message: message);
+
+  /// Requires a string to contain exactly [expected] characters.
+  static SmartValidator length(int expected, {String? message}) {
+    return SmartValueValidators.length<String>(expected, message: message);
+  }
+
+  /// Requires a string to contain at least [minimum] characters.
+  static SmartValidator minLength(int minimum, {String? message}) {
+    return SmartValueValidators.minLength<String>(minimum, message: message);
+  }
+
+  /// Requires a string to contain at most [maximum] characters.
+  static SmartValidator maxLength(int maximum, {String? message}) {
+    return SmartValueValidators.maxLength<String>(maximum, message: message);
+  }
+
+  /// Requires a string to match [pattern] when present.
+  static SmartValidator pattern(
+    Pattern pattern, {
+    String message = 'Enter a value in the required format.',
+  }) => SmartValueValidators.pattern(pattern, message: message);
+
+  /// Requires a string to contain a finite number.
+  static SmartValidator number({String message = 'Enter a valid number.'}) {
+    return SmartValueValidators.number<String>(message: message);
+  }
+
+  /// Requires a numeric string greater than or equal to [minimum].
+  static SmartValidator min(num minimum, {String? message}) {
+    return SmartValueValidators.min<String>(minimum, message: message);
+  }
+
+  /// Requires a numeric string less than or equal to [maximum].
+  static SmartValidator max(num maximum, {String? message}) {
+    return SmartValueValidators.max<String>(maximum, message: message);
+  }
+}
+
+/// Generic validator factories for typed dropdowns, dates, and custom fields.
+abstract final class SmartValueValidators {
   /// Creates a validator with explicit [dependsOn] metadata.
   ///
   /// Every field read from [SmartValidationContext] should appear in
   /// [dependsOn] so source changes can automatically revalidate this field.
-  static SmartValidator<T> dependent<T>({
+  static SmartValueValidator<T> dependent<T>({
     required Iterable<String> dependsOn,
     required SmartContextValidator<T> validator,
   }) {
@@ -24,7 +105,7 @@ abstract final class SmartValidators {
   /// Requires a non-empty value to equal another form [field].
   ///
   /// Empty values are allowed; add [required] when confirmation is mandatory.
-  static SmartValidator<T> matchesField<T>(
+  static SmartValueValidator<T> matchesField<T>(
     String field, {
     String message = 'Values do not match.',
   }) {
@@ -40,7 +121,7 @@ abstract final class SmartValidators {
   }
 
   /// Requires this value when another [field] equals [equals].
-  static SmartValidator<T> requiredWhen<T>({
+  static SmartValueValidator<T> requiredWhen<T>({
     required String field,
     required Object? equals,
     String message = 'This field is required.',
@@ -60,14 +141,14 @@ abstract final class SmartValidators {
   ///
   /// Strings containing only whitespace and empty iterables or maps are
   /// considered empty.
-  static SmartValidator<T> required<T>({
+  static SmartValueValidator<T> required<T>({
     String message = 'This field is required.',
   }) {
     return (value) => _isEmpty(value) ? message : null;
   }
 
   /// Requires a syntactically plausible email address when a value is present.
-  static SmartValidator<String> email({
+  static SmartValidator email({
     String message = 'Enter a valid email address.',
   }) {
     final pattern = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
@@ -81,7 +162,7 @@ abstract final class SmartValidators {
   }
 
   /// Requires a string or collection to contain exactly [expected] items.
-  static SmartValidator<T> length<T>(int expected, {String? message}) {
+  static SmartValueValidator<T> length<T>(int expected, {String? message}) {
     _checkLength(expected, 'expected');
     final error = message ?? 'Must contain exactly $expected characters.';
     return (value) {
@@ -93,7 +174,7 @@ abstract final class SmartValidators {
   }
 
   /// Requires a string or collection to contain at least [minimum] items.
-  static SmartValidator<T> minLength<T>(int minimum, {String? message}) {
+  static SmartValueValidator<T> minLength<T>(int minimum, {String? message}) {
     _checkLength(minimum, 'minimum');
     final error = message ?? 'Must contain at least $minimum characters.';
     return (value) {
@@ -106,7 +187,7 @@ abstract final class SmartValidators {
   }
 
   /// Requires a string or collection to contain at most [maximum] items.
-  static SmartValidator<T> maxLength<T>(int maximum, {String? message}) {
+  static SmartValueValidator<T> maxLength<T>(int maximum, {String? message}) {
     _checkLength(maximum, 'maximum');
     final error = message ?? 'Must contain at most $maximum characters.';
     return (value) {
@@ -119,7 +200,7 @@ abstract final class SmartValidators {
   }
 
   /// Requires a string to match [pattern] when a value is present.
-  static SmartValidator<String> pattern(
+  static SmartValidator pattern(
     Pattern pattern, {
     String message = 'Enter a value in the required format.',
   }) {
@@ -134,7 +215,7 @@ abstract final class SmartValidators {
   /// Requires a value to be a finite number.
   ///
   /// Numeric values and strings accepted by [num.tryParse] are supported.
-  static SmartValidator<T> number<T>({
+  static SmartValueValidator<T> number<T>({
     String message = 'Enter a valid number.',
   }) {
     return (value) {
@@ -146,7 +227,7 @@ abstract final class SmartValidators {
   }
 
   /// Requires a numeric value greater than or equal to [minimum].
-  static SmartValidator<T> min<T>(num minimum, {String? message}) {
+  static SmartValueValidator<T> min<T>(num minimum, {String? message}) {
     final error = message ?? 'Enter a value greater than or equal to $minimum.';
     return (value) {
       if (_isEmpty(value)) {
@@ -158,7 +239,7 @@ abstract final class SmartValidators {
   }
 
   /// Requires a numeric value less than or equal to [maximum].
-  static SmartValidator<T> max<T>(num maximum, {String? message}) {
+  static SmartValueValidator<T> max<T>(num maximum, {String? message}) {
     final error = message ?? 'Enter a value less than or equal to $maximum.';
     return (value) {
       if (_isEmpty(value)) {

@@ -69,7 +69,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
-          body: SmartJsonForm.fromJson(json: json, controller: controller),
+          body: SmartSchemaForm.fromJson(json: json, controller: controller),
         ),
       ),
     );
@@ -103,6 +103,80 @@ void main() {
     expect(valid.values['country'], 'md');
   });
 
+  testWidgets('builds and validates a form from Dart definition classes', (
+    tester,
+  ) async {
+    final controller = SmartFormController();
+    final schema = SmartFormSchema(
+      scrollToFirstError: false,
+      focusFirstError: false,
+      errorAnimation: SmartErrorAnimation.none,
+      fields: <SmartFieldDefinition>[
+        SmartFieldDefinition.email(
+          name: 'email',
+          labelText: 'Email',
+          required: true,
+          requiredMessage: 'Email is required',
+        ),
+        SmartFieldDefinition.password(
+          name: 'password',
+          labelText: 'Password',
+          required: true,
+          minLength: 8,
+          minLengthMessage: 'Use at least 8 characters',
+        ),
+        SmartFieldDefinition.password(
+          name: 'confirm_password',
+          labelText: 'Confirm password',
+          required: true,
+          minLength: null,
+          validators: <SmartValidatorDefinition>[
+            SmartValidatorDefinition.matchesField(
+              'password',
+              message: 'Passwords do not match',
+            ),
+          ],
+        ),
+        SmartFieldDefinition.dropdown(
+          name: 'country',
+          labelText: 'Country',
+          required: true,
+          options: const <SmartOptionDefinition>[
+            SmartOptionDefinition(value: 'md', label: 'Moldova'),
+            SmartOptionDefinition(value: 'ro', label: 'Romania'),
+          ],
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SmartSchemaForm(schema: schema, controller: controller),
+        ),
+      ),
+    );
+
+    final invalid = await controller.validate();
+    await tester.pump();
+
+    expect(invalid.errors['email'], 'Email is required');
+    expect(invalid.errors['password'], 'This field is required.');
+    expect(invalid.errors['country'], 'This field is required.');
+
+    controller.patchValue(<String, Object?>{
+      'email': 'person@example.com',
+      'password': 'password123',
+      'confirm_password': 'password123',
+      'country': 'md',
+    });
+    await tester.pump();
+
+    final valid = await controller.validate();
+    expect(valid.isValid, isTrue);
+    expect(valid.values['country'], 'md');
+  });
+
   testWidgets('supports custom fields, validators, and named async checks', (
     tester,
   ) async {
@@ -112,7 +186,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
-          body: SmartJsonForm.fromJson(
+          body: SmartSchemaForm.fromJson(
             controller: controller,
             json: const <String, Object?>{
               'scroll_to_first_error': false,
@@ -132,7 +206,7 @@ void main() {
                 },
               ],
             },
-            customFieldBuilders: <String, SmartJsonFieldBuilder>{
+            customFieldBuilders: <String, SmartFieldDefinitionBuilder>{
               'toggle': (context, definition, validators, asyncValidators) {
                 return SmartFormField<Object?>(
                   name: definition.name,
@@ -147,7 +221,7 @@ void main() {
                 );
               },
             },
-            customValidatorBuilders: <String, SmartJsonValidatorBuilder>{
+            customValidatorBuilders: <String, SmartValidatorDefinitionBuilder>{
               'mustBeTrue': (definition) {
                 return (value) => value == true ? null : definition.message;
               },
@@ -191,5 +265,20 @@ void main() {
         ),
       ),
     );
+  });
+
+  test('keeps JSON-oriented names as schema API aliases', () {
+    final SmartJsonValidatorDefinition validator =
+        SmartJsonValidatorDefinition.required();
+    final SmartJsonFieldDefinition field = SmartJsonFieldDefinition(
+      name: 'name',
+      type: 'text',
+      validators: <SmartValidatorDefinition>[validator],
+    );
+    final SmartJsonForm form = SmartJsonForm(
+      schema: SmartFormSchema(fields: <SmartFieldDefinition>[field]),
+    );
+
+    expect(form.schema.fields.single.name, 'name');
   });
 }

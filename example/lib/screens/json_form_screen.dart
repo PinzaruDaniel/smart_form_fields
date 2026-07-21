@@ -108,13 +108,13 @@ class _JsonFormExamplePageState extends State<JsonFormExamplePage> {
   @override
   void initState() {
     super.initState();
-    _jsonForm = SmartJsonForm.fromJson(
+    _jsonForm = SmartSchemaForm.fromJson(
       json: _apiResponse,
       controller: _controller,
       asyncValidators: <String, SmartAsyncValidator<Object?>>{
         'email_available': _emailAvailable,
       },
-      customValidatorBuilders: <String, SmartJsonValidatorBuilder>{
+      customValidatorBuilders: <String, SmartValidatorDefinitionBuilder>{
         'not_reserved': (definition) {
           return (value) => value?.toString().toLowerCase() == 'admin'
               ? definition.message
@@ -124,7 +124,7 @@ class _JsonFormExamplePageState extends State<JsonFormExamplePage> {
           return (value) => value == true ? null : definition.message;
         },
       },
-      customFieldBuilders: <String, SmartJsonFieldBuilder>{
+      customFieldBuilders: <String, SmartFieldDefinitionBuilder>{
         'agreement': _agreementField,
       },
     );
@@ -232,8 +232,8 @@ class _JsonFormExamplePageState extends State<JsonFormExamplePage> {
 
   Widget _agreementField(
     BuildContext context,
-    SmartJsonFieldDefinition definition,
-    List<SmartValidator<Object?>> validators,
+    SmartFieldDefinition definition,
+    List<SmartValueValidator<Object?>> validators,
     List<SmartAsyncValidator<Object?>> asyncValidators,
   ) {
     return SmartFormField<Object?>(

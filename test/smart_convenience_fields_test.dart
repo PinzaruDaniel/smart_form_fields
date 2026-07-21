@@ -254,7 +254,7 @@ void main() {
               required: true,
               requiredMessage: 'Country is required',
               decoration: const InputDecoration(labelText: 'Country'),
-              validators: <SmartValidator<String>>[
+              validators: <SmartValidator>[
                 (value) {
                   validationCalls++;
                   return value == 'Blocked' ? 'Country is unavailable' : null;

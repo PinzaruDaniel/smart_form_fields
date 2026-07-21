@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'class_schema_form_screen.dart';
 import 'controller_playground_screen.dart';
 import 'json_form_screen.dart';
 import 'registration_form_screen.dart';
@@ -20,7 +21,7 @@ class ExampleHomeScreen extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               'Open a focused example to see widget-authored forms, API JSON '
-              'schemas, and imperative form control.',
+              'schemas, Dart class schemas, and imperative form control.',
               style: theme.textTheme.bodyLarge?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -33,6 +34,15 @@ class ExampleHomeScreen extends StatelessWidget {
                   'Reusable fields, sync and async validation, validation '
                   'timing, first-error navigation, reset, and submission.',
               onTap: () => _open(context, const RegistrationExamplePage()),
+            ),
+            const SizedBox(height: 12),
+            _DemoCard(
+              icon: Icons.account_tree_outlined,
+              title: 'Class-defined form',
+              description:
+                  'SmartFormSchema, typed field definitions, validator '
+                  'definitions, and cross-field dependencies without JSON.',
+              onTap: () => _open(context, const ClassSchemaFormExamplePage()),
             ),
             const SizedBox(height: 12),
             _DemoCard(

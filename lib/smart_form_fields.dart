@@ -9,10 +9,20 @@ export 'src/form/smart_form_result.dart' show SmartFormResult;
 export 'src/json/smart_form_schema.dart'
     show
         SmartFormSchema,
+        SmartFieldDefinition,
         SmartJsonFieldDefinition,
-        SmartJsonValidatorDefinition;
+        SmartJsonValidatorDefinition,
+        SmartOptionDefinition,
+        SmartValidatorDefinition;
 export 'src/json/smart_json_form.dart'
-    show SmartJsonFieldBuilder, SmartJsonForm, SmartJsonValidatorBuilder;
+    show
+        SmartClassFieldMapper,
+        SmartFieldDefinitionBuilder,
+        SmartJsonFieldBuilder,
+        SmartJsonForm,
+        SmartJsonValidatorBuilder,
+        SmartSchemaForm,
+        SmartValidatorDefinitionBuilder;
 export 'src/theme/smart_form_theme.dart'
     show SmartFormTheme, SmartFormThemeData;
 export 'src/fields/smart_field_controller.dart' show SmartFieldController;
@@ -33,5 +43,7 @@ export 'src/validation/smart_validation_context.dart'
         SmartContextAsyncValidator,
         SmartContextValidator,
         SmartValidationContext;
-export 'src/validation/smart_validator.dart' show SmartValidator;
-export 'src/validation/smart_validators.dart' show SmartValidators;
+export 'src/validation/smart_validator.dart'
+    show SmartValidator, SmartValueValidator;
+export 'src/validation/smart_validators.dart'
+    show SmartValidators, SmartValueValidators;
