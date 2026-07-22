@@ -80,10 +80,27 @@ class _RegistrationExamplePageState extends State<RegistrationExamplePage> {
   }
 
   Future<void> _showServerErrors() async {
-    await _formController.setErrors(const <String, String>{
-      'email': 'The server rejected this email address',
-      'phone': 'The server could not verify this phone number',
-    }, scrollToFirstError: true);
+    final result = await _formController.setErrorsFromResponse(
+      const <String, Object?>{
+        'success': false,
+        'message': 'The server rejected the registration',
+        'data': <String, Object?>{
+          'validation_errors': <String, Object?>{
+            'email': <String>['The server rejected this email address'],
+            'phone_number': <String>[
+              'The server could not verify this phone number',
+            ],
+          },
+        },
+      },
+      fieldAliases: const <String, String>{'phone_number': 'phone'},
+      scrollToFirstError: true,
+    );
+    if (mounted && result.generalErrors.isNotEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(result.generalErrors.first)));
+    }
   }
 
   @override

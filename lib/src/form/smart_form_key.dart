@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+import 'smart_api_errors.dart';
 import 'smart_form.dart';
 import 'smart_form_result.dart';
 
@@ -52,6 +53,25 @@ final class SmartFormKey extends GlobalKey<SmartFormState> {
     bool scrollToFirstError = false,
   }) {
     return _state.setErrors(errors, scrollToFirstError: scrollToFirstError);
+  }
+
+  /// Parses a complete decoded API [response] and applies matching errors.
+  Future<SmartApiErrorResult> setErrorsFromResponse(
+    Object? response, {
+    SmartApiErrorExtractor? extractor,
+    Map<String, String> fieldAliases = const {},
+    String messageSeparator = '\n',
+    bool clearExistingErrors = false,
+    bool scrollToFirstError = false,
+  }) {
+    return _state.setErrorsFromResponse(
+      response,
+      extractor: extractor,
+      fieldAliases: fieldAliases,
+      messageSeparator: messageSeparator,
+      clearExistingErrors: clearExistingErrors,
+      scrollToFirstError: scrollToFirstError,
+    );
   }
 
   /// Scrolls to and focuses field [name].

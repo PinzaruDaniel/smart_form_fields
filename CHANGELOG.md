@@ -1,3 +1,15 @@
+## 1.0.1
+
+* Add `SmartApiErrors.parse` for recursively extracting validation errors from
+  complete decoded backend responses.
+* Add `setErrorsFromResponse` to `SmartFormController` and `SmartFormKey` with
+  automatic snake_case/camelCase matching, path matching, explicit aliases,
+  multiple-message joining, optional error clearing, and first-error scrolling.
+* Recognize field maps, error object arrays, nested validation containers,
+  JSON:API pointers, GraphQL paths, fieldless messages, and custom extractors.
+* Return applied, unmapped, discovered, and general errors through
+  `SmartApiErrorResult` so no backend validation information is lost.
+
 ## 1.0.0
 
 * Make `SmartValidator` string-first so text, email, phone, and password

@@ -470,23 +470,39 @@ instead of silently rendering an incomplete form.
 
 ## Server errors and value updates
 
-Backend errors can be applied after a request. The next value change clears
-the server error for that field.
+Pass the complete decoded backend response to `setErrorsFromResponse`. The
+default parser recursively finds common `errors`, `validation_errors`, and
+`field_errors` containers, direct field maps, arrays of field/message objects,
+JSON:API pointers, and GraphQL paths. The next value change clears the applied
+server error for that field.
 
 ```dart
-await formController.setErrors(
-  {
-    'email': 'The server rejected this email',
-    'phone': 'The server could not verify this number',
+final apiErrors = await formController.setErrorsFromResponse(
+  responseBody,
+  fieldAliases: {
+    'phone_number': 'phone',
   },
   scrollToFirstError: true,
 );
+
+showGlobalErrors(apiErrors.generalErrors);
+logUnmappedErrors(apiErrors.unmappedFieldErrors);
 
 formController.patchValue({
   'email': 'person@example.com',
   'country': 'Moldova',
 });
 ```
+
+Field names are matched exactly first and then normalized, so `first_name`
+maps to `firstName`. Dotted paths and bracket paths use their last component.
+Multiple messages for one field are joined with a newline by default; customize
+this with `messageSeparator`.
+
+For an uncommon response shape, pass an `extractor` that returns a
+`SmartApiErrorPayload`. `SmartApiErrorResult` always reports all discovered,
+applied, unmapped, and fieldless/general errors. The existing `setErrors` API
+remains available when the application already has a simple field-error map.
 
 `patchValue` validates all field names before changing any value. Unknown names
 throw instead of leaving the form partially updated.

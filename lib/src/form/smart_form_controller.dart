@@ -1,3 +1,4 @@
+import 'smart_api_errors.dart';
 import 'smart_form_result.dart';
 
 /// Internal command surface implemented by a mounted smart form.
@@ -31,6 +32,16 @@ abstract interface class SmartFormControllerDelegate {
 
   /// Applies multiple field errors.
   Future<void> setErrors(Map<String, String> errors, {bool scrollToFirstError});
+
+  /// Parses and applies field errors from a complete API response.
+  Future<SmartApiErrorResult> setErrorsFromResponse(
+    Object? response, {
+    SmartApiErrorExtractor? extractor,
+    Map<String, String> fieldAliases,
+    String messageSeparator,
+    bool clearExistingErrors,
+    bool scrollToFirstError,
+  });
 
   /// Reveals and focuses a field.
   Future<void> focusField(String name);
@@ -92,6 +103,30 @@ final class SmartFormController {
   }) {
     return _requireDelegate().setErrors(
       errors,
+      scrollToFirstError: scrollToFirstError,
+    );
+  }
+
+  /// Parses a complete decoded API [response] and applies matching errors.
+  ///
+  /// Common nested maps and error arrays are supported automatically. Use
+  /// [fieldAliases] to map backend names to form names, or [extractor] for an
+  /// application-specific response shape. Unmapped and general messages are
+  /// returned to the caller.
+  Future<SmartApiErrorResult> setErrorsFromResponse(
+    Object? response, {
+    SmartApiErrorExtractor? extractor,
+    Map<String, String> fieldAliases = const {},
+    String messageSeparator = '\n',
+    bool clearExistingErrors = false,
+    bool scrollToFirstError = false,
+  }) {
+    return _requireDelegate().setErrorsFromResponse(
+      response,
+      extractor: extractor,
+      fieldAliases: fieldAliases,
+      messageSeparator: messageSeparator,
+      clearExistingErrors: clearExistingErrors,
       scrollToFirstError: scrollToFirstError,
     );
   }

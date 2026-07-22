@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import '../animation/smart_error_animation.dart';
 import '../theme/smart_form_theme.dart';
 import '../validation/smart_validation_context.dart';
+import 'smart_api_errors.dart';
 import 'smart_field_handle.dart';
 import 'smart_field_registry.dart';
 import 'smart_form_controller.dart';
@@ -321,6 +322,99 @@ class SmartFormState extends State<SmartForm>
         }
       }
     }
+  }
+
+  @override
+  Future<SmartApiErrorResult> setErrorsFromResponse(
+    Object? response, {
+    SmartApiErrorExtractor? extractor,
+    Map<String, String> fieldAliases = const {},
+    String messageSeparator = '\n',
+    bool clearExistingErrors = false,
+    bool scrollToFirstError = false,
+  }) async {
+    if (messageSeparator.isEmpty) {
+      throw ArgumentError.value(
+        messageSeparator,
+        'messageSeparator',
+        'Must not be empty.',
+      );
+    }
+    final payload = (extractor ?? SmartApiErrors.parse)(response);
+    final appliedMessages = <String, List<String>>{};
+    final unmappedErrors = <String, List<String>>{};
+
+    for (final entry in payload.fieldErrors.entries) {
+      final formFieldName = _matchApiFieldName(entry.key, fieldAliases);
+      if (formFieldName == null) {
+        unmappedErrors[entry.key] = entry.value;
+        continue;
+      }
+      final messages = appliedMessages.putIfAbsent(
+        formFieldName,
+        () => <String>[],
+      );
+      for (final message in entry.value) {
+        if (!messages.contains(message)) {
+          messages.add(message);
+        }
+      }
+    }
+
+    final appliedErrors = <String, String>{
+      for (final entry in appliedMessages.entries)
+        entry.key: entry.value.join(messageSeparator),
+    };
+    if (clearExistingErrors) {
+      clearErrors();
+    }
+    if (appliedErrors.isNotEmpty) {
+      await setErrors(appliedErrors, scrollToFirstError: scrollToFirstError);
+    }
+    return SmartApiErrorResult(
+      discoveredFieldErrors: payload.fieldErrors,
+      appliedErrors: appliedErrors,
+      unmappedFieldErrors: unmappedErrors,
+      generalErrors: payload.generalErrors,
+    );
+  }
+
+  String? _matchApiFieldName(String apiName, Map<String, String> fieldAliases) {
+    final normalizedApiName = _normalizedFieldName(apiName);
+    String? aliasedName = fieldAliases[apiName];
+    if (aliasedName == null) {
+      for (final entry in fieldAliases.entries) {
+        if (_normalizedFieldName(entry.key) == normalizedApiName) {
+          aliasedName = entry.value;
+          break;
+        }
+      }
+    }
+    final candidate = aliasedName ?? apiName;
+    if (_registry.fieldNamed(candidate) != null) {
+      return candidate;
+    }
+
+    final normalizedCandidate = _normalizedFieldName(candidate);
+    String? match;
+    for (final field in _registry.fields) {
+      if (_normalizedFieldName(field.name) == normalizedCandidate) {
+        if (match != null) {
+          return null;
+        }
+        match = field.name;
+      }
+    }
+    return match;
+  }
+
+  String _normalizedFieldName(String name) {
+    final segments = name
+        .split(RegExp(r'[/\.\[\]]+'))
+        .where((segment) => segment.isNotEmpty)
+        .toList();
+    final leaf = segments.isEmpty ? name : segments.last;
+    return leaf.replaceAll(RegExp('[^a-zA-Z0-9]'), '').toLowerCase();
   }
 
   @override
