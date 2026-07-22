@@ -311,53 +311,57 @@ Render `field.errorText` in a custom widget and call `field.didChange` whenever
 its value changes. Use `field.isValidating` when the UI should expose async
 validation progress.
 
-## Forms from Dart classes
+## Forms from API model classes
 
-Use `SmartFormSchema`, `SmartFieldDefinition`, and
-`SmartValidatorDefinition` when a form is declarative but already defined in
-Dart. This uses the same renderer as JSON without maps or decoding:
+Use `SmartSchemaForm.fromClasses` when an API response has already been decoded
+into application DTOs such as `EmailField`, `PasswordField`, or a heterogeneous
+`List<ApiField>`. Supply one typed mapper that tells the package how each API
+model maps to a built-in field definition:
 
 ```dart
-final schema = SmartFormSchema(
-  fields: [
-    SmartFieldDefinition.email(
-      name: 'email',
-      labelText: 'Email',
-      required: true,
-    ),
-    SmartFieldDefinition.password(
-      name: 'password',
-      labelText: 'Password',
-      required: true,
-    ),
-    SmartFieldDefinition.password(
-      name: 'confirm_password',
-      labelText: 'Confirm password',
-      minLength: null,
-      validators: [
-        SmartValidatorDefinition.matchesField(
-          'password',
-          message: 'Passwords do not match',
-        ),
-      ],
-    ),
-    SmartFieldDefinition.dropdown(
-      name: 'country',
-      labelText: 'Country',
-      options: const [
-        SmartOptionDefinition(value: 'md', label: 'Moldova'),
-        SmartOptionDefinition(value: 'ro', label: 'Romania'),
-      ],
-    ),
-  ],
-);
+sealed class ApiField {
+  const ApiField(this.name, this.label);
+  final String name;
+  final String label;
+}
 
-SmartSchemaForm(schema: schema, controller: formController);
+final class EmailField extends ApiField {
+  const EmailField(super.name, super.label, {required this.required});
+  final bool required;
+}
+
+final fields = response.fields; // List<ApiField> created by your API client.
+
+SmartSchemaForm.fromClasses<ApiField>(
+  fields: fields,
+  controller: formController,
+  fieldMapper: (field) => switch (field) {
+    EmailField field => SmartFieldDefinition.email(
+        name: field.name,
+        labelText: field.label,
+        required: field.required,
+      ),
+    PasswordField field => SmartFieldDefinition.password(
+        name: field.name,
+        labelText: field.label,
+        minLength: field.minimumLength,
+      ),
+    DropdownField field => SmartFieldDefinition.dropdown(
+        name: field.name,
+        labelText: field.label,
+        options: [
+          for (final option in field.options)
+            SmartOptionDefinition(value: option.value, label: option.label),
+        ],
+      ),
+  },
+);
 ```
 
-Built-in class constructors cover text, email, phone, password, date, and
-dropdown fields. The general `SmartFieldDefinition` constructor remains
-available for application-registered field types.
+Flutter does not provide runtime reflection for arbitrary application classes,
+so the mapper is explicit and type-safe. Define it once for the API model
+family; the package then handles field rendering, registration, validation,
+values, dependencies, scrolling, and focus for every returned list.
 
 ## Forms from API JSON
 
@@ -517,8 +521,8 @@ final birthDate = result.values['birthDate'] as DateTime?;
 ## Example application
 
 The [example](example/) directory contains four Material 3 screens: a complete
-registration flow, a Dart class-defined form, a snake_case JSON/API form, and
-an imperative controller playground. Together they demonstrate reusable and
+registration flow, an API-model-class form, a snake_case JSON/API form, and an
+imperative controller playground. Together they demonstrate reusable and
 custom fields, sync/async validation, bottom-sheet selection, value updates,
 dynamic and disabled fields, reset, server errors, focus/scroll commands, and
 first-error navigation.

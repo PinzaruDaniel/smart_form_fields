@@ -12,58 +12,93 @@ class ClassSchemaFormExamplePage extends StatefulWidget {
 class _ClassSchemaFormExamplePageState
     extends State<ClassSchemaFormExamplePage> {
   final SmartFormController _controller = SmartFormController();
-  late final SmartFormSchema _schema = SmartFormSchema(
-    scrollToFirstError: true,
-    focusFirstError: true,
-    errorAnimation: SmartErrorAnimation.fade,
-    fields: <SmartFieldDefinition>[
-      SmartFieldDefinition.text(
-        name: 'display_name',
-        labelText: 'Display name',
-        required: true,
+  final List<ApiField> _apiFields = const <ApiField>[
+    TextApiField(
+      name: 'display_name',
+      label: 'Display name',
+      required: true,
+      minimumLength: 3,
+      validationMessage: 'Use at least 3 characters',
+    ),
+    EmailApiField(
+      name: 'email',
+      label: 'Email',
+      required: true,
+      requiredMessage: 'Email is required',
+    ),
+    PasswordApiField(
+      name: 'password',
+      label: 'Password',
+      required: true,
+      minimumLength: 8,
+      validationMessage: 'Use at least 8 characters',
+    ),
+    PasswordApiField(
+      name: 'confirm_password',
+      label: 'Confirm password',
+      required: true,
+      matchesField: 'password',
+      validationMessage: 'Passwords do not match',
+    ),
+    DropdownApiField(
+      name: 'country',
+      label: 'Country',
+      required: true,
+      options: <ApiOption>[
+        ApiOption(value: 'md', label: 'Moldova'),
+        ApiOption(value: 'ro', label: 'Romania'),
+        ApiOption(value: 'ua', label: 'Ukraine'),
+      ],
+    ),
+  ];
+
+  SmartFieldDefinition _mapApiField(ApiField field) {
+    return switch (field) {
+      TextApiField field => SmartFieldDefinition.text(
+        name: field.name,
+        labelText: field.label,
+        required: field.required,
         validators: <SmartValidatorDefinition>[
-          SmartValidatorDefinition.minLength(
-            3,
-            message: 'Use at least 3 characters',
-          ),
+          if (field.minimumLength case final length?)
+            SmartValidatorDefinition.minLength(
+              length,
+              message: field.validationMessage,
+            ),
         ],
       ),
-      SmartFieldDefinition.email(
-        name: 'email',
-        labelText: 'Email',
-        required: true,
-        requiredMessage: 'Email is required',
+      EmailApiField field => SmartFieldDefinition.email(
+        name: field.name,
+        labelText: field.label,
+        required: field.required,
+        requiredMessage: field.requiredMessage,
       ),
-      SmartFieldDefinition.password(
-        name: 'password',
-        labelText: 'Password',
-        required: true,
-        minLengthMessage: 'Use at least 8 characters',
-      ),
-      SmartFieldDefinition.password(
-        name: 'confirm_password',
-        labelText: 'Confirm password',
-        required: true,
-        minLength: null,
+      PasswordApiField field => SmartFieldDefinition.password(
+        name: field.name,
+        labelText: field.label,
+        required: field.required,
+        minLength: field.minimumLength,
+        minLengthMessage: field.matchesField == null
+            ? field.validationMessage
+            : null,
         validators: <SmartValidatorDefinition>[
-          SmartValidatorDefinition.matchesField(
-            'password',
-            message: 'Passwords do not match',
-          ),
+          if (field.matchesField case final source?)
+            SmartValidatorDefinition.matchesField(
+              source,
+              message: field.validationMessage,
+            ),
         ],
       ),
-      SmartFieldDefinition.dropdown(
-        name: 'country',
-        labelText: 'Country',
-        required: true,
-        options: const <SmartOptionDefinition>[
-          SmartOptionDefinition(value: 'md', label: 'Moldova'),
-          SmartOptionDefinition(value: 'ro', label: 'Romania'),
-          SmartOptionDefinition(value: 'ua', label: 'Ukraine'),
+      DropdownApiField field => SmartFieldDefinition.dropdown(
+        name: field.name,
+        labelText: field.label,
+        required: field.required,
+        options: <SmartOptionDefinition>[
+          for (final option in field.options)
+            SmartOptionDefinition(value: option.value, label: option.label),
         ],
       ),
-    ],
-  );
+    };
+  }
 
   bool _isSubmitting = false;
 
@@ -114,16 +149,24 @@ class _ClassSchemaFormExamplePageState
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
               children: <Widget>[
                 Text(
-                  'Rendered from Dart definition classes',
+                  'Rendered from API model classes',
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'SmartFormSchema and SmartFieldDefinition use the same '
-                  'renderer as JSON without requiring maps or decoding.',
+                  'The API response is decoded into EmailApiField, '
+                  'PasswordApiField, and other DTOs. One typed mapper lets '
+                  'the package render the complete model list.',
                 ),
                 const SizedBox(height: 24),
-                SmartSchemaForm(schema: _schema, controller: _controller),
+                SmartSchemaForm.fromClasses<ApiField>(
+                  fields: _apiFields,
+                  fieldMapper: _mapApiField,
+                  controller: _controller,
+                  scrollToFirstError: true,
+                  focusFirstError: true,
+                  errorAnimation: SmartErrorAnimation.fade,
+                ),
                 const SizedBox(height: 24),
                 FilledButton.icon(
                   onPressed: _isSubmitting ? null : _submit,
@@ -152,4 +195,73 @@ class _ClassSchemaFormExamplePageState
       ),
     );
   }
+}
+
+sealed class ApiField {
+  const ApiField({
+    required this.name,
+    required this.label,
+    required this.required,
+  });
+
+  final String name;
+  final String label;
+  final bool required;
+}
+
+final class TextApiField extends ApiField {
+  const TextApiField({
+    required super.name,
+    required super.label,
+    required super.required,
+    this.minimumLength,
+    this.validationMessage,
+  });
+
+  final int? minimumLength;
+  final String? validationMessage;
+}
+
+final class EmailApiField extends ApiField {
+  const EmailApiField({
+    required super.name,
+    required super.label,
+    required super.required,
+    this.requiredMessage,
+  });
+
+  final String? requiredMessage;
+}
+
+final class PasswordApiField extends ApiField {
+  const PasswordApiField({
+    required super.name,
+    required super.label,
+    required super.required,
+    this.minimumLength,
+    this.matchesField,
+    this.validationMessage,
+  });
+
+  final int? minimumLength;
+  final String? matchesField;
+  final String? validationMessage;
+}
+
+final class DropdownApiField extends ApiField {
+  const DropdownApiField({
+    required super.name,
+    required super.label,
+    required super.required,
+    required this.options,
+  });
+
+  final List<ApiOption> options;
+}
+
+final class ApiOption {
+  const ApiOption({required this.value, required this.label});
+
+  final Object? value;
+  final String label;
 }

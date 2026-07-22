@@ -21,7 +21,7 @@ class ExampleHomeScreen extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               'Open a focused example to see widget-authored forms, API JSON '
-              'schemas, Dart class schemas, and imperative form control.',
+              'schemas, API model classes, and imperative form control.',
               style: theme.textTheme.bodyLarge?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -40,8 +40,8 @@ class ExampleHomeScreen extends StatelessWidget {
               icon: Icons.account_tree_outlined,
               title: 'Class-defined form',
               description:
-                  'SmartFormSchema, typed field definitions, validator '
-                  'definitions, and cross-field dependencies without JSON.',
+                  'EmailField, PasswordField, and other API DTOs mapped once '
+                  'into a complete generated form.',
               onTap: () => _open(context, const ClassSchemaFormExamplePage()),
             ),
             const SizedBox(height: 12),

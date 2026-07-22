@@ -4,12 +4,14 @@
   validators no longer require `<String>`.
 * Add `SmartValueValidator<T>` and `SmartValueValidators` for dates, typed
   dropdowns, and custom value fields.
-* Add class-based form construction with `SmartSchemaForm`,
-  `SmartFieldDefinition`, `SmartValidatorDefinition`, and typed constructors
-  for every built-in generated field.
+* Add `SmartSchemaForm.fromClasses` with a typed mapper for creating forms from
+  lists of application/API DTO classes such as email, password, and dropdown
+  field models.
+* Add `SmartFieldDefinition`, `SmartValidatorDefinition`, and typed mapping
+  targets for every built-in generated field.
 * Keep snake_case JSON construction through `SmartSchemaForm.fromJson` and
   backwards-compatible `SmartJson*` aliases.
-* Add a complete class-defined form example and 1.0 migration guide.
+* Add a complete API-model-class form example and 1.0 migration guide.
 
 ## 0.2.3
 

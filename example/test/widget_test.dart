@@ -156,13 +156,13 @@ void main() {
     expect(find.textContaining('JSON values:'), findsOneWidget);
   });
 
-  testWidgets('builds and validates the Dart class schema example', (
+  testWidgets('builds and validates the API model class example', (
     tester,
   ) async {
     await tester.pumpWidget(const SmartFormFieldsExampleApp());
     await _openExample(tester, 'Class-defined form');
 
-    expect(find.text('Rendered from Dart definition classes'), findsOneWidget);
+    expect(find.text('Rendered from API model classes'), findsOneWidget);
     expect(find.widgetWithText(TextField, 'Display name'), findsOneWidget);
     expect(find.widgetWithText(TextField, 'Confirm password'), findsOneWidget);
 

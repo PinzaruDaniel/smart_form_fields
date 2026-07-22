@@ -98,7 +98,7 @@ class SmartSchemaForm extends StatelessWidget {
   /// so [fieldMapper] explicitly describes how one model becomes a package
   /// field definition. Heterogeneous lists can use a sealed base type and a
   /// switch expression in the mapper.
-  factory SmartSchemaForm.fromClasses<T>({
+  static SmartSchemaForm fromClasses<T>({
     required Iterable<T> fields,
     required SmartClassFieldMapper<T> fieldMapper,
     SmartFormController? controller,

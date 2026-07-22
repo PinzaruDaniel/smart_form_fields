@@ -103,56 +103,70 @@ void main() {
     expect(valid.values['country'], 'md');
   });
 
-  testWidgets('builds and validates a form from Dart definition classes', (
+  testWidgets('builds and validates a form from API model classes', (
     tester,
   ) async {
     final controller = SmartFormController();
-    final schema = SmartFormSchema(
-      scrollToFirstError: false,
-      focusFirstError: false,
-      errorAnimation: SmartErrorAnimation.none,
-      fields: <SmartFieldDefinition>[
-        SmartFieldDefinition.email(
-          name: 'email',
-          labelText: 'Email',
-          required: true,
+    const fields = <_ApiField>[
+      _EmailField(name: 'email', label: 'Email', required: true),
+      _PasswordField(name: 'password', label: 'Password', minLength: 8),
+      _PasswordField(
+        name: 'confirm_password',
+        label: 'Confirm password',
+        matchesField: 'password',
+      ),
+      _DropdownField(
+        name: 'country',
+        label: 'Country',
+        options: <String>['md', 'ro'],
+      ),
+    ];
+
+    SmartFieldDefinition mapField(_ApiField field) {
+      return switch (field) {
+        _EmailField field => SmartFieldDefinition.email(
+          name: field.name,
+          labelText: field.label,
+          required: field.required,
           requiredMessage: 'Email is required',
         ),
-        SmartFieldDefinition.password(
-          name: 'password',
-          labelText: 'Password',
+        _PasswordField field => SmartFieldDefinition.password(
+          name: field.name,
+          labelText: field.label,
           required: true,
-          minLength: 8,
+          minLength: field.minLength,
           minLengthMessage: 'Use at least 8 characters',
-        ),
-        SmartFieldDefinition.password(
-          name: 'confirm_password',
-          labelText: 'Confirm password',
-          required: true,
-          minLength: null,
           validators: <SmartValidatorDefinition>[
-            SmartValidatorDefinition.matchesField(
-              'password',
-              message: 'Passwords do not match',
-            ),
+            if (field.matchesField case final source?)
+              SmartValidatorDefinition.matchesField(
+                source,
+                message: 'Passwords do not match',
+              ),
           ],
         ),
-        SmartFieldDefinition.dropdown(
-          name: 'country',
-          labelText: 'Country',
+        _DropdownField field => SmartFieldDefinition.dropdown(
+          name: field.name,
+          labelText: field.label,
           required: true,
-          options: const <SmartOptionDefinition>[
-            SmartOptionDefinition(value: 'md', label: 'Moldova'),
-            SmartOptionDefinition(value: 'ro', label: 'Romania'),
+          options: <SmartOptionDefinition>[
+            for (final option in field.options)
+              SmartOptionDefinition(value: option, label: option),
           ],
         ),
-      ],
-    );
+      };
+    }
 
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
-          body: SmartSchemaForm(schema: schema, controller: controller),
+          body: SmartSchemaForm.fromClasses<_ApiField>(
+            fields: fields,
+            fieldMapper: mapField,
+            controller: controller,
+            scrollToFirstError: false,
+            focusFirstError: false,
+            errorAnimation: SmartErrorAnimation.none,
+          ),
         ),
       ),
     );
@@ -281,4 +295,43 @@ void main() {
 
     expect(form.schema.fields.single.name, 'name');
   });
+}
+
+sealed class _ApiField {
+  const _ApiField({required this.name, required this.label});
+
+  final String name;
+  final String label;
+}
+
+final class _EmailField extends _ApiField {
+  const _EmailField({
+    required super.name,
+    required super.label,
+    required this.required,
+  });
+
+  final bool required;
+}
+
+final class _PasswordField extends _ApiField {
+  const _PasswordField({
+    required super.name,
+    required super.label,
+    this.minLength,
+    this.matchesField,
+  });
+
+  final int? minLength;
+  final String? matchesField;
+}
+
+final class _DropdownField extends _ApiField {
+  const _DropdownField({
+    required super.name,
+    required super.label,
+    required this.options,
+  });
+
+  final List<String> options;
 }

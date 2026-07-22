@@ -29,20 +29,20 @@ final List<SmartValueValidator<DateTime>> validators = [
 
 ## Declarative forms
 
-`SmartSchemaForm` is the neutral renderer for definitions created from Dart
-classes or JSON.
+`SmartSchemaForm.fromClasses` adapts application/API model objects into smart
+fields through one typed mapper:
 
 ```dart
-SmartSchemaForm(
-  schema: SmartFormSchema(
-    fields: [
-      SmartFieldDefinition.email(
-        name: 'email',
-        labelText: 'Email',
-        required: true,
+SmartSchemaForm.fromClasses<ApiField>(
+  fields: response.fields,
+  fieldMapper: (field) => switch (field) {
+    EmailField field => SmartFieldDefinition.email(
+        name: field.name,
+        labelText: field.label,
+        required: field.required,
       ),
-    ],
-  ),
+    // Map the remaining API model subclasses once.
+  },
 );
 ```
 
