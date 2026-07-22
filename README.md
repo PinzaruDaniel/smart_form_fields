@@ -554,6 +554,17 @@ SmartPhoneField(
       inputContainsCountryCode: false,
     ),
   ],
+  valueParser: (formatted) async {
+    final parsed = await getFormattedParseResult(
+      formatted,
+      selectedCountry,
+      phoneNumberFormat: PhoneNumberFormat.national,
+    );
+    return SmartPhoneValue(
+      formatted: parsed?.formattedNumber ?? formatted,
+      e164: parsed?.e164,
+    );
+  },
 );
 ```
 
@@ -568,6 +579,21 @@ For localized country names, load the country list through your localized
 field with the selected `CountryWithPhoneCode`. Keeping this adapter app-side
 also lets apps without native phone metadata continue using
 `smart_form_fields` on every supported Flutter platform.
+
+Validation waits for `valueParser`. When it is configured, the result contains
+both representations while live controller values and validators continue to
+use the formatted string:
+
+```dart
+final result = await formController.validate();
+final phone = result.values['phone'] as SmartPhoneValue;
+
+print(phone.formatted); // 780 59 426
+print(phone.e164);      // +37378059426
+```
+
+Without `valueParser`, `result.values['phone']` remains a `String` for backward
+compatibility.
 
 ## Example application
 

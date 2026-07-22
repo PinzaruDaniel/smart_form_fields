@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -15,6 +17,28 @@ enum SmartPhoneCountrySelectorLayout {
   /// Renders the selector beside the input as a separate row child.
   separate,
 }
+
+/// The formatted and canonical representations of a submitted phone number.
+final class SmartPhoneValue {
+  /// Creates a parsed phone value.
+  const SmartPhoneValue({required this.formatted, required this.e164});
+
+  /// The human-readable value displayed by [SmartPhoneField].
+  final String formatted;
+
+  /// The canonical E.164 number, or `null` when parsing found no valid number.
+  final String? e164;
+
+  /// Whether parsing produced a canonical E.164 value.
+  bool get isParsed => e164 != null;
+
+  @override
+  String toString() => e164 ?? formatted;
+}
+
+/// Parses displayed phone text into a submission-ready [SmartPhoneValue].
+typedef SmartPhoneValueParser =
+    FutureOr<SmartPhoneValue> Function(String formattedValue);
 
 /// A phone input that supports custom country selectors and phone formatters.
 class SmartPhoneField extends StatefulWidget {
@@ -39,6 +63,7 @@ class SmartPhoneField extends StatefulWidget {
     this.enabled = true,
     this.decoration = const InputDecoration(),
     this.inputFormatters,
+    this.valueParser,
     this.textInputAction,
     this.onChanged,
     this.onSubmitted,
@@ -112,6 +137,15 @@ class SmartPhoneField extends StatefulWidget {
 
   /// Formatters applied to phone text edits.
   final List<TextInputFormatter>? inputFormatters;
+
+  /// Optionally parses the formatted text for the validation result.
+  ///
+  /// When supplied, `SmartFormResult.values[name]` is a [SmartPhoneValue].
+  /// Without a parser it remains the formatted `String` for compatibility.
+  /// Live `SmartFormController.values` and validators always use the displayed
+  /// string. The parser may be asynchronous, for example when backed by native
+  /// libphonenumber APIs.
+  final SmartPhoneValueParser? valueParser;
 
   /// Action button displayed by the keyboard.
   final TextInputAction? textInputAction;
@@ -187,6 +221,9 @@ class _SmartPhoneFieldState extends State<SmartPhoneField> {
       keyboardType: TextInputType.phone,
       textInputAction: widget.textInputAction,
       inputFormatters: widget.inputFormatters,
+      resultValueTransformer: widget.valueParser == null
+          ? null
+          : (value) => widget.valueParser!(value ?? ''),
       onChanged: widget.onChanged,
       onSubmitted: widget.onSubmitted,
     );

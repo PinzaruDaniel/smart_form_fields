@@ -1,3 +1,12 @@
+## 1.2.0
+
+* Add asynchronous result-value transformers to `SmartFormField` and
+  `SmartTextField` while preserving their raw live values.
+* Add `SmartPhoneValue` and `SmartPhoneField.valueParser` so validation results
+  can contain both the formatted display number and canonical E.164 number.
+* Wait for phone parsing before returning `SmartFormResult` and retain the
+  formatted `String` behavior when no parser is configured.
+
 ## 1.1.0
 
 * Add application-owned country selector widgets to `SmartPhoneField`.

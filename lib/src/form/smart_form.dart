@@ -226,7 +226,7 @@ class SmartFormState extends State<SmartForm>
 
     return SmartFormResult(
       isValid: firstInvalidField == null,
-      values: _registry.values,
+      values: await _registry.resolveResultValues(),
       errors: errors,
     );
   }

@@ -225,6 +225,11 @@ class _RegistrationExamplePageState extends State<RegistrationExamplePage> {
                             RegExp(r'[\d\s+()-]'),
                           ),
                         ],
+                        valueParser: (formatted) => SmartPhoneValue(
+                          formatted: formatted,
+                          e164:
+                              '$_phoneCountryCode${formatted.replaceAll(RegExp(r'\D'), '')}',
+                        ),
                         validators: <SmartValidator>[_phone],
                       ),
                       const SizedBox(height: 16),

@@ -404,6 +404,9 @@ class _TestFieldState extends State<_TestField>
   }
 
   @override
+  Future<Object?> resolveResultValue() async => _value;
+
+  @override
   void setValue(Object? value, {bool notifyDependents = true}) {
     _value = value;
     _error = null;

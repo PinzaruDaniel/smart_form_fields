@@ -34,6 +34,17 @@ final class SmartFieldRegistry {
     for (final field in fields) field.name: field.value,
   };
 
+  Future<Map<String, Object?>> resolveResultValues() async {
+    final orderedFields = fields;
+    final resolvedValues = await Future.wait<Object?>(
+      orderedFields.map((field) => field.resolveResultValue()),
+    );
+    return <String, Object?>{
+      for (var index = 0; index < orderedFields.length; index++)
+        orderedFields[index].name: resolvedValues[index],
+    };
+  }
+
   SmartFieldHandle<Object?>? fieldNamed(String name) {
     for (final entry in _entries) {
       if (entry.field.name == name) {

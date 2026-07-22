@@ -17,6 +17,9 @@ import 'smart_field_controller.dart';
 typedef SmartFieldBuilder<T> =
     Widget Function(BuildContext context, SmartFieldController<T> field);
 
+/// Converts a live field value into the value returned by form validation.
+typedef SmartResultValueTransformer<T> = FutureOr<Object?> Function(T? value);
+
 /// A generic field that participates in the closest [SmartForm].
 class SmartFormField<T> extends StatefulWidget {
   /// Creates a custom field registered with the closest [SmartForm].
@@ -31,6 +34,7 @@ class SmartFormField<T> extends StatefulWidget {
     this.autovalidateMode,
     this.asyncValidationDebounce,
     this.errorAnimation,
+    this.resultValueTransformer,
     super.key,
   }) : assert(name.length > 0, 'A field name cannot be empty.');
 
@@ -70,6 +74,12 @@ class SmartFormField<T> extends StatefulWidget {
   /// Overrides the containing form's error animation for this field.
   final SmartErrorAnimation? errorAnimation;
 
+  /// Optionally transforms the value captured in the validation result.
+  ///
+  /// Live controller values and validation contexts continue exposing [T].
+  /// The transformer may perform asynchronous normalization for submission.
+  final SmartResultValueTransformer<T>? resultValueTransformer;
+
   @override
   State<SmartFormField<T>> createState() => _SmartFormFieldState<T>();
 }
@@ -97,6 +107,12 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
 
   @override
   T? get value => _value;
+
+  @override
+  Future<Object?> resolveResultValue() async {
+    final transformer = widget.resultValueTransformer;
+    return transformer == null ? _value : await transformer(_value);
+  }
 
   @override
   String? get errorText => _errorText;

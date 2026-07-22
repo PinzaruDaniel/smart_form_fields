@@ -33,6 +33,7 @@ class SmartTextField extends StatefulWidget {
     this.minLines,
     this.onChanged,
     this.onSubmitted,
+    this.resultValueTransformer,
     super.key,
   }) : assert(
          controller == null || initialValue == null,
@@ -104,6 +105,9 @@ class SmartTextField extends StatefulWidget {
 
   /// Called when the platform submits the text field.
   final ValueChanged<String>? onSubmitted;
+
+  /// Optionally transforms the text captured in the validation result.
+  final SmartResultValueTransformer<String>? resultValueTransformer;
 
   @override
   State<SmartTextField> createState() => _SmartTextFieldState();
@@ -180,6 +184,7 @@ class _SmartTextFieldState extends State<SmartTextField> {
       asyncValidationDebounce: widget.asyncValidationDebounce,
       autovalidateMode: widget.autovalidateMode,
       errorAnimation: widget.errorAnimation,
+      resultValueTransformer: widget.resultValueTransformer,
       enabled: widget.enabled,
       focusNode: widget.focusNode,
       builder: (context, field) {

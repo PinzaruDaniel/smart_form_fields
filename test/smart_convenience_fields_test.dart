@@ -180,6 +180,50 @@ void main() {
     expect(tester.getTopLeft(find.byType(TextField)).dx, greaterThan(80));
   });
 
+  testWidgets('SmartPhoneField resolves formatted and E.164 result values', (
+    tester,
+  ) async {
+    final controller = SmartFormController();
+    var parserCompleted = false;
+
+    await tester.pumpWidget(
+      _app(
+        SmartForm(
+          controller: controller,
+          children: <Widget>[
+            SmartPhoneField(
+              name: 'phone',
+              valueParser: (formatted) async {
+                await Future<void>.delayed(const Duration(milliseconds: 10));
+                parserCompleted = true;
+                return SmartPhoneValue(
+                  formatted: formatted,
+                  e164: '+373${formatted.replaceAll(RegExp(r'\D'), '')}',
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+
+    await tester.enterText(find.byType(TextField), '780 59 426');
+    expect(controller.values['phone'], '780 59 426');
+
+    final validation = controller.validate(
+      scrollToError: false,
+      focusFirstError: false,
+    );
+    await tester.pump(const Duration(milliseconds: 10));
+    final result = await validation;
+    final phone = result.values['phone']! as SmartPhoneValue;
+
+    expect(parserCompleted, isTrue);
+    expect(phone.formatted, '780 59 426');
+    expect(phone.e164, '+37378059426');
+    expect(phone.isParsed, isTrue);
+  });
+
   testWidgets('SmartDateField validates and synchronizes DateTime values', (
     tester,
   ) async {

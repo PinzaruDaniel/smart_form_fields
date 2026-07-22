@@ -38,10 +38,14 @@ export 'src/fields/smart_dropdown_field.dart'
     show SmartDropdownField, SmartDropdownItemBuilder, SmartItemLabelBuilder;
 export 'src/fields/smart_email_field.dart' show SmartEmailField;
 export 'src/fields/smart_form_field.dart'
-    show SmartFieldBuilder, SmartFormField;
+    show SmartFieldBuilder, SmartFormField, SmartResultValueTransformer;
 export 'src/fields/smart_password_field.dart' show SmartPasswordField;
 export 'src/fields/smart_phone_field.dart'
-    show SmartPhoneCountrySelectorLayout, SmartPhoneField;
+    show
+        SmartPhoneCountrySelectorLayout,
+        SmartPhoneField,
+        SmartPhoneValue,
+        SmartPhoneValueParser;
 export 'src/fields/smart_text_field.dart' show SmartTextField;
 export 'src/validation/smart_async_validator.dart' show SmartAsyncValidator;
 export 'src/validation/smart_async_validators.dart' show SmartAsyncValidators;

@@ -10,6 +10,8 @@ abstract interface class SmartFieldHandle<T> {
 
   T? get value;
 
+  Future<Object?> resolveResultValue();
+
   bool get enabled;
 
   bool get isValid;
