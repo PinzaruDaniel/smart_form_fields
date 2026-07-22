@@ -120,6 +120,66 @@ void main() {
     expect(controller.valueOf<String>('phone'), '1234');
   });
 
+  testWidgets('SmartPhoneField renders a country selector inside the input', (
+    tester,
+  ) async {
+    const selectorKey = Key('country-selector');
+    const separatorKey = Key('country-separator');
+
+    await tester.pumpWidget(
+      _app(
+        SmartForm(
+          children: const <Widget>[
+            SmartPhoneField(
+              name: 'phone',
+              countryCode: '+373 ',
+              countrySelector: SizedBox(key: selectorKey, child: Text('+373')),
+              countrySelectorSeparator: VerticalDivider(key: separatorKey),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    final field = tester.widget<TextField>(find.byType(TextField));
+    expect(field.decoration!.prefixIcon, isNotNull);
+    expect(field.decoration!.prefixText, isNull);
+    expect(find.byKey(selectorKey), findsOneWidget);
+    expect(find.byKey(separatorKey), findsOneWidget);
+  });
+
+  testWidgets('SmartPhoneField renders a separate country selector', (
+    tester,
+  ) async {
+    const selectorKey = Key('separate-country-selector');
+
+    await tester.pumpWidget(
+      _app(
+        SmartForm(
+          children: const <Widget>[
+            SmartPhoneField(
+              name: 'phone',
+              countrySelector: SizedBox(
+                key: selectorKey,
+                width: 80,
+                child: Text('+373'),
+              ),
+              countrySelectorLayout: SmartPhoneCountrySelectorLayout.separate,
+              countrySelectorSeparator: SizedBox(width: 12),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    expect(find.byKey(selectorKey), findsOneWidget);
+    expect(
+      find.ancestor(of: find.byType(TextField), matching: find.byType(Row)),
+      findsWidgets,
+    );
+    expect(tester.getTopLeft(find.byType(TextField)).dx, greaterThan(80));
+  });
+
   testWidgets('SmartDateField validates and synchronizes DateTime values', (
     tester,
   ) async {

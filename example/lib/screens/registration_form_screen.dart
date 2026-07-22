@@ -15,6 +15,7 @@ class RegistrationExamplePage extends StatefulWidget {
 class _RegistrationExamplePageState extends State<RegistrationExamplePage> {
   final SmartFormController _formController = SmartFormController();
   bool _isSubmitting = false;
+  String _phoneCountryCode = '+373';
 
   static String? _phone(String? value) {
     if (value == null || value.isEmpty) {
@@ -103,6 +104,33 @@ class _RegistrationExamplePageState extends State<RegistrationExamplePage> {
     }
   }
 
+  Future<void> _selectPhoneCountry() async {
+    final selected = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            for (final country in const <(String, String)>[
+              ('Moldova', '+373'),
+              ('Romania', '+40'),
+              ('Ukraine', '+380'),
+            ])
+              ListTile(
+                title: Text(country.$1),
+                trailing: Text(country.$2),
+                onTap: () => Navigator.pop(context, country.$2),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (selected != null && mounted) {
+      setState(() => _phoneCountryCode = selected);
+    }
+  }
+
   @override
   void dispose() {
     _formController.dispose();
@@ -178,13 +206,18 @@ class _RegistrationExamplePageState extends State<RegistrationExamplePage> {
                       SmartPhoneField(
                         autovalidateMode: .onUnfocus,
                         name: 'phone',
-                        countryCode: '+373 ',
+                        countrySelector: GestureDetector(
+                          onTap: _selectPhoneCountry,
+                          child: Text(_phoneCountryCode),
+                        ),
+                        countrySelectorSeparator: const VerticalDivider(
+                          width: 1,
+                        ),
                         required: true,
                         requiredMessage: 'Phone is required',
                         decoration: const InputDecoration(
                           labelText: 'Phone',
                           hintText: '60 123 456',
-                          prefixIcon: Icon(Icons.phone_outlined),
                         ),
                         textInputAction: TextInputAction.next,
                         inputFormatters: <TextInputFormatter>[

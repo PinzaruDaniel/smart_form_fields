@@ -1,3 +1,12 @@
+## 1.1.0
+
+* Add application-owned country selector widgets to `SmartPhoneField`.
+* Support selectors inside the input decoration or in a separate container in
+  the same row, with an optional custom separator.
+* Keep phone formatting pluggable through `inputFormatters`, allowing apps to
+  use `flutter_libphonenumber` and locale-specific country data without making
+  its platform plugin a required dependency of every form user.
+
 ## 1.0.1
 
 * Add `SmartApiErrors.parse` for recursively extracting validation errors from

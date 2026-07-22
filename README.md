@@ -534,6 +534,41 @@ final email = result.values['email'] as String?;
 final birthDate = result.values['birthDate'] as DateTime?;
 ```
 
+## Country-aware phone fields
+
+`SmartPhoneField` accepts any application-owned country selector. It can live
+inside the decorated input with a vertical divider:
+
+```dart
+SmartPhoneField(
+  name: 'phone',
+  countrySelector: TextButton(
+    onPressed: showCountryBottomSheet,
+    child: Text('+${selectedCountry.phoneCode}'),
+  ),
+  countrySelectorSeparator: const VerticalDivider(width: 1),
+  inputFormatters: [
+    LibPhonenumberTextFormatter(
+      country: selectedCountry,
+      phoneNumberFormat: PhoneNumberFormat.national,
+      inputContainsCountryCode: false,
+    ),
+  ],
+);
+```
+
+With Moldova selected, the formatter can display `780 59 426` while the
+selector displays `+373`. Set
+`countrySelectorLayout: SmartPhoneCountrySelectorLayout.separate` to render the
+selector as another container in the same row. The selector is intentionally a
+widget supplied by the app, so it may open a dropdown, dialog, or bottom sheet.
+
+For localized country names, load the country list through your localized
+`flutter_libphonenumber` implementation using the app locale, then rebuild the
+field with the selected `CountryWithPhoneCode`. Keeping this adapter app-side
+also lets apps without native phone metadata continue using
+`smart_form_fields` on every supported Flutter platform.
+
 ## Example application
 
 The [example](example/) directory contains four Material 3 screens: a complete
