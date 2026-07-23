@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'class_schema_form_screen.dart';
 import 'controller_playground_screen.dart';
+import 'items_form_screen.dart';
 import 'json_form_screen.dart';
 import 'registration_form_screen.dart';
 
@@ -34,6 +35,15 @@ class ExampleHomeScreen extends StatelessWidget {
                   'Reusable fields, sync and async validation, validation '
                   'timing, first-error navigation, reset, and submission.',
               onTap: () => _open(context, const RegistrationExamplePage()),
+            ),
+            const SizedBox(height: 12),
+            _DemoCard(
+              icon: Icons.view_list_outlined,
+              title: 'Item-driven form',
+              description:
+                  'A complete form rendered from SmartFieldViewItem objects '
+                  'with consistent separator spacing.',
+              onTap: () => _open(context, const ItemsFormExamplePage()),
             ),
             const SizedBox(height: 12),
             _DemoCard(

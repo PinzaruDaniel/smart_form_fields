@@ -8,14 +8,45 @@ void main() {
 
     expect(find.text('Package examples'), findsOneWidget);
     expect(find.text('Registration form'), findsOneWidget);
-    expect(find.text('JSON API form'), findsOneWidget);
-    expect(find.text('Class-defined form'), findsOneWidget);
-    await tester.scrollUntilVisible(
-      find.text('Controller playground'),
-      250,
-      scrollable: _pageScrollable(),
-    );
-    expect(find.text('Controller playground'), findsOneWidget);
+    expect(find.text('Item-driven form'), findsOneWidget);
+    for (final title in const <String>[
+      'Class-defined form',
+      'JSON API form',
+      'Controller playground',
+    ]) {
+      await tester.scrollUntilVisible(
+        find.text(title),
+        250,
+        scrollable: _pageScrollable(),
+      );
+      expect(find.text(title), findsOneWidget);
+    }
+  });
+
+  testWidgets('builds and submits the item-driven form', (tester) async {
+    await tester.pumpWidget(const SmartFormFieldsExampleApp());
+    await _openExample(tester, 'Item-driven form');
+
+    expect(find.text('Built entirely from field items'), findsOneWidget);
+    expect(find.widgetWithText(TextField, 'Display name'), findsOneWidget);
+    expect(find.widgetWithText(TextField, 'Email'), findsOneWidget);
+    expect(find.widgetWithText(TextField, 'Phone'), findsOneWidget);
+    expect(find.text('Account type'), findsOneWidget);
+    expect(find.text('Product updates'), findsOneWidget);
+
+    final fillButton = find.widgetWithText(TextButton, 'Fill item sample');
+    await tester.ensureVisible(fillButton);
+    await tester.tap(fillButton);
+    await tester.pump();
+
+    expect(find.text('mara@example.com'), findsOneWidget);
+    expect(tester.widget<Switch>(find.byType(Switch)).value, isTrue);
+
+    final validateButton = find.widgetWithText(FilledButton, 'Validate items');
+    await tester.tap(validateButton);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Items form is valid: +37378059426'), findsOneWidget);
   });
 
   testWidgets('renders the registration example', (tester) async {

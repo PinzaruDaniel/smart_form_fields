@@ -224,6 +224,69 @@ void main() {
     expect(phone.isParsed, isTrue);
   });
 
+  testWidgets('SmartPhoneField builds from an immutable view item', (
+    tester,
+  ) async {
+    final controller = SmartFormController();
+    const item = SmartPhoneFieldViewItem(
+      name: 'phone',
+      initialValue: '780 59 426',
+      countryCode: '+373 ',
+      required: true,
+      decoration: InputDecoration(labelText: 'Mobile number'),
+    );
+
+    await tester.pumpWidget(
+      _app(
+        SmartForm(
+          controller: controller,
+          children: const <Widget>[SmartPhoneField(item: item)],
+        ),
+      ),
+    );
+
+    final textField = tester.widget<TextField>(find.byType(TextField));
+    expect(textField.decoration!.labelText, 'Mobile number');
+    expect(textField.decoration!.prefixText, '+373 ');
+    expect(controller.values['phone'], '780 59 426');
+  });
+
+  testWidgets('SmartForm builds view items with configured separator height', (
+    tester,
+  ) async {
+    final controller = SmartFormController();
+    final items = <SmartFieldViewItem>[
+      const SmartPhoneFieldViewItem(
+        name: 'phone',
+        decoration: InputDecoration(labelText: 'Phone'),
+      ),
+      SmartWidgetFieldViewItem(
+        name: 'extension',
+        builder: (_) => const SmartTextField(
+          name: 'extension',
+          decoration: InputDecoration(labelText: 'Extension'),
+        ),
+      ),
+    ];
+
+    await tester.pumpWidget(
+      _app(
+        SmartForm(
+          controller: controller,
+          items: items,
+          itemSeparatorHeight: 24,
+        ),
+      ),
+    );
+
+    final textFields = find.byType(TextField);
+    expect(textFields, findsNWidgets(2));
+    final firstBottom = tester.getBottomLeft(textFields.at(0)).dy;
+    final secondTop = tester.getTopLeft(textFields.at(1)).dy;
+    expect(secondTop - firstBottom, 24);
+    expect(controller.values.keys, <String>['phone', 'extension']);
+  });
+
   testWidgets('SmartDateField validates and synchronizes DateTime values', (
     tester,
   ) async {

@@ -140,6 +140,30 @@ class _RegistrationExamplePageState extends State<RegistrationExamplePage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final smartPhoneFieldViewItem = SmartPhoneFieldViewItem(
+      name: 'phone',
+      autovalidateMode: .onUnfocus,
+      countrySelector: GestureDetector(
+        onTap: _selectPhoneCountry,
+        child: Text(_phoneCountryCode),
+      ),
+      countrySelectorSeparator: const VerticalDivider(width: 1),
+      required: true,
+      requiredMessage: 'Phone is required',
+      decoration: const InputDecoration(
+        labelText: 'Phone',
+        hintText: '60 123 456',
+      ),
+      textInputAction: TextInputAction.next,
+      inputFormatters: <TextInputFormatter>[
+        FilteringTextInputFormatter.allow(RegExp(r'[\d\s+()-]')),
+      ],
+      valueParser: (formatted) => SmartPhoneValue(
+        formatted: formatted,
+        e164: '$_phoneCountryCode${formatted.replaceAll(RegExp(r'\D'), '')}',
+      ),
+      validators: <SmartValidator>[_phone],
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -203,35 +227,7 @@ class _RegistrationExamplePageState extends State<RegistrationExamplePage> {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      SmartPhoneField(
-                        autovalidateMode: .onUnfocus,
-                        name: 'phone',
-                        countrySelector: GestureDetector(
-                          onTap: _selectPhoneCountry,
-                          child: Text(_phoneCountryCode),
-                        ),
-                        countrySelectorSeparator: const VerticalDivider(
-                          width: 1,
-                        ),
-                        required: true,
-                        requiredMessage: 'Phone is required',
-                        decoration: const InputDecoration(
-                          labelText: 'Phone',
-                          hintText: '60 123 456',
-                        ),
-                        textInputAction: TextInputAction.next,
-                        inputFormatters: <TextInputFormatter>[
-                          FilteringTextInputFormatter.allow(
-                            RegExp(r'[\d\s+()-]'),
-                          ),
-                        ],
-                        valueParser: (formatted) => SmartPhoneValue(
-                          formatted: formatted,
-                          e164:
-                              '$_phoneCountryCode${formatted.replaceAll(RegExp(r'\D'), '')}',
-                        ),
-                        validators: <SmartValidator>[_phone],
-                      ),
+                      SmartPhoneField(item: smartPhoneFieldViewItem),
                       const SizedBox(height: 16),
                       SmartPasswordField(
                         name: 'password',

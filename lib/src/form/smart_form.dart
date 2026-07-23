@@ -3,6 +3,7 @@ import 'dart:ui' show FlutterView;
 import 'package:flutter/widgets.dart';
 
 import '../animation/smart_error_animation.dart';
+import '../fields/smart_field_view_item.dart';
 import '../theme/smart_form_theme.dart';
 import '../validation/smart_validation_context.dart';
 import 'smart_api_errors.dart';
@@ -14,9 +15,11 @@ import 'smart_form_scope.dart';
 
 /// Coordinates the smart fields below it.
 class SmartForm extends StatefulWidget {
-  /// Creates a form that coordinates the supplied [children].
+  /// Creates a form from [children] or declarative field [items].
   const SmartForm({
-    required this.children,
+    this.children = const [],
+    this.items = const [],
+    this.itemSeparatorHeight = 0,
     this.controller,
     this.scrollToFirstError,
     this.focusFirstError,
@@ -30,10 +33,19 @@ class SmartForm extends StatefulWidget {
     this.autovalidateMode = AutovalidateMode.onUnfocus,
     this.mainAxisSize = MainAxisSize.min,
     super.key,
-  });
+  }) : assert(
+         itemSeparatorHeight >= 0,
+         'itemSeparatorHeight cannot be negative.',
+       );
 
   /// Fields and other widgets laid out vertically in registration order.
   final List<Widget> children;
+
+  /// Declarative field items laid out vertically in their list order.
+  final List<SmartFieldViewItem> items;
+
+  /// Vertical space inserted between consecutive [items].
+  final double itemSeparatorHeight;
 
   /// Optional controller for imperative access to this form.
   final SmartFormController? controller;
@@ -466,6 +478,10 @@ class SmartFormState extends State<SmartForm>
 
   @override
   Widget build(BuildContext context) {
+    assert(
+      widget.children.isEmpty || widget.items.isEmpty,
+      'Provide children or items, not both.',
+    );
     final theme = SmartFormTheme.of(context);
     return TapRegion(
       onTapOutside: widget.dismissKeyboardOnTapOutside
@@ -485,20 +501,37 @@ class SmartFormState extends State<SmartForm>
             autovalidateMode: widget.autovalidateMode,
             child: Column(
               mainAxisSize: widget.mainAxisSize,
-              children: <Widget>[
-                for (var index = 0; index < widget.children.length; index++)
-                  SmartFormOrderScope(
-                    key: widget.children[index].key == null
-                        ? null
-                        : ValueKey<Key>(widget.children[index].key!),
-                    order: index,
-                    child: widget.children[index],
-                  ),
-              ],
+              children: _buildFormChildren(context),
             ),
           ),
         ),
       ),
     );
+  }
+
+  List<Widget> _buildFormChildren(BuildContext context) {
+    if (widget.items.isNotEmpty) {
+      return <Widget>[
+        for (var index = 0; index < widget.items.length; index++) ...<Widget>[
+          if (index > 0) SizedBox(height: widget.itemSeparatorHeight),
+          SmartFormOrderScope(
+            key: ValueKey<String>(widget.items[index].name),
+            order: index,
+            child: widget.items[index].build(context),
+          ),
+        ],
+      ];
+    }
+
+    return <Widget>[
+      for (var index = 0; index < widget.children.length; index++)
+        SmartFormOrderScope(
+          key: widget.children[index].key == null
+              ? null
+              : ValueKey<Key>(widget.children[index].key!),
+          order: index,
+          child: widget.children[index],
+        ),
+    ];
   }
 }

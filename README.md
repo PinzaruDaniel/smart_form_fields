@@ -595,14 +595,57 @@ print(phone.e164);      // +37378059426
 Without `valueParser`, `result.values['phone']` remains a `String` for backward
 compatibility.
 
+## Field view items
+
+Reusable field configuration can be moved into an immutable view item:
+
+```dart
+final phoneItem = SmartPhoneFieldViewItem(
+  name: 'phone',
+  required: true,
+  requiredMessage: 'Phone is required',
+  countrySelector: countrySelector,
+  countrySelectorSeparator: const VerticalDivider(width: 1),
+  decoration: const InputDecoration(
+    labelText: 'Phone',
+    hintText: '60 123 456',
+  ),
+  inputFormatters: phoneFormatters,
+  valueParser: parsePhoneValue,
+);
+
+SmartPhoneField(item: phoneItem);
+```
+
+Direct parameters remain supported and override values from the item. Forms can
+also build a complete vertical list of items and insert consistent spacing:
+
+```dart
+SmartForm(
+  controller: formController,
+  items: [
+    phoneItem,
+    SmartWidgetFieldViewItem(
+      name: 'custom_field',
+      builder: (_) => const MyCustomSmartField(),
+    ),
+  ],
+  itemSeparatorHeight: 16,
+);
+```
+
+Use either `children` or `items` on one `SmartForm`. The existing `children`
+API remains unchanged.
+
 ## Example application
 
-The [example](example/) directory contains four Material 3 screens: a complete
-registration flow, an API-model-class form, a snake_case JSON/API form, and an
-imperative controller playground. Together they demonstrate reusable and
-custom fields, sync/async validation, bottom-sheet selection, value updates,
-dynamic and disabled fields, reset, server errors, focus/scroll commands, and
-first-error navigation.
+The [example](example/) directory contains five Material 3 screens: a complete
+registration flow, a form built entirely from view items, an API-model-class
+form, a snake_case JSON/API form, and an imperative controller playground.
+Together they demonstrate reusable and custom fields, sync/async validation,
+item spacing, bottom-sheet selection, value updates, dynamic and disabled
+fields, reset, server errors, focus/scroll commands, and first-error
+navigation.
 
 ```sh
 cd example

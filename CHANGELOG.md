@@ -1,3 +1,20 @@
+## 1.4.0
+
+* Add a complete item-driven example page built exclusively with
+  `SmartForm.items`, `SmartPhoneFieldViewItem`, and builder-backed field items.
+* Demonstrate shared item spacing, validation, value patching, resetting,
+  custom boolean fields, country selection, and parsed phone submission.
+
+## 1.3.0
+
+* Add the immutable `SmartFieldViewItem` contract and a builder-backed custom
+  item for declarative field lists.
+* Add `SmartPhoneFieldViewItem` and support concise
+  `SmartPhoneField(item: phoneItem)` construction with optional direct
+  overrides.
+* Let `SmartForm` render `items` with configurable `itemSeparatorHeight` while
+  preserving the existing `children` API.
+
 ## 1.2.0
 
 * Add asynchronous result-value transformers to `SmartFormField` and

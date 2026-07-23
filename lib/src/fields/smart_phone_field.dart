@@ -1,3 +1,5 @@
+// ignore_for_file: prefer_initializing_formals
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -7,6 +9,7 @@ import '../animation/smart_error_animation.dart';
 import '../validation/smart_async_validator.dart';
 import '../validation/smart_validator.dart';
 import '../validation/smart_validators.dart';
+import 'smart_field_view_item.dart';
 import 'smart_text_field.dart';
 
 /// Controls where [SmartPhoneField.countrySelector] is rendered.
@@ -40,11 +43,11 @@ final class SmartPhoneValue {
 typedef SmartPhoneValueParser =
     FutureOr<SmartPhoneValue> Function(String formattedValue);
 
-/// A phone input that supports custom country selectors and phone formatters.
-class SmartPhoneField extends StatefulWidget {
-  /// Creates a phone field registered as [name].
-  const SmartPhoneField({
-    required this.name,
+/// Immutable visual and behavioral configuration for a [SmartPhoneField].
+final class SmartPhoneFieldViewItem extends SmartFieldViewItem {
+  /// Creates a phone field item.
+  const SmartPhoneFieldViewItem({
+    required super.name,
     this.initialValue,
     this.controller,
     this.focusNode,
@@ -67,13 +70,9 @@ class SmartPhoneField extends StatefulWidget {
     this.textInputAction,
     this.onChanged,
     this.onSubmitted,
-    super.key,
   });
 
-  /// Unique form field name.
-  final String name;
-
-  /// Initial phone text used when no [controller] is supplied.
+  /// Initial phone text.
   final String? initialValue;
 
   /// Optional caller-owned text controller.
@@ -82,54 +81,43 @@ class SmartPhoneField extends StatefulWidget {
   /// Optional caller-owned focus node.
   final FocusNode? focusNode;
 
-  /// Optional visual prefix, such as `+373`.
-  ///
-  /// Ignored when [countrySelector] is supplied because the selector owns the
-  /// visible calling code in that configuration.
+  /// Optional visual calling-code prefix.
   final String? countryCode;
 
-  /// Optional application-owned country selector displayed before the input.
-  ///
-  /// This can be a button that opens a dropdown, dialog, or bottom sheet. The
-  /// package deliberately does not prescribe how countries are selected, so
-  /// callers can use localized country data from their preferred phone-number
-  /// package.
+  /// Optional application-owned country selector.
   final Widget? countrySelector;
 
-  /// Whether [countrySelector] is inside the input or beside it.
+  /// Placement of [countrySelector].
   final SmartPhoneCountrySelectorLayout countrySelectorLayout;
 
-  /// Optional separator rendered between [countrySelector] and the input.
-  ///
-  /// A `VerticalDivider` is useful for [SmartPhoneCountrySelectorLayout.insideField],
-  /// while a `SizedBox` can provide spacing for the separate layout.
+  /// Optional separator after [countrySelector].
   final Widget? countrySelectorSeparator;
 
-  /// Padding around an inside-field [countrySelector].
+  /// Padding around an inside-field selector.
   final EdgeInsetsGeometry countrySelectorPadding;
 
   /// Whether an empty value is invalid.
   final bool required;
 
-  /// Message returned when [required] validation fails.
+  /// Required-field validation message.
   final String requiredMessage;
 
-  /// Additional synchronous validators for application-specific phone rules.
+  /// Additional synchronous validators.
   final List<SmartValidator> validators;
 
-  /// Asynchronous validators run after synchronous validators pass.
+  /// Additional asynchronous validators.
   final List<SmartAsyncValidator<String>> asyncValidators;
 
-  /// Debounce applied to automatic asynchronous validation.
+  /// Automatic asynchronous-validation debounce.
   final Duration? asyncValidationDebounce;
 
   /// Field-level automatic validation override.
   final AutovalidateMode? autovalidateMode;
 
-  /// Field-level error animation override.
+  /// Field-level error-animation override.
   final SmartErrorAnimation? errorAnimation;
 
-  /// Whether the field accepts input and participates in validation.
+  /// Whether the field is enabled.
   final bool enabled;
 
   /// Material input decoration.
@@ -138,6 +126,207 @@ class SmartPhoneField extends StatefulWidget {
   /// Formatters applied to phone text edits.
   final List<TextInputFormatter>? inputFormatters;
 
+  /// Parser used to produce a submission-ready phone value.
+  final SmartPhoneValueParser? valueParser;
+
+  /// Action displayed by the keyboard.
+  final TextInputAction? textInputAction;
+
+  /// Called when the formatted phone text changes.
+  final ValueChanged<String>? onChanged;
+
+  /// Called when the platform submits the phone field.
+  final ValueChanged<String>? onSubmitted;
+
+  @override
+  Widget build(BuildContext context) => SmartPhoneField(item: this);
+}
+
+/// A phone input that supports custom country selectors and phone formatters.
+class SmartPhoneField extends StatefulWidget {
+  /// Creates a phone field from direct parameters or an [item].
+  ///
+  /// Direct parameters override corresponding values from [item].
+  const SmartPhoneField({
+    this.item,
+    String? name,
+    String? initialValue,
+    TextEditingController? controller,
+    FocusNode? focusNode,
+    String? countryCode,
+    Widget? countrySelector,
+    SmartPhoneCountrySelectorLayout? countrySelectorLayout,
+    Widget? countrySelectorSeparator,
+    EdgeInsetsGeometry? countrySelectorPadding,
+    bool? required,
+    String? requiredMessage,
+    List<SmartValidator>? validators,
+    List<SmartAsyncValidator<String>>? asyncValidators,
+    Duration? asyncValidationDebounce,
+    AutovalidateMode? autovalidateMode,
+    SmartErrorAnimation? errorAnimation,
+    bool? enabled,
+    InputDecoration? decoration,
+    List<TextInputFormatter>? inputFormatters,
+    SmartPhoneValueParser? valueParser,
+    TextInputAction? textInputAction,
+    ValueChanged<String>? onChanged,
+    ValueChanged<String>? onSubmitted,
+    super.key,
+  }) : assert(
+         item != null || (name != null && name.length > 0),
+         'Provide a SmartPhoneFieldViewItem or a non-empty name.',
+       ),
+       _name = name,
+       _initialValue = initialValue,
+       _controller = controller,
+       _focusNode = focusNode,
+       _countryCode = countryCode,
+       _countrySelector = countrySelector,
+       _countrySelectorLayout = countrySelectorLayout,
+       _countrySelectorSeparator = countrySelectorSeparator,
+       _countrySelectorPadding = countrySelectorPadding,
+       _required = required,
+       _requiredMessage = requiredMessage,
+       _validators = validators,
+       _asyncValidators = asyncValidators,
+       _asyncValidationDebounce = asyncValidationDebounce,
+       _autovalidateMode = autovalidateMode,
+       _errorAnimation = errorAnimation,
+       _enabled = enabled,
+       _decoration = decoration,
+       _inputFormatters = inputFormatters,
+       _valueParser = valueParser,
+       _textInputAction = textInputAction,
+       _onChanged = onChanged,
+       _onSubmitted = onSubmitted;
+
+  /// Optional immutable configuration used to create this field.
+  final SmartPhoneFieldViewItem? item;
+
+  final String? _name;
+
+  /// Unique form field name.
+  String get name => _name ?? item!.name;
+
+  final String? _initialValue;
+
+  /// Initial phone text used when no [controller] is supplied.
+  String? get initialValue => _initialValue ?? item?.initialValue;
+
+  final TextEditingController? _controller;
+
+  /// Optional caller-owned text controller.
+  TextEditingController? get controller => _controller ?? item?.controller;
+
+  final FocusNode? _focusNode;
+
+  /// Optional caller-owned focus node.
+  FocusNode? get focusNode => _focusNode ?? item?.focusNode;
+
+  final String? _countryCode;
+
+  /// Optional visual prefix, such as `+373`.
+  ///
+  /// Ignored when [countrySelector] is supplied because the selector owns the
+  /// visible calling code in that configuration.
+  String? get countryCode => _countryCode ?? item?.countryCode;
+
+  final Widget? _countrySelector;
+
+  /// Optional application-owned country selector displayed before the input.
+  ///
+  /// This can be a button that opens a dropdown, dialog, or bottom sheet. The
+  /// package deliberately does not prescribe how countries are selected, so
+  /// callers can use localized country data from their preferred phone-number
+  /// package.
+  Widget? get countrySelector => _countrySelector ?? item?.countrySelector;
+
+  final SmartPhoneCountrySelectorLayout? _countrySelectorLayout;
+
+  /// Whether [countrySelector] is inside the input or beside it.
+  SmartPhoneCountrySelectorLayout get countrySelectorLayout =>
+      _countrySelectorLayout ??
+      item?.countrySelectorLayout ??
+      SmartPhoneCountrySelectorLayout.insideField;
+
+  final Widget? _countrySelectorSeparator;
+
+  /// Optional separator rendered between [countrySelector] and the input.
+  ///
+  /// A `VerticalDivider` is useful for [SmartPhoneCountrySelectorLayout.insideField],
+  /// while a `SizedBox` can provide spacing for the separate layout.
+  Widget? get countrySelectorSeparator =>
+      _countrySelectorSeparator ?? item?.countrySelectorSeparator;
+
+  final EdgeInsetsGeometry? _countrySelectorPadding;
+
+  /// Padding around an inside-field [countrySelector].
+  EdgeInsetsGeometry get countrySelectorPadding =>
+      _countrySelectorPadding ??
+      item?.countrySelectorPadding ??
+      const EdgeInsets.symmetric(horizontal: 12);
+
+  final bool? _required;
+
+  /// Whether an empty value is invalid.
+  bool get required => _required ?? item?.required ?? false;
+
+  final String? _requiredMessage;
+
+  /// Message returned when [required] validation fails.
+  String get requiredMessage =>
+      _requiredMessage ?? item?.requiredMessage ?? 'This field is required.';
+
+  final List<SmartValidator>? _validators;
+
+  /// Additional synchronous validators for application-specific phone rules.
+  List<SmartValidator> get validators =>
+      _validators ?? item?.validators ?? const [];
+
+  final List<SmartAsyncValidator<String>>? _asyncValidators;
+
+  /// Asynchronous validators run after synchronous validators pass.
+  List<SmartAsyncValidator<String>> get asyncValidators =>
+      _asyncValidators ?? item?.asyncValidators ?? const [];
+
+  final Duration? _asyncValidationDebounce;
+
+  /// Debounce applied to automatic asynchronous validation.
+  Duration? get asyncValidationDebounce =>
+      _asyncValidationDebounce ?? item?.asyncValidationDebounce;
+
+  final AutovalidateMode? _autovalidateMode;
+
+  /// Field-level automatic validation override.
+  AutovalidateMode? get autovalidateMode =>
+      _autovalidateMode ?? item?.autovalidateMode;
+
+  final SmartErrorAnimation? _errorAnimation;
+
+  /// Field-level error animation override.
+  SmartErrorAnimation? get errorAnimation =>
+      _errorAnimation ?? item?.errorAnimation;
+
+  final bool? _enabled;
+
+  /// Whether the field accepts input and participates in validation.
+  bool get enabled => _enabled ?? item?.enabled ?? true;
+
+  final InputDecoration? _decoration;
+
+  /// Material input decoration.
+  InputDecoration get decoration =>
+      _decoration ?? item?.decoration ?? const InputDecoration();
+
+  final List<TextInputFormatter>? _inputFormatters;
+
+  /// Formatters applied to phone text edits.
+  List<TextInputFormatter>? get inputFormatters =>
+      _inputFormatters ?? item?.inputFormatters;
+
+  final SmartPhoneValueParser? _valueParser;
+
   /// Optionally parses the formatted text for the validation result.
   ///
   /// When supplied, `SmartFormResult.values[name]` is a [SmartPhoneValue].
@@ -145,16 +334,23 @@ class SmartPhoneField extends StatefulWidget {
   /// Live `SmartFormController.values` and validators always use the displayed
   /// string. The parser may be asynchronous, for example when backed by native
   /// libphonenumber APIs.
-  final SmartPhoneValueParser? valueParser;
+  SmartPhoneValueParser? get valueParser => _valueParser ?? item?.valueParser;
+
+  final TextInputAction? _textInputAction;
 
   /// Action button displayed by the keyboard.
-  final TextInputAction? textInputAction;
+  TextInputAction? get textInputAction =>
+      _textInputAction ?? item?.textInputAction;
+
+  final ValueChanged<String>? _onChanged;
 
   /// Called whenever the phone value changes.
-  final ValueChanged<String>? onChanged;
+  ValueChanged<String>? get onChanged => _onChanged ?? item?.onChanged;
+
+  final ValueChanged<String>? _onSubmitted;
 
   /// Called when the platform submits the phone field.
-  final ValueChanged<String>? onSubmitted;
+  ValueChanged<String>? get onSubmitted => _onSubmitted ?? item?.onSubmitted;
 
   @override
   State<SmartPhoneField> createState() => _SmartPhoneFieldState();

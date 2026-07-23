@@ -32,6 +32,8 @@ export 'src/json/smart_json_form.dart'
 export 'src/theme/smart_form_theme.dart'
     show SmartFormTheme, SmartFormThemeData;
 export 'src/fields/smart_field_controller.dart' show SmartFieldController;
+export 'src/fields/smart_field_view_item.dart'
+    show SmartFieldViewItem, SmartWidgetFieldViewItem;
 export 'src/fields/smart_date_field.dart'
     show SmartDateField, SmartDateFormatter;
 export 'src/fields/smart_dropdown_field.dart'
@@ -44,6 +46,7 @@ export 'src/fields/smart_phone_field.dart'
     show
         SmartPhoneCountrySelectorLayout,
         SmartPhoneField,
+        SmartPhoneFieldViewItem,
         SmartPhoneValue,
         SmartPhoneValueParser;
 export 'src/fields/smart_text_field.dart' show SmartTextField;
