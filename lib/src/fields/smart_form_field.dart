@@ -401,6 +401,7 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
       if (widget.asyncValidators.isNotEmpty &&
           _isCurrentGeneration(generation)) {
         setState(() => _isValidating = true);
+        _formScope?.registrar.fieldStateChanged(this);
       }
 
       final debounce = widget.asyncValidationDebounce;
@@ -430,6 +431,7 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
     } catch (_) {
       if (_isCurrentGeneration(generation)) {
         setState(() => _isValidating = false);
+        _formScope?.registrar.fieldStateChanged(this);
       }
       rethrow;
     }
@@ -447,6 +449,7 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
       _errorText = error;
       _isValidating = false;
     });
+    _formScope?.registrar.fieldStateChanged(this);
     if (error != null && animateError) {
       _animateError();
     }
@@ -492,6 +495,7 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
       _isTouched = false;
       _hasValidated = false;
     });
+    _formScope?.registrar.fieldStateChanged(this);
   }
 
   @override
@@ -501,6 +505,7 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
       _errorText = null;
       _isValidating = false;
     });
+    _formScope?.registrar.fieldStateChanged(this);
   }
 
   @override
@@ -512,6 +517,7 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
       _isTouched = true;
       _hasValidated = true;
     });
+    _formScope?.registrar.fieldStateChanged(this);
     if (animateError) {
       _animateError();
     }

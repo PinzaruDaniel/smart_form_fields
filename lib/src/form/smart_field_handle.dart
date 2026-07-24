@@ -16,6 +16,10 @@ abstract interface class SmartFieldHandle<T> {
 
   bool get isValid;
 
+  bool get isDirty;
+
+  bool get isValidating;
+
   String? get errorText;
 
   Set<String> get dependencies;

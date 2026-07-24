@@ -1,3 +1,29 @@
+## 1.5.2
+
+* Keep item-form drafts after validation; drafts are now cleared only after an
+  actual successful submission explicitly calls `markSubmitted()`.
+* Demonstrate and test automatic draft restoration across application
+  restarts.
+
+## 1.5.1
+
+* Make the example's item-driven draft persist across application restarts
+  using a `shared_preferences` storage adapter.
+* Add example coverage for restoring a saved draft after rebuilding the
+  application.
+
+## 1.5.0
+
+* Add observable form status with field-level dirty and asynchronous validation
+  state as the foundation for draft persistence.
+* Add debounced draft autosaving, restoration prompts, schema migrations,
+  sensitive-field exclusions, expiration, explicit submission/discard flows,
+  and navigation protection.
+* Add JSON/DateTime serialization, in-memory storage, and transform storage for
+  application-provided local encryption.
+* Extend the item-driven example with autosave status, draft restoration,
+  reset/submission cleanup, and guarded back navigation.
+
 ## 1.4.0
 
 * Add a complete item-driven example page built exclusively with

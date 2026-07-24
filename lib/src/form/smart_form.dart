@@ -1,8 +1,11 @@
+import 'dart:async';
 import 'dart:ui' show FlutterView;
 
 import 'package:flutter/widgets.dart';
+import 'package:flutter/scheduler.dart';
 
 import '../animation/smart_error_animation.dart';
+import '../draft/smart_form_draft.dart';
 import '../fields/smart_field_view_item.dart';
 import '../theme/smart_form_theme.dart';
 import '../validation/smart_validation_context.dart';
@@ -10,6 +13,7 @@ import 'smart_api_errors.dart';
 import 'smart_field_handle.dart';
 import 'smart_field_registry.dart';
 import 'smart_form_controller.dart';
+import 'smart_form_field_status.dart';
 import 'smart_form_result.dart';
 import 'smart_form_scope.dart';
 
@@ -21,6 +25,7 @@ class SmartForm extends StatefulWidget {
     this.items = const [],
     this.itemSeparatorHeight = 0,
     this.controller,
+    this.draftController,
     this.scrollToFirstError,
     this.focusFirstError,
     this.scrollDuration,
@@ -36,6 +41,10 @@ class SmartForm extends StatefulWidget {
   }) : assert(
          itemSeparatorHeight >= 0,
          'itemSeparatorHeight cannot be negative.',
+       ),
+       assert(
+         draftController == null || controller != null,
+         'A SmartForm with draftController also needs a controller.',
        );
 
   /// Fields and other widgets laid out vertically in registration order.
@@ -49,6 +58,9 @@ class SmartForm extends StatefulWidget {
 
   /// Optional controller for imperative access to this form.
   final SmartFormController? controller;
+
+  /// Optional draft lifecycle attached to [controller] after the first frame.
+  final SmartFormDraftController? draftController;
 
   /// Whether validation scrolls to the first invalid field.
   final bool? scrollToFirstError;
@@ -99,12 +111,15 @@ class SmartFormState extends State<SmartForm>
   );
   FlutterView? _view;
   double _lastKeyboardInset = 0;
+  final Set<VoidCallback> _formListeners = <VoidCallback>{};
+  bool _formNotificationScheduled = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     widget.controller?.attach(this);
+    _attachDraftAfterLayout();
   }
 
   @override
@@ -137,17 +152,46 @@ class SmartFormState extends State<SmartForm>
   void didUpdateWidget(SmartForm oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (!identical(oldWidget.controller, widget.controller)) {
+      if (oldWidget.controller != null) {
+        oldWidget.draftController?.detach(oldWidget.controller!);
+      }
       oldWidget.controller?.detach(this);
       widget.controller?.attach(this);
+    }
+    if (!identical(oldWidget.draftController, widget.draftController) ||
+        !identical(oldWidget.controller, widget.controller)) {
+      if (identical(oldWidget.controller, widget.controller) &&
+          oldWidget.controller != null) {
+        oldWidget.draftController?.detach(oldWidget.controller!);
+      }
+      _attachDraftAfterLayout();
     }
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    if (widget.controller != null) {
+      widget.draftController?.detach(widget.controller!);
+    }
     widget.controller?.detach(this);
     _focusScopeNode.dispose();
     super.dispose();
+  }
+
+  void _attachDraftAfterLayout() {
+    final draft = widget.draftController;
+    final controller = widget.controller;
+    if (draft == null || controller == null) {
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted &&
+          identical(widget.draftController, draft) &&
+          identical(widget.controller, controller)) {
+        unawaited(draft.attach(controller));
+      }
+    });
   }
 
   void _unfocusForm() {
@@ -178,6 +222,41 @@ class SmartFormState extends State<SmartForm>
   @override
   Map<String, Object?> get values =>
       Map<String, Object?>.unmodifiable(_registry.values);
+
+  @override
+  Map<String, SmartFormFieldStatus> get fieldStatuses =>
+      Map<String, SmartFormFieldStatus>.unmodifiable(_registry.statuses);
+
+  @override
+  void addFormListener(VoidCallback listener) => _formListeners.add(listener);
+
+  @override
+  void removeFormListener(VoidCallback listener) =>
+      _formListeners.remove(listener);
+
+  void _notifyFormListeners() {
+    if (SchedulerBinding.instance.schedulerPhase ==
+        SchedulerPhase.persistentCallbacks) {
+      if (_formNotificationScheduled) {
+        return;
+      }
+      _formNotificationScheduled = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _formNotificationScheduled = false;
+        if (mounted) {
+          _dispatchFormListeners();
+        }
+      });
+      return;
+    }
+    _dispatchFormListeners();
+  }
+
+  void _dispatchFormListeners() {
+    for (final listener in List<VoidCallback>.of(_formListeners)) {
+      listener();
+    }
+  }
 
   @override
   SmartValidationContext get validationContext {
@@ -293,10 +372,14 @@ class SmartFormState extends State<SmartForm>
       );
     }
     _revalidateDependents(values.keys);
+    _notifyFormListeners();
   }
 
   @override
-  void reset() => _registry.reset();
+  void reset() {
+    _registry.reset();
+    _notifyFormListeners();
+  }
 
   @override
   void clearErrors() => _registry.clearErrors();
@@ -456,6 +539,14 @@ class SmartFormState extends State<SmartForm>
   void fieldValueChanged(SmartFieldHandle<Object?> field) {
     if (_registry.contains(field)) {
       _revalidateDependents(<String>[field.name]);
+      _notifyFormListeners();
+    }
+  }
+
+  @override
+  void fieldStateChanged(SmartFieldHandle<Object?> field) {
+    if (_registry.contains(field)) {
+      _notifyFormListeners();
     }
   }
 

@@ -350,6 +350,12 @@ class _TestFieldState extends State<_TestField>
   bool get isValid => _error == null;
 
   @override
+  bool get isDirty => false;
+
+  @override
+  bool get isValidating => false;
+
+  @override
   String? get errorText => _error;
 
   @override

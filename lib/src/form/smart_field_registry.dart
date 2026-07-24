@@ -5,6 +5,7 @@ import 'dart:ui' show Offset;
 import 'package:flutter/foundation.dart';
 
 import 'smart_field_handle.dart';
+import 'smart_form_field_status.dart';
 
 final class _SmartFieldEntry {
   _SmartFieldEntry({
@@ -33,6 +34,20 @@ final class SmartFieldRegistry {
   Map<String, Object?> get values => <String, Object?>{
     for (final field in fields) field.name: field.value,
   };
+
+  Map<String, SmartFormFieldStatus> get statuses =>
+      <String, SmartFormFieldStatus>{
+        for (final field in fields)
+          field.name: SmartFormFieldStatus(
+            name: field.name,
+            value: field.value,
+            enabled: field.enabled,
+            isDirty: field.isDirty,
+            isValid: field.isValid,
+            isValidating: field.isValidating,
+            errorText: field.errorText,
+          ),
+      };
 
   Future<Map<String, Object?>> resolveResultValues() async {
     final orderedFields = fields;

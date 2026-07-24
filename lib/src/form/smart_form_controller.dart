@@ -1,10 +1,22 @@
+import 'package:flutter/foundation.dart';
+
 import 'smart_api_errors.dart';
+import 'smart_form_field_status.dart';
 import 'smart_form_result.dart';
 
 /// Internal command surface implemented by a mounted smart form.
 abstract interface class SmartFormControllerDelegate {
   /// Current values keyed by field name.
   Map<String, Object?> get values;
+
+  /// Current state keyed by field name.
+  Map<String, SmartFormFieldStatus> get fieldStatuses;
+
+  /// Registers an observer for form value and status changes.
+  void addFormListener(VoidCallback listener);
+
+  /// Removes a previously registered observer.
+  void removeFormListener(VoidCallback listener);
 
   /// Reads a typed field value.
   T? valueOf<T>(String name);
@@ -51,7 +63,7 @@ abstract interface class SmartFormControllerDelegate {
 }
 
 /// Imperative access to a mounted smart form.
-final class SmartFormController {
+final class SmartFormController extends ChangeNotifier {
   SmartFormControllerDelegate? _delegate;
   bool _disposed = false;
 
@@ -60,6 +72,28 @@ final class SmartFormController {
 
   /// Returns an immutable snapshot of current registered field values.
   Map<String, Object?> get values => _requireDelegate().values;
+
+  /// Returns immutable runtime state for every registered field.
+  Map<String, SmartFormFieldStatus> get fieldStatuses =>
+      _requireDelegate().fieldStatuses;
+
+  /// Names of fields changed since their last reset.
+  Set<String> get dirtyFields => <String>{
+    for (final status in fieldStatuses.values)
+      if (status.isDirty) status.name,
+  };
+
+  /// Whether at least one field has changed since reset.
+  bool get isDirty => dirtyFields.isNotEmpty;
+
+  /// Names of fields currently running asynchronous validation.
+  Set<String> get validatingFields => <String>{
+    for (final status in fieldStatuses.values)
+      if (status.isValidating) status.name,
+  };
+
+  /// Whether any field is currently running asynchronous validation.
+  bool get isValidating => validatingFields.isNotEmpty;
 
   /// Returns field [name] as [T], or null when its value is null.
   T? valueOf<T>(String name) => _requireDelegate().valueOf<T>(name);
@@ -144,9 +178,12 @@ final class SmartFormController {
   /// Releases this controller.
   ///
   /// A form does not dispose a controller supplied by its caller.
+  @override
   void dispose() {
+    _delegate?.removeFormListener(_handleFormChanged);
     _disposed = true;
     _delegate = null;
+    super.dispose();
   }
 
   /// Attaches this controller to a mounted form delegate.
@@ -163,6 +200,7 @@ final class SmartFormController {
       );
     }
     _delegate = delegate;
+    delegate.addFormListener(_handleFormChanged);
   }
 
   /// Detaches [delegate] when it is the currently attached form.
@@ -170,9 +208,12 @@ final class SmartFormController {
   /// This is used by [SmartForm] and is not normally called by applications.
   void detach(SmartFormControllerDelegate delegate) {
     if (identical(_delegate, delegate)) {
+      delegate.removeFormListener(_handleFormChanged);
       _delegate = null;
     }
   }
+
+  void _handleFormChanged() => notifyListeners();
 
   SmartFormControllerDelegate _requireDelegate() {
     if (_disposed) {

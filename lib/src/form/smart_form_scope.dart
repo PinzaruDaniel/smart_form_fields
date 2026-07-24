@@ -17,6 +17,8 @@ abstract interface class SmartFormRegistrar {
   void unregisterField(SmartFieldHandle<Object?> field);
 
   void fieldValueChanged(SmartFieldHandle<Object?> field);
+
+  void fieldStateChanged(SmartFieldHandle<Object?> field);
 }
 
 final class SmartFormScope extends InheritedWidget {

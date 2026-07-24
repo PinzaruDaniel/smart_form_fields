@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:smart_form_fields/smart_form_fields.dart';
 
+import '../storage/shared_preferences_draft_storage.dart';
+
+const SmartDraftStorage _itemFormDraftStorage = SharedPreferencesDraftStorage();
+
 class ItemsFormExamplePage extends StatefulWidget {
   const ItemsFormExamplePage({super.key});
 
@@ -11,6 +15,14 @@ class ItemsFormExamplePage extends StatefulWidget {
 
 class _ItemsFormExamplePageState extends State<ItemsFormExamplePage> {
   final SmartFormController _controller = SmartFormController();
+  final SmartFormDraftController _draftController = SmartFormDraftController(
+    id: 'item-driven-profile',
+    storage: _itemFormDraftStorage,
+    autosaveDebounce: const Duration(milliseconds: 500),
+    schemaVersion: 1,
+    expiration: const Duration(days: 7),
+    restoreAutomatically: true,
+  );
   String _callingCode = '+373';
   bool _isValidating = false;
 
@@ -167,13 +179,41 @@ class _ItemsFormExamplePageState extends State<ItemsFormExamplePage> {
       );
   }
 
-  void _reset() {
-    _controller.reset();
+  Future<void> _reset() async {
+    await _draftController.discard(resetForm: true);
+    if (!mounted) {
+      return;
+    }
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
+  }
+
+  Future<bool> _confirmLeave(BuildContext context) async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Leave this form?'),
+            content: const Text(
+              'Your unfinished draft is saved, but this form has not been '
+              'submitted.',
+            ),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Keep editing'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Leave'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
   }
 
   @override
   void dispose() {
+    _draftController.dispose();
     _controller.dispose();
     super.dispose();
   }
@@ -181,71 +221,98 @@ class _ItemsFormExamplePageState extends State<ItemsFormExamplePage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Scaffold(
-      appBar: AppBar(title: const Text('Item-driven form')),
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 720),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: <Widget>[
-                  Icon(
-                    Icons.view_list_outlined,
-                    size: 48,
-                    color: theme.colorScheme.primary,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Built entirely from field items',
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.headlineMedium,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Every field below comes from SmartForm.items, with one '
-                    'shared separator height and normal controller behavior.',
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 24),
-                  SmartForm(
-                    controller: _controller,
-                    items: _buildItems(),
-                    itemSeparatorHeight: 16,
-                  ),
-                  const SizedBox(height: 24),
-                  FilledButton.icon(
-                    onPressed: _isValidating ? null : _validate,
-                    icon: _isValidating
-                        ? const SizedBox.square(
-                            dimension: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.check_circle_outline),
-                    label: Text(
-                      _isValidating ? 'Validating items…' : 'Validate items',
+    return SmartDraftNavigationGuard(
+      controller: _draftController,
+      confirmLeave: _confirmLeave,
+      child: Scaffold(
+        appBar: AppBar(title: const Text('Item-driven form')),
+        body: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 720),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: <Widget>[
+                    SmartDraftRestoreBanner(
+                      controller: _draftController,
+                      message: 'You have an unfinished item-form draft.',
+                      restoreLabel: 'Restore',
+                      discardLabel: 'Discard',
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    alignment: WrapAlignment.center,
-                    spacing: 8,
-                    children: <Widget>[
-                      TextButton.icon(
-                        onPressed: _fillSample,
-                        icon: const Icon(Icons.auto_fix_high_outlined),
-                        label: const Text('Fill item sample'),
+                    ListenableBuilder(
+                      listenable: _draftController,
+                      builder: (context, _) => Text(
+                        _draftController.isSaving
+                            ? 'Saving draft…'
+                            : _draftController.hasPendingChanges
+                            ? 'Draft has pending changes'
+                            : _draftController.hasStoredDraft
+                            ? 'Draft saved'
+                            : 'No unfinished draft',
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.labelLarge,
                       ),
-                      TextButton.icon(
-                        onPressed: _reset,
-                        icon: const Icon(Icons.restart_alt),
-                        label: const Text('Reset items'),
+                    ),
+                    const SizedBox(height: 12),
+                    Icon(
+                      Icons.view_list_outlined,
+                      size: 48,
+                      color: theme.colorScheme.primary,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Built entirely from field items',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.headlineMedium,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Every field below comes from SmartForm.items, with one '
+                      'shared separator height and normal controller behavior. '
+                      'Changes are auto-saved and restored on the next launch.',
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    SmartForm(
+                      controller: _controller,
+                      draftController: _draftController,
+                      items: _buildItems(),
+                      itemSeparatorHeight: 16,
+                    ),
+                    const SizedBox(height: 24),
+                    FilledButton.icon(
+                      onPressed: _isValidating ? null : _validate,
+                      icon: _isValidating
+                          ? const SizedBox.square(
+                              dimension: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.check_circle_outline),
+                      label: Text(
+                        _isValidating ? 'Validating items…' : 'Validate items',
                       ),
-                    ],
-                  ),
-                ],
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      spacing: 8,
+                      children: <Widget>[
+                        TextButton.icon(
+                          onPressed: _fillSample,
+                          icon: const Icon(Icons.auto_fix_high_outlined),
+                          label: const Text('Fill item sample'),
+                        ),
+                        TextButton.icon(
+                          onPressed: _reset,
+                          icon: const Icon(Icons.restart_alt),
+                          label: const Text('Reset items'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

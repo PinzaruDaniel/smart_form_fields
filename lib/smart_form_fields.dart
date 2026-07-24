@@ -2,6 +2,18 @@
 library;
 
 export 'src/animation/smart_error_animation.dart' show SmartErrorAnimation;
+export 'src/draft/smart_form_draft.dart'
+    show
+        SmartDraftMigration,
+        SmartDraftNavigationGuard,
+        SmartDraftRestoreBanner,
+        SmartDraftSerializer,
+        SmartDraftStorage,
+        SmartDraftStringTransform,
+        SmartFormDraftController,
+        SmartJsonDraftSerializer,
+        SmartMemoryDraftStorage,
+        SmartTransformDraftStorage;
 export 'src/form/smart_form.dart' show SmartForm, SmartFormState;
 export 'src/form/smart_api_errors.dart'
     show
@@ -10,6 +22,7 @@ export 'src/form/smart_api_errors.dart'
         SmartApiErrorResult,
         SmartApiErrors;
 export 'src/form/smart_form_controller.dart' show SmartFormController;
+export 'src/form/smart_form_field_status.dart' show SmartFormFieldStatus;
 export 'src/form/smart_form_key.dart' show SmartFormKey;
 export 'src/form/smart_form_result.dart' show SmartFormResult;
 export 'src/json/smart_form_schema.dart'

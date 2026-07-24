@@ -637,15 +637,80 @@ SmartForm(
 Use either `children` or `items` on one `SmartForm`. The existing `children`
 API remains unchanged.
 
+## Draft persistence
+
+Attach a draft controller to an existing `SmartFormController`:
+
+```dart
+final formController = SmartFormController();
+final draftController = SmartFormDraftController(
+  id: 'edit-profile',
+  storage: secureDraftStorage,
+  serializer: const SmartJsonDraftSerializer(),
+  autosaveDebounce: const Duration(milliseconds: 500),
+  schemaVersion: 3,
+  migrations: {
+    1: migrateProfileV1ToV2,
+    2: migrateProfileV2ToV3,
+  },
+  excludedFields: {'password', 'card_cvc'},
+  expiration: const Duration(days: 7),
+);
+
+SmartForm(
+  controller: formController,
+  draftController: draftController,
+  children: fields,
+);
+```
+
+The draft controller provides debounced autosaving, manual saving, draft
+inspection and restoration, expiration, sequential schema migration,
+field-level dirty state, async-validation state, sensitive-field exclusions,
+and explicit `discard()` and `markSubmitted()` lifecycle methods.
+
+```dart
+await draftController.saveNow();
+await draftController.restore();
+await draftController.discard(resetForm: true);
+await draftController.markSubmitted();
+
+print(draftController.dirtyFields);
+print(draftController.validatingFields);
+```
+
+Validation alone should not call `markSubmitted()`. Call it only after the
+backend accepts the submission, because it permanently deletes the stored
+draft. Set `restoreAutomatically: true` to apply a stored draft during
+attachment; otherwise present `SmartDraftRestoreBanner` for an explicit choice.
+
+Use `SmartDraftRestoreBanner` for an application-localized unfinished-draft
+prompt and `SmartDraftNavigationGuard` to confirm leaving a changed form.
+
+Encryption belongs at the storage boundary. Wrap any storage implementation
+with application-provided authenticated encryption:
+
+```dart
+final secureDraftStorage = SmartTransformDraftStorage(
+  storage: localStorage,
+  encode: encryptDraft,
+  decode: decryptDraft,
+);
+```
+
+`SmartMemoryDraftStorage` is included for tests and temporary in-process
+drafts. Production applications should adapt durable platform storage and use
+authenticated encryption when draft contents are sensitive.
+
 ## Example application
 
 The [example](example/) directory contains five Material 3 screens: a complete
 registration flow, a form built entirely from view items, an API-model-class
 form, a snake_case JSON/API form, and an imperative controller playground.
 Together they demonstrate reusable and custom fields, sync/async validation,
-item spacing, bottom-sheet selection, value updates, dynamic and disabled
-fields, reset, server errors, focus/scroll commands, and first-error
-navigation.
+item spacing, draft autosaving and restoration, navigation protection,
+bottom-sheet selection, value updates, dynamic and disabled fields, reset,
+server errors, focus/scroll commands, and first-error navigation.
 
 ```sh
 cd example

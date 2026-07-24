@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smart_form_fields_example/app.dart';
 
 void main() {
+  setUp(() {
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+  });
+
   testWidgets('renders the example hub', (tester) async {
     await tester.pumpWidget(const SmartFormFieldsExampleApp());
 
@@ -23,7 +28,9 @@ void main() {
     }
   });
 
-  testWidgets('builds and submits the item-driven form', (tester) async {
+  testWidgets('validates the item-driven form without deleting its draft', (
+    tester,
+  ) async {
     await tester.pumpWidget(const SmartFormFieldsExampleApp());
     await _openExample(tester, 'Item-driven form');
 
@@ -47,6 +54,51 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Items form is valid: +37378059426'), findsOneWidget);
+    expect(find.text('Draft saved'), findsOneWidget);
+  });
+
+  testWidgets('autosaves and clears the item-driven draft', (tester) async {
+    await tester.pumpWidget(const SmartFormFieldsExampleApp());
+    await _openExample(tester, 'Item-driven form');
+
+    final nameField = find.widgetWithText(TextField, 'Display name');
+    await tester.enterText(nameField, 'Draft name');
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump();
+
+    expect(find.text('Draft saved'), findsOneWidget);
+
+    final resetButton = find.widgetWithText(TextButton, 'Reset items');
+    await tester.ensureVisible(resetButton);
+    await tester.tap(resetButton);
+    await tester.pumpAndSettle();
+
+    expect(find.text('No unfinished draft'), findsOneWidget);
+    expect(find.text('Draft name'), findsNothing);
+  });
+
+  testWidgets('restores the item-driven draft after an app restart', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const SmartFormFieldsExampleApp());
+    await _openExample(tester, 'Item-driven form');
+
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Display name'),
+      'Restart-safe draft',
+    );
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump();
+    expect(find.text('Draft saved'), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+    await tester.pumpWidget(const SmartFormFieldsExampleApp());
+    await _openExample(tester, 'Item-driven form');
+
+    expect(find.text('Restart-safe draft'), findsOneWidget);
+    expect(find.text('You have an unfinished item-form draft.'), findsNothing);
+    expect(find.text('Draft saved'), findsOneWidget);
   });
 
   testWidgets('renders the registration example', (tester) async {
