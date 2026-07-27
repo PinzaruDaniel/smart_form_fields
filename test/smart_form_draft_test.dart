@@ -300,6 +300,40 @@ void main() {
     },
   );
 
+  test(
+    'callback storage delegates read, write, and delete operations',
+    () async {
+      final calls = <String>[];
+      final values = <String, String>{};
+      final storage = SmartCallbackDraftStorage(
+        onRead: (id) {
+          calls.add('read:$id');
+          return values[id];
+        },
+        onWrite: (id, payload) {
+          calls.add('write:$id:$payload');
+          values[id] = payload;
+        },
+        onDelete: (id) {
+          calls.add('delete:$id');
+          values.remove(id);
+        },
+      );
+
+      await storage.write('profile', '{"name":"Ana"}');
+      expect(await storage.read('profile'), '{"name":"Ana"}');
+      await storage.delete('profile');
+
+      expect(await storage.read('profile'), isNull);
+      expect(calls, <String>[
+        'write:profile:{"name":"Ana"}',
+        'read:profile',
+        'delete:profile',
+        'read:profile',
+      ]);
+    },
+  );
+
   test('default serializer round-trips DateTime values', () {
     const serializer = SmartJsonDraftSerializer();
     final date = DateTime.utc(2026, 7, 24, 10, 30);

@@ -698,6 +698,29 @@ final secureDraftStorage = SmartTransformDraftStorage(
 );
 ```
 
+When persistence belongs to your own architecture, adapt the package to your
+controller or domain use case with `SmartCallbackDraftStorage`. This keeps
+ObjectBox, repositories, and database entities inside the application instead
+of leaking them into the widget layer:
+
+```dart
+final draftStorage = SmartCallbackDraftStorage(
+  onRead: profileFormController.readDraftPayload,
+  onWrite: profileFormController.saveDraftPayload,
+  onDelete: profileFormController.deleteDraftPayload,
+);
+
+final draftController = SmartFormDraftController(
+  id: 'edit-profile',
+  storage: draftStorage,
+  restoreAutomatically: true,
+);
+```
+
+For example, `saveDraftPayload` can call a presentation controller, which calls
+a domain use case, which writes the payload to an ObjectBox-backed repository.
+The package only needs the string payload for a draft id.
+
 `SmartMemoryDraftStorage` is included for tests and temporary in-process
 drafts. Production applications should adapt durable platform storage and use
 authenticated encryption when draft contents are sensitive.

@@ -85,6 +85,51 @@ abstract interface class SmartDraftStorage {
   Future<void> delete(String id);
 }
 
+/// Reads a draft payload by form id.
+typedef SmartDraftRead = FutureOr<String?> Function(String id);
+
+/// Writes a draft [payload] for a form id.
+typedef SmartDraftWrite = FutureOr<void> Function(String id, String payload);
+
+/// Deletes a draft payload by form id.
+typedef SmartDraftDelete = FutureOr<void> Function(String id);
+
+/// Adapts application-owned persistence callbacks to [SmartDraftStorage].
+///
+/// This is useful when drafts should be saved through an application's own
+/// data/domain/presentation layers, for example an ObjectBox repository or
+/// use case exposed by a controller.
+final class SmartCallbackDraftStorage implements SmartDraftStorage {
+  /// Creates a callback-backed draft storage adapter.
+  const SmartCallbackDraftStorage({
+    required this.onRead,
+    required this.onWrite,
+    required this.onDelete,
+  });
+
+  /// Callback used when the draft controller reads a payload.
+  final SmartDraftRead onRead;
+
+  /// Callback used when the draft controller writes a payload.
+  final SmartDraftWrite onWrite;
+
+  /// Callback used when the draft controller deletes a payload.
+  final SmartDraftDelete onDelete;
+
+  @override
+  Future<String?> read(String id) async => onRead(id);
+
+  @override
+  Future<void> write(String id, String payload) async {
+    await onWrite(id, payload);
+  }
+
+  @override
+  Future<void> delete(String id) async {
+    await onDelete(id);
+  }
+}
+
 /// In-memory draft storage suitable for tests and temporary drafts.
 final class SmartMemoryDraftStorage implements SmartDraftStorage {
   /// Creates empty in-memory storage.

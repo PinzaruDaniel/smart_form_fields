@@ -1,3 +1,9 @@
+## 1.5.3
+
+* Add `SmartCallbackDraftStorage` so applications can persist drafts through
+  their own controllers, domain use cases, repositories, or ObjectBox adapters
+  without adding storage-specific dependencies to the package.
+
 ## 1.5.2
 
 * Keep item-form drafts after validation; drafts are now cleared only after an
