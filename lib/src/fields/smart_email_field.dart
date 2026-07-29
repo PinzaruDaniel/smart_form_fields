@@ -27,6 +27,7 @@ class SmartEmailField extends StatefulWidget {
     this.textInputAction,
     this.onChanged,
     this.onSubmitted,
+    this.excludeFromDraft = false,
     super.key,
   });
 
@@ -81,6 +82,9 @@ class SmartEmailField extends StatefulWidget {
   /// Called when the platform submits the email field.
   final ValueChanged<String>? onSubmitted;
 
+  /// Whether this field is omitted from persisted draft payloads.
+  final bool excludeFromDraft;
+
   @override
   State<SmartEmailField> createState() => _SmartEmailFieldState();
 }
@@ -134,6 +138,7 @@ class _SmartEmailFieldState extends State<SmartEmailField> {
       enableSuggestions: false,
       onChanged: widget.onChanged,
       onSubmitted: widget.onSubmitted,
+      excludeFromDraft: widget.excludeFromDraft,
     );
   }
 }

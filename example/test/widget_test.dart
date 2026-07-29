@@ -110,6 +110,8 @@ void main() {
     expect(find.widgetWithText(TextField, 'Email'), findsOneWidget);
     expect(find.widgetWithText(TextField, 'Birth date'), findsOneWidget);
     expect(find.text('Country'), findsOneWidget);
+    expect(find.text('Account type'), findsOneWidget);
+    expect(find.widgetWithText(TextField, 'Company name'), findsNothing);
     expect(find.text('Product updates'), findsOneWidget);
   });
 
@@ -126,7 +128,7 @@ void main() {
 
     expect(find.text('First name is required'), findsOneWidget);
     expect(find.text('Email is required'), findsOneWidget);
-    expect(find.text('Please correct 8 field(s).'), findsOneWidget);
+    expect(find.text('Account type is required'), findsOneWidget);
   });
 
   testWidgets('validates email after focus leaves the field', (tester) async {
@@ -156,21 +158,40 @@ void main() {
     final fillButton = find.widgetWithText(TextButton, 'Fill sample');
     await tester.ensureVisible(fillButton);
     await tester.tap(fillButton);
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     expect(find.text('ana@example.com'), findsOneWidget);
+    expect(find.text('Smart Moldova SRL'), findsOneWidget);
     expect(tester.widget<Switch>(find.byType(Switch)).value, isTrue);
 
     final submitButton = find.widgetWithText(FilledButton, 'Create account');
     await tester.tap(submitButton);
     await tester.pump();
-    expect(find.text('Validating…'), findsOneWidget);
+    expect(find.text('Creating account...'), findsOneWidget);
     await tester.pumpAndSettle();
 
     expect(
       find.text('Account data is valid for ana@example.com'),
       findsOneWidget,
     );
+  });
+
+  testWidgets('shows conditional company field for business accounts', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const SmartFormFieldsExampleApp());
+    await _openExample(tester, 'Registration form');
+
+    expect(find.widgetWithText(TextField, 'Company name'), findsNothing);
+
+    final accountType = find.text('Account type');
+    await tester.ensureVisible(accountType);
+    await tester.tap(accountType);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Business').last);
+    await tester.pumpAndSettle();
+
+    expect(find.widgetWithText(TextField, 'Company name'), findsOneWidget);
   });
 
   testWidgets('keeps both password errors visible after submission', (
@@ -182,7 +203,7 @@ void main() {
     final fillButton = find.widgetWithText(TextButton, 'Fill sample');
     await tester.ensureVisible(fillButton);
     await tester.tap(fillButton);
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     final passwordField = find.widgetWithText(TextField, 'Password');
     await tester.ensureVisible(passwordField);

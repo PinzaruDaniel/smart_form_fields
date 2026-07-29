@@ -42,6 +42,7 @@ final class SmartFieldRegistry {
             name: field.name,
             value: field.value,
             enabled: field.enabled,
+            excludeFromDraft: field.excludeFromDraft,
             isDirty: field.isDirty,
             isValid: field.isValid,
             isValidating: field.isValidating,

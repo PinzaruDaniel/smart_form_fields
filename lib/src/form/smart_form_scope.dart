@@ -9,6 +9,10 @@ import 'smart_field_handle.dart';
 abstract interface class SmartFormRegistrar {
   SmartValidationContext get validationContext;
 
+  void addFormListener(VoidCallback listener);
+
+  void removeFormListener(VoidCallback listener);
+
   void registerField(
     SmartFieldHandle<Object?> field, {
     required int sectionOrder,

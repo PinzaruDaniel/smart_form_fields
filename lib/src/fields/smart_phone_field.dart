@@ -70,6 +70,7 @@ final class SmartPhoneFieldViewItem extends SmartFieldViewItem {
     this.textInputAction,
     this.onChanged,
     this.onSubmitted,
+    this.excludeFromDraft = false,
   });
 
   /// Initial phone text.
@@ -138,6 +139,9 @@ final class SmartPhoneFieldViewItem extends SmartFieldViewItem {
   /// Called when the platform submits the phone field.
   final ValueChanged<String>? onSubmitted;
 
+  /// Whether this field is omitted from persisted draft payloads.
+  final bool excludeFromDraft;
+
   @override
   Widget build(BuildContext context) => SmartPhoneField(item: this);
 }
@@ -172,6 +176,7 @@ class SmartPhoneField extends StatefulWidget {
     TextInputAction? textInputAction,
     ValueChanged<String>? onChanged,
     ValueChanged<String>? onSubmitted,
+    bool? excludeFromDraft,
     super.key,
   }) : assert(
          item != null || (name != null && name.length > 0),
@@ -199,7 +204,8 @@ class SmartPhoneField extends StatefulWidget {
        _valueParser = valueParser,
        _textInputAction = textInputAction,
        _onChanged = onChanged,
-       _onSubmitted = onSubmitted;
+       _onSubmitted = onSubmitted,
+       _excludeFromDraft = excludeFromDraft;
 
   /// Optional immutable configuration used to create this field.
   final SmartPhoneFieldViewItem? item;
@@ -352,6 +358,12 @@ class SmartPhoneField extends StatefulWidget {
   /// Called when the platform submits the phone field.
   ValueChanged<String>? get onSubmitted => _onSubmitted ?? item?.onSubmitted;
 
+  final bool? _excludeFromDraft;
+
+  /// Whether this field is omitted from persisted draft payloads.
+  bool get excludeFromDraft =>
+      _excludeFromDraft ?? item?.excludeFromDraft ?? false;
+
   @override
   State<SmartPhoneField> createState() => _SmartPhoneFieldState();
 }
@@ -422,6 +434,7 @@ class _SmartPhoneFieldState extends State<SmartPhoneField> {
           : (value) => widget.valueParser!(value ?? ''),
       onChanged: widget.onChanged,
       onSubmitted: widget.onSubmitted,
+      excludeFromDraft: widget.excludeFromDraft,
     );
   }
 

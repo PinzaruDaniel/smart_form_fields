@@ -347,6 +347,9 @@ class _TestFieldState extends State<_TestField>
   bool get enabled => widget.enabled;
 
   @override
+  bool get excludeFromDraft => false;
+
+  @override
   bool get isValid => _error == null;
 
   @override

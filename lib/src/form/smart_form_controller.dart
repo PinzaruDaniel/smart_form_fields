@@ -1,8 +1,14 @@
 import 'package:flutter/foundation.dart';
 
+import 'dart:async';
+
 import 'smart_api_errors.dart';
 import 'smart_form_field_status.dart';
 import 'smart_form_result.dart';
+
+/// Called after a form validates successfully during submission.
+typedef SmartFormSubmitCallback =
+    FutureOr<void> Function(Map<String, Object?> values);
 
 /// Internal command surface implemented by a mounted smart form.
 abstract interface class SmartFormControllerDelegate {
@@ -26,6 +32,9 @@ abstract interface class SmartFormControllerDelegate {
     bool? scrollToError,
     bool? focusFirstError,
   });
+
+  /// Validates the form and runs its submit callback when valid.
+  Future<SmartFormResult> submit({bool? scrollToError, bool? focusFirstError});
 
   /// Changes one field value.
   void setValue<T>(String name, T? value);
@@ -66,9 +75,22 @@ abstract interface class SmartFormControllerDelegate {
 final class SmartFormController extends ChangeNotifier {
   SmartFormControllerDelegate? _delegate;
   bool _disposed = false;
+  bool _isSubmitting = false;
+  Future<SmartFormResult>? _activeSubmission;
+  SmartFormResult? _lastSubmitResult;
+  Object? _submissionError;
 
   /// Whether this controller is attached to a mounted form.
   bool get isAttached => _delegate != null;
+
+  /// Whether a submit call is currently validating or running `onSubmit`.
+  bool get isSubmitting => _isSubmitting;
+
+  /// Last validation result produced by [submit], when available.
+  SmartFormResult? get lastSubmitResult => _lastSubmitResult;
+
+  /// Last error thrown by the form submit callback.
+  Object? get submissionError => _submissionError;
 
   /// Returns an immutable snapshot of current registered field values.
   Map<String, Object?> get values => _requireDelegate().values;
@@ -107,6 +129,21 @@ final class SmartFormController extends ChangeNotifier {
       scrollToError: scrollToError,
       focusFirstError: focusFirstError,
     );
+  }
+
+  /// Validates the form, prevents duplicate concurrent submissions, and runs
+  /// `SmartForm.onSubmit` when the form is valid.
+  Future<SmartFormResult> submit({bool? scrollToError, bool? focusFirstError}) {
+    final active = _activeSubmission;
+    if (active != null) {
+      return active;
+    }
+    final submission = _submit(
+      scrollToError: scrollToError,
+      focusFirstError: focusFirstError,
+    );
+    _activeSubmission = submission;
+    return submission;
   }
 
   /// Changes the value of field [name].
@@ -214,6 +251,30 @@ final class SmartFormController extends ChangeNotifier {
   }
 
   void _handleFormChanged() => notifyListeners();
+
+  Future<SmartFormResult> _submit({
+    bool? scrollToError,
+    bool? focusFirstError,
+  }) async {
+    _isSubmitting = true;
+    _submissionError = null;
+    notifyListeners();
+    try {
+      final result = await _requireDelegate().submit(
+        scrollToError: scrollToError,
+        focusFirstError: focusFirstError,
+      );
+      _lastSubmitResult = result;
+      return result;
+    } catch (error) {
+      _submissionError = error;
+      rethrow;
+    } finally {
+      _isSubmitting = false;
+      _activeSubmission = null;
+      notifyListeners();
+    }
+  }
 
   SmartFormControllerDelegate _requireDelegate() {
     if (_disposed) {

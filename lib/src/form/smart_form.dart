@@ -35,6 +35,7 @@ class SmartForm extends StatefulWidget {
     this.dismissKeyboardOnTapOutside = true,
     this.unfocusOnKeyboardDismiss = true,
     this.onKeyboardVisibilityChanged,
+    this.onSubmit,
     this.autovalidateMode = AutovalidateMode.onUnfocus,
     this.mainAxisSize = MainAxisSize.min,
     super.key,
@@ -88,6 +89,12 @@ class SmartForm extends StatefulWidget {
 
   /// Called when the keyboard changes between visible and hidden.
   final ValueChanged<bool>? onKeyboardVisibilityChanged;
+
+  /// Called by [SmartFormController.submit] after validation succeeds.
+  ///
+  /// When this callback completes successfully, an attached draft controller is
+  /// marked submitted so its stored draft is cleared.
+  final SmartFormSubmitCallback? onSubmit;
 
   /// Default automatic validation mode for descendant smart fields.
   ///
@@ -320,6 +327,24 @@ class SmartFormState extends State<SmartForm>
       values: await _registry.resolveResultValues(),
       errors: errors,
     );
+  }
+
+  @override
+  Future<SmartFormResult> submit({
+    bool? scrollToError,
+    bool? focusFirstError,
+  }) async {
+    final result = await validate(
+      scrollToError: scrollToError,
+      focusFirstError: focusFirstError,
+    );
+    final onSubmit = widget.onSubmit;
+    if (!result.isValid || onSubmit == null) {
+      return result;
+    }
+    await onSubmit(result.values);
+    await widget.draftController?.markSubmitted();
+    return result;
   }
 
   Future<void> _navigateToInvalidField(

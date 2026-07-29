@@ -295,7 +295,7 @@ final class SmartFormDraftController extends ChangeNotifier {
     }
     _form = form;
     form.addListener(_handleFormChanged);
-    _observedValues = Map<String, Object?>.of(form.values);
+    _observedValues = _draftableValues(form);
     await inspect();
   }
 
@@ -382,7 +382,7 @@ final class SmartFormDraftController extends ChangeNotifier {
     _suppressChanges = true;
     try {
       form.patchValue(applicable);
-      _observedValues = Map<String, Object?>.of(form.values);
+      _observedValues = _draftableValues(form);
       _hasRestorableDraft = false;
       _hasPendingChanges = false;
       _lastError = null;
@@ -403,10 +403,7 @@ final class SmartFormDraftController extends ChangeNotifier {
     _isSaving = true;
     notifyListeners();
     try {
-      final includedValues = <String, Object?>{
-        for (final entry in form.values.entries)
-          if (!excludedFields.contains(entry.key)) entry.key: entry.value,
-      };
+      final includedValues = _draftableValues(form);
       final serialized = serializer.serialize(includedValues);
       final now = DateTime.now().toUtc();
       await storage.write(
@@ -422,7 +419,7 @@ final class SmartFormDraftController extends ChangeNotifier {
       _hasRestorableDraft = false;
       _hasPendingChanges = false;
       _lastError = null;
-      _observedValues = Map<String, Object?>.of(form.values);
+      _observedValues = includedValues;
     } catch (error) {
       _lastError = error;
       rethrow;
@@ -445,9 +442,7 @@ final class SmartFormDraftController extends ChangeNotifier {
       }
     }
     _clearStoredState();
-    _observedValues = _form == null
-        ? null
-        : Map<String, Object?>.of(_form!.values);
+    _observedValues = _form == null ? null : _draftableValues(_form!);
     _ignoreCurrentChanges = false;
     notifyListeners();
   }
@@ -466,7 +461,7 @@ final class SmartFormDraftController extends ChangeNotifier {
       notifyListeners();
       return;
     }
-    final nextValues = Map<String, Object?>.of(_form!.values);
+    final nextValues = _draftableValues(_form!);
     if (_deepEquals(nextValues, _observedValues)) {
       notifyListeners();
       return;
@@ -508,6 +503,16 @@ final class SmartFormDraftController extends ChangeNotifier {
       return true;
     }
     return false;
+  }
+
+  Map<String, Object?> _draftableValues(SmartFormController form) {
+    final statuses = form.fieldStatuses;
+    return <String, Object?>{
+      for (final entry in form.values.entries)
+        if (!excludedFields.contains(entry.key) &&
+            !(statuses[entry.key]?.excludeFromDraft ?? false))
+          entry.key: entry.value,
+    };
   }
 
   void _setLoading(bool value) {

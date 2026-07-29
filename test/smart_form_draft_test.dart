@@ -71,13 +71,104 @@ void main() {
         'new-sensitive-value',
       );
       await tester.pump();
-      expect(draft.hasPendingChanges, isTrue);
-      expect(draft.shouldProtectNavigation, isTrue);
+      expect(draft.hasPendingChanges, isFalse);
+      expect(draft.shouldProtectNavigation, isFalse);
 
       draft.dispose();
       form.dispose();
     },
   );
+
+  testWidgets('field-level draft exclusion omits sensitive values', (
+    tester,
+  ) async {
+    final storage = SmartMemoryDraftStorage();
+    final form = SmartFormController();
+    final draft = SmartFormDraftController(
+      id: 'field-exclusions',
+      storage: storage,
+      autosaveDebounce: const Duration(milliseconds: 100),
+    );
+
+    await tester.pumpWidget(
+      _host(
+        form: form,
+        draft: draft,
+        children: const <Widget>[
+          SmartTextField(
+            name: 'email',
+            decoration: InputDecoration(labelText: 'Email'),
+          ),
+          SmartPasswordField(
+            name: 'password',
+            excludeFromDraft: true,
+            decoration: InputDecoration(labelText: 'Password'),
+          ),
+        ],
+      ),
+    );
+    await tester.pump();
+
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Email'),
+      'person@example.com',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Password'),
+      'secret-password',
+    );
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump();
+
+    final payload =
+        jsonDecode((await storage.read('field-exclusions'))!)
+            as Map<String, Object?>;
+    final values = payload['values']! as Map<String, Object?>;
+    expect(values, <String, Object?>{'email': 'person@example.com'});
+
+    draft.dispose();
+    form.dispose();
+  });
+
+  testWidgets('excluded-only edits do not create pending draft changes', (
+    tester,
+  ) async {
+    final storage = SmartMemoryDraftStorage();
+    final form = SmartFormController();
+    final draft = SmartFormDraftController(
+      id: 'excluded-only',
+      storage: storage,
+      autosaveDebounce: const Duration(milliseconds: 100),
+    );
+
+    await tester.pumpWidget(
+      _host(
+        form: form,
+        draft: draft,
+        children: const <Widget>[
+          SmartPasswordField(
+            name: 'password',
+            excludeFromDraft: true,
+            decoration: InputDecoration(labelText: 'Password'),
+          ),
+        ],
+      ),
+    );
+    await tester.pump();
+
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Password'),
+      'secret-password',
+    );
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump();
+
+    expect(draft.hasPendingChanges, isFalse);
+    expect(await storage.read('excluded-only'), isNull);
+
+    draft.dispose();
+    form.dispose();
+  });
 
   testWidgets('offers and restores a migrated unfinished draft', (
     tester,

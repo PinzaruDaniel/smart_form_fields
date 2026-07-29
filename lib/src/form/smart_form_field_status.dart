@@ -5,6 +5,7 @@ final class SmartFormFieldStatus {
     required this.name,
     required this.value,
     required this.enabled,
+    required this.excludeFromDraft,
     required this.isDirty,
     required this.isValid,
     required this.isValidating,
@@ -19,6 +20,9 @@ final class SmartFormFieldStatus {
 
   /// Whether the field participates in validation.
   final bool enabled;
+
+  /// Whether this field should be omitted from persisted drafts.
+  final bool excludeFromDraft;
 
   /// Whether the field changed since its last reset.
   final bool isDirty;

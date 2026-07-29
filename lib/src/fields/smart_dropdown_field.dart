@@ -40,6 +40,7 @@ class SmartDropdownField<T> extends StatefulWidget {
     this.isExpanded = true,
     this.menuMaxHeight,
     this.onChanged,
+    this.excludeFromDraft = false,
     super.key,
   });
 
@@ -99,6 +100,9 @@ class SmartDropdownField<T> extends StatefulWidget {
 
   /// Called whenever the selected value changes.
   final ValueChanged<T?>? onChanged;
+
+  /// Whether this field is omitted from persisted draft payloads.
+  final bool excludeFromDraft;
 
   @override
   State<SmartDropdownField<T>> createState() => _SmartDropdownFieldState<T>();
@@ -210,6 +214,7 @@ class _SmartDropdownFieldState<T> extends State<SmartDropdownField<T>> {
       asyncValidators: widget.asyncValidators,
       autovalidateMode: dropdownAutovalidateMode,
       errorAnimation: widget.errorAnimation,
+      excludeFromDraft: widget.excludeFromDraft,
       enabled: widget.enabled,
       focusNode: widget.focusNode,
       builder: (context, field) {

@@ -34,6 +34,7 @@ class SmartTextField extends StatefulWidget {
     this.onChanged,
     this.onSubmitted,
     this.resultValueTransformer,
+    this.excludeFromDraft = false,
     super.key,
   }) : assert(
          controller == null || initialValue == null,
@@ -108,6 +109,9 @@ class SmartTextField extends StatefulWidget {
 
   /// Optionally transforms the text captured in the validation result.
   final SmartResultValueTransformer<String>? resultValueTransformer;
+
+  /// Whether this field is omitted from persisted draft payloads.
+  final bool excludeFromDraft;
 
   @override
   State<SmartTextField> createState() => _SmartTextFieldState();
@@ -185,6 +189,7 @@ class _SmartTextFieldState extends State<SmartTextField> {
       autovalidateMode: widget.autovalidateMode,
       errorAnimation: widget.errorAnimation,
       resultValueTransformer: widget.resultValueTransformer,
+      excludeFromDraft: widget.excludeFromDraft,
       enabled: widget.enabled,
       focusNode: widget.focusNode,
       builder: (context, field) {

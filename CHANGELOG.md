@@ -1,3 +1,13 @@
+## 1.5.4
+
+* Add field-level draft exclusions with `excludeFromDraft` for sensitive values
+  such as passwords, tokens, and card details.
+* Add `SmartForm.onSubmit`, `SmartFormController.submit`, submission state, and
+  `SmartSubmitButton` with duplicate-submission prevention and draft cleanup
+  after successful submits.
+* Add `SmartConditionalField` for showing and unregistering dependent fields
+  based on another field's value.
+
 ## 1.5.3
 
 * Add `SmartCallbackDraftStorage` so applications can persist drafts through

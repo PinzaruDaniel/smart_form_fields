@@ -14,7 +14,6 @@ class RegistrationExamplePage extends StatefulWidget {
 
 class _RegistrationExamplePageState extends State<RegistrationExamplePage> {
   final SmartFormController _formController = SmartFormController();
-  bool _isSubmitting = false;
   String _phoneCountryCode = '+373';
 
   static String? _phone(String? value) {
@@ -37,31 +36,39 @@ class _RegistrationExamplePageState extends State<RegistrationExamplePage> {
   }
 
   Future<void> _submit() async {
-    if (_isSubmitting) {
-      return;
-    }
-    setState(() => _isSubmitting = true);
-    final result = await _formController.validate();
+    await Future<void>.delayed(const Duration(milliseconds: 450));
+  }
+
+  void _showSubmitResult() {
     if (!mounted) {
       return;
     }
-    setState(() => _isSubmitting = false);
-
-    final messenger = ScaffoldMessenger.of(context);
-    messenger.hideCurrentSnackBar();
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text(
-          result.isValid
-              ? 'Account data is valid for ${result.values['email']}'
-              : 'Please correct ${result.errors.length} field(s).',
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            'Account data is valid for '
+            '${_formController.lastSubmitResult?.values['email']}',
+          ),
+          behavior: SnackBarBehavior.floating,
         ),
+      );
+  }
+
+  void _showSubmitError(Object error) {
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Registration failed: $error'),
         behavior: SnackBarBehavior.floating,
       ),
     );
   }
 
-  void _fillSample() {
+  Future<void> _fillSample() async {
     _formController.patchValue(<String, Object?>{
       'firstName': 'Ana',
       'lastName': 'Popescu',
@@ -71,8 +78,13 @@ class _RegistrationExamplePageState extends State<RegistrationExamplePage> {
       'confirmPassword': 'flutter123',
       'birthDate': DateTime(1992, 5, 14),
       'country': 'Moldova',
+      'accountType': 'Business',
       'newsletter': true,
     });
+    await WidgetsBinding.instance.endOfFrame;
+    if (mounted && _formController.values.containsKey('companyName')) {
+      _formController.setValue<String>('companyName', 'Smart Moldova SRL');
+    }
   }
 
   void _reset() {
@@ -208,6 +220,7 @@ class _RegistrationExamplePageState extends State<RegistrationExamplePage> {
                   const SizedBox(height: 24),
                   SmartForm(
                     controller: _formController,
+                    onSubmit: (_) => _submit(),
                     children: <Widget>[
                       const _NameFields(),
                       const SizedBox(height: 16),
@@ -241,6 +254,7 @@ class _RegistrationExamplePageState extends State<RegistrationExamplePage> {
                           prefixIcon: Icon(Icons.lock_outline),
                         ),
                         textInputAction: TextInputAction.next,
+                        excludeFromDraft: true,
                       ),
                       const SizedBox(height: 16),
                       SmartPasswordField(
@@ -260,7 +274,8 @@ class _RegistrationExamplePageState extends State<RegistrationExamplePage> {
                             message: 'Passwords do not match',
                           ),
                         ],
-                        onSubmitted: (_) => unawaited(_submit()),
+                        onSubmitted: (_) => unawaited(_formController.submit()),
+                        excludeFromDraft: true,
                       ),
                       const SizedBox(height: 16),
                       SmartDateField(
@@ -286,6 +301,37 @@ class _RegistrationExamplePageState extends State<RegistrationExamplePage> {
                           prefixIcon: Icon(Icons.public_outlined),
                         ),
                       ),
+                      const SizedBox(height: 16),
+                      SmartDropdownField<String>(
+                        name: 'accountType',
+                        items: const <String>['Personal', 'Business'],
+                        itemLabelBuilder: (value) => value,
+                        required: true,
+                        requiredMessage: 'Account type is required',
+                        decoration: const InputDecoration(
+                          labelText: 'Account type',
+                          prefixIcon: Icon(Icons.account_circle_outlined),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      SmartConditionalField(
+                        dependsOn: 'accountType',
+                        condition: (value, _) => value == 'Business',
+                        child: SmartTextField(
+                          name: 'companyName',
+                          decoration: const InputDecoration(
+                            labelText: 'Company name',
+                            prefixIcon: Icon(Icons.business_outlined),
+                          ),
+                          textCapitalization: TextCapitalization.words,
+                          textInputAction: TextInputAction.next,
+                          validators: <SmartValidator>[
+                            SmartValidators.required(
+                              message: 'Company name is required',
+                            ),
+                          ],
+                        ),
+                      ),
                       const SizedBox(height: 12),
                       SmartFormField<bool>(
                         name: 'newsletter',
@@ -308,16 +354,28 @@ class _RegistrationExamplePageState extends State<RegistrationExamplePage> {
                     ],
                   ),
                   const SizedBox(height: 24),
-                  FilledButton.icon(
-                    onPressed: _isSubmitting ? null : _submit,
-                    icon: _isSubmitting
-                        ? const SizedBox.square(
-                            dimension: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.check_circle_outline),
-                    label: Text(
-                      _isSubmitting ? 'Validating…' : 'Create account',
+                  SmartSubmitButton(
+                    controller: _formController,
+                    onSubmitted: _showSubmitResult,
+                    onError: _showSubmitError,
+                    loadingChild: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        SizedBox.square(
+                          dimension: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                        SizedBox(width: 12),
+                        Text('Creating account...'),
+                      ],
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        Icon(Icons.check_circle_outline),
+                        SizedBox(width: 8),
+                        Text('Create account'),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 12),

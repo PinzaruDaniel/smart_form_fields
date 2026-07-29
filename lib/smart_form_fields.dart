@@ -25,10 +25,12 @@ export 'src/form/smart_api_errors.dart'
         SmartApiErrorPayload,
         SmartApiErrorResult,
         SmartApiErrors;
-export 'src/form/smart_form_controller.dart' show SmartFormController;
+export 'src/form/smart_form_controller.dart'
+    show SmartFormController, SmartFormSubmitCallback;
 export 'src/form/smart_form_field_status.dart' show SmartFormFieldStatus;
 export 'src/form/smart_form_key.dart' show SmartFormKey;
 export 'src/form/smart_form_result.dart' show SmartFormResult;
+export 'src/form/smart_submit_button.dart' show SmartSubmitButton;
 export 'src/json/smart_form_schema.dart'
     show
         SmartFormSchema,
@@ -53,6 +55,8 @@ export 'src/fields/smart_field_view_item.dart'
     show SmartFieldViewItem, SmartWidgetFieldViewItem;
 export 'src/fields/smart_date_field.dart'
     show SmartDateField, SmartDateFormatter;
+export 'src/fields/smart_conditional_field.dart'
+    show SmartConditionalField, SmartConditionalFieldCondition;
 export 'src/fields/smart_dropdown_field.dart'
     show SmartDropdownField, SmartDropdownItemBuilder, SmartItemLabelBuilder;
 export 'src/fields/smart_email_field.dart' show SmartEmailField;

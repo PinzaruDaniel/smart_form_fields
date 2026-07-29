@@ -35,6 +35,7 @@ class SmartFormField<T> extends StatefulWidget {
     this.asyncValidationDebounce,
     this.errorAnimation,
     this.resultValueTransformer,
+    this.excludeFromDraft = false,
     super.key,
   }) : assert(name.length > 0, 'A field name cannot be empty.');
 
@@ -79,6 +80,9 @@ class SmartFormField<T> extends StatefulWidget {
   /// Live controller values and validation contexts continue exposing [T].
   /// The transformer may perform asynchronous normalization for submission.
   final SmartResultValueTransformer<T>? resultValueTransformer;
+
+  /// Whether this field is omitted from [SmartFormDraftController] payloads.
+  final bool excludeFromDraft;
 
   @override
   State<SmartFormField<T>> createState() => _SmartFormFieldState<T>();
@@ -125,6 +129,9 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
 
   @override
   bool get enabled => widget.enabled;
+
+  @override
+  bool get excludeFromDraft => widget.excludeFromDraft;
 
   @override
   bool get isValid => _errorText == null;

@@ -5,6 +5,159 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:smart_form_fields/smart_form_fields.dart';
 
 void main() {
+  testWidgets('SmartSubmitButton submits valid forms once and clears drafts', (
+    tester,
+  ) async {
+    final controller = SmartFormController();
+    final storage = SmartMemoryDraftStorage();
+    final draft = SmartFormDraftController(
+      id: 'submit-profile',
+      storage: storage,
+      autosaveDebounce: Duration.zero,
+    );
+    final completer = Completer<void>();
+    var submitCount = 0;
+    Map<String, Object?>? submittedValues;
+
+    await tester.pumpWidget(
+      _app(
+        SmartForm(
+          controller: controller,
+          draftController: draft,
+          onSubmit: (values) {
+            submitCount++;
+            submittedValues = values;
+            return completer.future;
+          },
+          children: <Widget>[
+            SmartTextField(
+              name: 'email',
+              decoration: const InputDecoration(labelText: 'Email'),
+              validators: <SmartValidator>[SmartValidators.required()],
+            ),
+            SmartSubmitButton(
+              controller: controller,
+              child: const Text('Create account'),
+            ),
+          ],
+        ),
+      ),
+    );
+    await tester.pump();
+
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Email'),
+      'person@example.com',
+    );
+    await tester.pump();
+    await tester.pump();
+    expect(await storage.read('submit-profile'), isNotNull);
+
+    await tester.tap(find.text('Create account'));
+    await tester.pump();
+    await tester.tap(find.byType(FilledButton));
+    await tester.pump();
+
+    expect(controller.isSubmitting, isTrue);
+    expect(submitCount, 1);
+
+    completer.complete();
+    await tester.pumpAndSettle();
+
+    expect(controller.isSubmitting, isFalse);
+    expect(submittedValues, <String, Object?>{'email': 'person@example.com'});
+    expect(await storage.read('submit-profile'), isNull);
+
+    draft.dispose();
+    controller.dispose();
+  });
+
+  testWidgets('SmartSubmitButton validates without submitting invalid forms', (
+    tester,
+  ) async {
+    final controller = SmartFormController();
+    var submitCount = 0;
+
+    await tester.pumpWidget(
+      _app(
+        SmartForm(
+          controller: controller,
+          onSubmit: (_) => submitCount++,
+          children: <Widget>[
+            SmartTextField(
+              name: 'email',
+              decoration: const InputDecoration(labelText: 'Email'),
+              validators: <SmartValidator>[SmartValidators.required()],
+            ),
+            SmartSubmitButton(
+              controller: controller,
+              child: const Text('Create account'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Create account'));
+    await tester.pumpAndSettle();
+
+    expect(submitCount, 0);
+    expect(find.text('This field is required.'), findsOneWidget);
+
+    controller.dispose();
+  });
+
+  testWidgets('SmartConditionalField shows and unregisters dependent child', (
+    tester,
+  ) async {
+    final controller = SmartFormController();
+
+    await tester.pumpWidget(
+      _app(
+        SmartForm(
+          controller: controller,
+          children: <Widget>[
+            SmartDropdownField<String>(
+              name: 'account_type',
+              items: <String>['personal', 'business'],
+              itemLabelBuilder: (value) => value,
+              decoration: const InputDecoration(labelText: 'Account type'),
+            ),
+            SmartConditionalField(
+              dependsOn: 'account_type',
+              condition: (value, _) => value == 'business',
+              child: const SmartTextField(
+                name: 'company_name',
+                decoration: InputDecoration(labelText: 'Company name'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    expect(find.widgetWithText(TextField, 'Company name'), findsNothing);
+    expect(controller.values.containsKey('company_name'), isFalse);
+
+    await tester.tap(find.byType(DropdownButtonFormField<String>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('business').last);
+    await tester.pumpAndSettle();
+
+    expect(find.widgetWithText(TextField, 'Company name'), findsOneWidget);
+    expect(controller.values.containsKey('company_name'), isTrue);
+
+    await tester.tap(find.byType(DropdownButtonFormField<String>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('personal').last);
+    await tester.pumpAndSettle();
+
+    expect(find.widgetWithText(TextField, 'Company name'), findsNothing);
+    expect(controller.values.containsKey('company_name'), isFalse);
+
+    controller.dispose();
+  });
+
   testWidgets('SmartFormField supports package-independent custom fields', (
     tester,
   ) async {

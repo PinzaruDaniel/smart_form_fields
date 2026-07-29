@@ -38,6 +38,7 @@ class SmartDateField extends StatefulWidget {
     this.confirmText,
     this.dateFormatter,
     this.onChanged,
+    this.excludeFromDraft = false,
     super.key,
   });
 
@@ -109,6 +110,9 @@ class SmartDateField extends StatefulWidget {
 
   /// Called after the user selects a date.
   final ValueChanged<DateTime?>? onChanged;
+
+  /// Whether this field is omitted from persisted draft payloads.
+  final bool excludeFromDraft;
 
   @override
   State<SmartDateField> createState() => _SmartDateFieldState();
@@ -220,6 +224,7 @@ class _SmartDateFieldState extends State<SmartDateField> {
       asyncValidators: widget.asyncValidators,
       autovalidateMode: widget.autovalidateMode,
       errorAnimation: widget.errorAnimation,
+      excludeFromDraft: widget.excludeFromDraft,
       enabled: widget.enabled,
       focusNode: widget.focusNode,
       builder: (context, field) {

@@ -14,6 +14,8 @@ abstract interface class SmartFieldHandle<T> {
 
   bool get enabled;
 
+  bool get excludeFromDraft;
+
   bool get isValid;
 
   bool get isDirty;

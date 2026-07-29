@@ -30,6 +30,7 @@ class SmartPasswordField extends StatefulWidget {
     this.textInputAction,
     this.onChanged,
     this.onSubmitted,
+    this.excludeFromDraft = false,
     super.key,
   }) : assert(minLength == null || minLength >= 0);
 
@@ -92,6 +93,9 @@ class SmartPasswordField extends StatefulWidget {
 
   /// Called when the platform submits the password field.
   final ValueChanged<String>? onSubmitted;
+
+  /// Whether this field is omitted from persisted draft payloads.
+  final bool excludeFromDraft;
 
   @override
   State<SmartPasswordField> createState() => _SmartPasswordFieldState();
@@ -168,6 +172,7 @@ class _SmartPasswordFieldState extends State<SmartPasswordField> {
       enableSuggestions: false,
       onChanged: widget.onChanged,
       onSubmitted: widget.onSubmitted,
+      excludeFromDraft: widget.excludeFromDraft,
     );
   }
 }

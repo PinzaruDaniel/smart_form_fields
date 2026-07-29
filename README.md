@@ -698,6 +698,18 @@ final secureDraftStorage = SmartTransformDraftStorage(
 );
 ```
 
+Sensitive values can be excluded directly on fields:
+
+```dart
+SmartPasswordField(
+  name: 'password',
+  excludeFromDraft: true,
+);
+```
+
+Field-level exclusions are combined with the controller-level
+`excludedFields` set.
+
 When persistence belongs to your own architecture, adapt the package to your
 controller or domain use case with `SmartCallbackDraftStorage`. This keeps
 ObjectBox, repositories, and database entities inside the application instead
@@ -724,6 +736,62 @@ The package only needs the string payload for a draft id.
 `SmartMemoryDraftStorage` is included for tests and temporary in-process
 drafts. Production applications should adapt durable platform storage and use
 authenticated encryption when draft contents are sensitive.
+
+## Submission
+
+`SmartForm` can own the submit callback while `SmartSubmitButton` manages
+validation, loading state, duplicate-tap prevention, and draft cleanup after a
+successful submit:
+
+```dart
+final controller = SmartFormController();
+
+SmartForm(
+  controller: controller,
+  draftController: draftController,
+  onSubmit: (values) async {
+    await repository.register(values);
+  },
+  children: [
+    SmartEmailField(name: 'email', required: true),
+    SmartPasswordField(
+      name: 'password',
+      required: true,
+      excludeFromDraft: true,
+    ),
+    SmartSubmitButton(
+      controller: controller,
+      child: const Text('Create account'),
+    ),
+  ],
+);
+```
+
+For custom buttons or menu actions, call `await controller.submit()`. The
+controller exposes `isSubmitting`, `submissionError`, and `lastSubmitResult`.
+
+## Conditional fields
+
+Use `SmartConditionalField` when a field should exist only while another field
+has a matching value. Hidden children are removed from registration, validation,
+and form values:
+
+```dart
+SmartDropdownField<AccountType>(
+  name: 'account_type',
+  items: AccountType.values,
+  itemLabelBuilder: (value) => value.name,
+);
+
+SmartConditionalField(
+  dependsOn: 'account_type',
+  condition: (value, _) => value == AccountType.business,
+  child: SmartTextField(
+    name: 'company_name',
+    validators: [SmartValidators.required()],
+  ),
+);
+```
 
 ## Example application
 
