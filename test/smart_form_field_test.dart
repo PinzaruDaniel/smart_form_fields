@@ -158,6 +158,65 @@ void main() {
     controller.dispose();
   });
 
+  testWidgets('SmartConditionalField animates visibility changes', (
+    tester,
+  ) async {
+    final controller = SmartFormController();
+
+    await tester.pumpWidget(
+      _app(
+        SmartForm(
+          controller: controller,
+          children: <Widget>[
+            SmartDropdownField<String>(
+              name: 'account_type',
+              items: const <String>['personal', 'business'],
+              itemLabelBuilder: (value) => value,
+              decoration: const InputDecoration(labelText: 'Account type'),
+            ),
+            SmartConditionalField(
+              dependsOn: 'account_type',
+              duration: const Duration(milliseconds: 300),
+              condition: (value, _) => value == 'business',
+              child: const SmartTextField(
+                name: 'company_name',
+                decoration: InputDecoration(labelText: 'Company name'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    expect(find.widgetWithText(TextField, 'Company name'), findsNothing);
+
+    await tester.tap(find.byType(DropdownButtonFormField<String>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('business').last);
+    await tester.pump();
+
+    expect(find.byType(FadeTransition), findsWidgets);
+    expect(find.byType(SizeTransition), findsWidgets);
+    expect(find.widgetWithText(TextField, 'Company name'), findsOneWidget);
+
+    await tester.pumpAndSettle();
+    expect(controller.values.containsKey('company_name'), isTrue);
+
+    await tester.tap(find.byType(DropdownButtonFormField<String>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('personal').last);
+    await tester.pump();
+
+    expect(find.widgetWithText(TextField, 'Company name'), findsOneWidget);
+    expect(controller.values.containsKey('company_name'), isTrue);
+
+    await tester.pumpAndSettle();
+    expect(find.widgetWithText(TextField, 'Company name'), findsNothing);
+    expect(controller.values.containsKey('company_name'), isFalse);
+
+    controller.dispose();
+  });
+
   testWidgets('SmartFormField supports package-independent custom fields', (
     tester,
   ) async {

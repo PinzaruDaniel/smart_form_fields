@@ -7,6 +7,10 @@ import '../validation/smart_validation_context.dart';
 typedef SmartConditionalFieldCondition =
     bool Function(Object? value, SmartValidationContext context);
 
+/// Builds the transition used when a conditional field appears or disappears.
+typedef SmartConditionalFieldTransitionBuilder =
+    Widget Function(Widget child, Animation<double> animation);
+
 /// Shows [child] only when another field value satisfies [condition].
 class SmartConditionalField extends StatefulWidget {
   /// Creates a field wrapper controlled by [dependsOn].
@@ -15,6 +19,12 @@ class SmartConditionalField extends StatefulWidget {
     required this.condition,
     required this.child,
     this.placeholder = const SizedBox.shrink(),
+    this.duration = const Duration(milliseconds: 220),
+    this.reverseDuration,
+    this.curve = Curves.easeOutCubic,
+    this.reverseCurve = Curves.easeInCubic,
+    this.alignment = Alignment.topCenter,
+    this.transitionBuilder,
     super.key,
   });
 
@@ -29,6 +39,27 @@ class SmartConditionalField extends StatefulWidget {
 
   /// Widget displayed when [condition] returns false.
   final Widget placeholder;
+
+  /// Duration used when [child] appears.
+  final Duration duration;
+
+  /// Duration used when [child] disappears.
+  final Duration? reverseDuration;
+
+  /// Curve used when [child] appears.
+  final Curve curve;
+
+  /// Curve used when [child] disappears.
+  final Curve reverseCurve;
+
+  /// Alignment used by the built-in size animation.
+  final AlignmentGeometry alignment;
+
+  /// Optional custom transition for appearing and disappearing content.
+  ///
+  /// When omitted, the field uses a combined fade and vertical size
+  /// transition.
+  final SmartConditionalFieldTransitionBuilder? transitionBuilder;
 
   @override
   State<SmartConditionalField> createState() => _SmartConditionalFieldState();
@@ -89,6 +120,35 @@ class _SmartConditionalFieldState extends State<SmartConditionalField> {
 
   @override
   Widget build(BuildContext context) {
-    return _visible ? widget.child : widget.placeholder;
+    return AnimatedSwitcher(
+      duration: widget.duration,
+      reverseDuration: widget.reverseDuration,
+      switchInCurve: widget.curve,
+      switchOutCurve: widget.reverseCurve,
+      transitionBuilder: widget.transitionBuilder ?? _defaultTransitionBuilder,
+      layoutBuilder: (currentChild, previousChildren) {
+        return Stack(
+          alignment: widget.alignment,
+          children: <Widget>[...previousChildren, ?currentChild],
+        );
+      },
+      child: KeyedSubtree(
+        key: ValueKey<bool>(_visible),
+        child: _visible ? widget.child : widget.placeholder,
+      ),
+    );
+  }
+
+  Widget _defaultTransitionBuilder(Widget child, Animation<double> animation) {
+    return ClipRect(
+      child: FadeTransition(
+        opacity: animation,
+        child: SizeTransition(
+          sizeFactor: animation,
+          alignment: widget.alignment,
+          child: child,
+        ),
+      ),
+    );
   }
 }

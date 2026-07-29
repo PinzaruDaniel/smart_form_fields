@@ -786,12 +786,16 @@ SmartDropdownField<AccountType>(
 SmartConditionalField(
   dependsOn: 'account_type',
   condition: (value, _) => value == AccountType.business,
+  duration: const Duration(milliseconds: 250),
   child: SmartTextField(
     name: 'company_name',
     validators: [SmartValidators.required()],
   ),
 );
 ```
+
+Conditional fields animate with a built-in fade and size transition by default.
+Use `transitionBuilder` when the application needs a custom animation.
 
 ## Example application
 

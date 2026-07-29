@@ -1,3 +1,9 @@
+## 1.5.5
+
+* Add configurable appear/disappear animations to `SmartConditionalField`,
+  including duration, reverse duration, curves, alignment, and a custom
+  transition builder.
+
 ## 1.5.4
 
 * Add field-level draft exclusions with `excludeFromDraft` for sensitive values

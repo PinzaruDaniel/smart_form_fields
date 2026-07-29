@@ -56,7 +56,10 @@ export 'src/fields/smart_field_view_item.dart'
 export 'src/fields/smart_date_field.dart'
     show SmartDateField, SmartDateFormatter;
 export 'src/fields/smart_conditional_field.dart'
-    show SmartConditionalField, SmartConditionalFieldCondition;
+    show
+        SmartConditionalField,
+        SmartConditionalFieldCondition,
+        SmartConditionalFieldTransitionBuilder;
 export 'src/fields/smart_dropdown_field.dart'
     show SmartDropdownField, SmartDropdownItemBuilder, SmartItemLabelBuilder;
 export 'src/fields/smart_email_field.dart' show SmartEmailField;

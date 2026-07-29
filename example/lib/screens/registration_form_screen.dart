@@ -317,6 +317,8 @@ class _RegistrationExamplePageState extends State<RegistrationExamplePage> {
                       SmartConditionalField(
                         dependsOn: 'accountType',
                         condition: (value, _) => value == 'Business',
+                        curve: Curves.linear,
+                        duration: const Duration(milliseconds: 260),
                         child: SmartTextField(
                           name: 'companyName',
                           decoration: const InputDecoration(
