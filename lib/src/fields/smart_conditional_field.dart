@@ -57,8 +57,8 @@ class SmartConditionalField extends StatefulWidget {
 
   /// Optional custom transition for appearing and disappearing content.
   ///
-  /// When omitted, the field uses a combined fade and vertical size
-  /// transition.
+  /// When omitted, the field fades content while its outer size animates
+  /// without clipping descendant input labels.
   final SmartConditionalFieldTransitionBuilder? transitionBuilder;
 
   @override
@@ -120,35 +120,35 @@ class _SmartConditionalFieldState extends State<SmartConditionalField> {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedSwitcher(
+    return AnimatedSize(
       duration: widget.duration,
       reverseDuration: widget.reverseDuration,
-      switchInCurve: widget.curve,
-      switchOutCurve: widget.reverseCurve,
-      transitionBuilder: widget.transitionBuilder ?? _defaultTransitionBuilder,
-      layoutBuilder: (currentChild, previousChildren) {
-        return Stack(
-          alignment: widget.alignment,
-          children: <Widget>[...previousChildren, ?currentChild],
-        );
-      },
-      child: KeyedSubtree(
-        key: ValueKey<bool>(_visible),
-        child: _visible ? widget.child : widget.placeholder,
+      curve: widget.curve,
+      alignment: widget.alignment,
+      clipBehavior: Clip.none,
+      child: AnimatedSwitcher(
+        duration: widget.duration,
+        reverseDuration: widget.reverseDuration,
+        switchInCurve: widget.curve,
+        switchOutCurve: widget.reverseCurve,
+        transitionBuilder:
+            widget.transitionBuilder ?? _defaultTransitionBuilder,
+        layoutBuilder: (currentChild, previousChildren) {
+          return Stack(
+            clipBehavior: Clip.none,
+            alignment: widget.alignment,
+            children: <Widget>[...previousChildren, ?currentChild],
+          );
+        },
+        child: KeyedSubtree(
+          key: ValueKey<bool>(_visible),
+          child: _visible ? widget.child : widget.placeholder,
+        ),
       ),
     );
   }
 
   Widget _defaultTransitionBuilder(Widget child, Animation<double> animation) {
-    return ClipRect(
-      child: FadeTransition(
-        opacity: animation,
-        child: SizeTransition(
-          sizeFactor: animation,
-          alignment: widget.alignment,
-          child: child,
-        ),
-      ),
-    );
+    return FadeTransition(opacity: animation, child: child);
   }
 }

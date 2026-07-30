@@ -1,6 +1,6 @@
 name: smart_form_fields
 description: Behavior-first Flutter forms with validation and first-error navigation.
-version: 1.5.5
+version: 1.5.6
 homepage: https://github.com/pinzarulab/smart_form_fields
 issue_tracker: https://github.com/pinzarulab/smart_form_fields/issues
 

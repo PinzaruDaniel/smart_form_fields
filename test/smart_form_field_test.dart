@@ -196,7 +196,7 @@ void main() {
     await tester.pump();
 
     expect(find.byType(FadeTransition), findsWidgets);
-    expect(find.byType(SizeTransition), findsWidgets);
+    expect(find.byType(AnimatedSize), findsWidgets);
     expect(find.widgetWithText(TextField, 'Company name'), findsOneWidget);
 
     await tester.pumpAndSettle();
@@ -213,6 +213,65 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.widgetWithText(TextField, 'Company name'), findsNothing);
     expect(controller.values.containsKey('company_name'), isFalse);
+
+    controller.dispose();
+  });
+
+  testWidgets('SmartConditionalField does not clip focused outlined labels', (
+    tester,
+  ) async {
+    final controller = SmartFormController();
+
+    await tester.pumpWidget(
+      _app(
+        SmartForm(
+          controller: controller,
+          children: <Widget>[
+            SmartDropdownField<String>(
+              name: 'account_type',
+              items: const <String>['personal', 'business'],
+              itemLabelBuilder: (value) => value,
+              decoration: const InputDecoration(labelText: 'Account type'),
+            ),
+            SmartConditionalField(
+              dependsOn: 'account_type',
+              condition: (value, _) => value == 'business',
+              child: const SmartTextField(
+                name: 'company_name',
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: 'Company legal name',
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    await tester.tap(find.byType(DropdownButtonFormField<String>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('business').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(TextField, 'Company legal name'));
+    await tester.pumpAndSettle();
+
+    final animatedSizes = tester.widgetList<AnimatedSize>(
+      find.descendant(
+        of: find.byType(SmartConditionalField),
+        matching: find.byType(AnimatedSize),
+      ),
+    );
+    expect(animatedSizes.single.clipBehavior, Clip.none);
+
+    final stacks = tester.widgetList<Stack>(
+      find.descendant(
+        of: find.byType(SmartConditionalField),
+        matching: find.byType(Stack),
+      ),
+    );
+    expect(stacks.single.clipBehavior, Clip.none);
+    expect(find.text('Company legal name'), findsOneWidget);
 
     controller.dispose();
   });

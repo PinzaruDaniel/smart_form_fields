@@ -1,3 +1,8 @@
+## 1.5.6
+
+* Prevent `SmartConditionalField`'s built-in animation from clipping focused
+  outlined input labels while conditional content appears or disappears.
+
 ## 1.5.5
 
 * Add configurable appear/disappear animations to `SmartConditionalField`,
