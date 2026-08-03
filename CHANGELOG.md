@@ -1,3 +1,7 @@
+## 1.6.0
+
+* Add `slide`, `scale`, and `pulse` built-in error animations for smart fields.
+
 ## 1.5.6
 
 * Prevent `SmartConditionalField`'s built-in animation from clipping focused

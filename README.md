@@ -130,7 +130,7 @@ across multiple forms. Values set directly on `SmartForm` take precedence.
 ```dart
 SmartFormTheme(
   data: const SmartFormThemeData(
-    errorAnimation: SmartErrorAnimation.fade,
+    errorAnimation: SmartErrorAnimation.slide,
     scrollToFirstError: true,
   ),
   child: SmartForm(
@@ -138,6 +138,9 @@ SmartFormTheme(
   ),
 );
 ```
+
+Built-in error animations are `none`, `shake`, `fade`, `slide`, `scale`, and
+`pulse`. Reduced-motion accessibility settings disable motion automatically.
 
 Validation-message localization remains application-owned. Pass the desired
 message to a validator, for example

@@ -616,6 +616,20 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
                 opacity: 0.45 + 0.55 * progress,
                 child: child,
               ),
+              SmartErrorAnimation.slide => Transform.translate(
+                offset: Offset(0, -8 * (1 - progress)),
+                child: Opacity(opacity: 0.55 + 0.45 * progress, child: child),
+              ),
+              SmartErrorAnimation.scale => Transform.scale(
+                scale: 0.96 + 0.04 * progress,
+                alignment: Alignment.center,
+                child: Opacity(opacity: 0.55 + 0.45 * progress, child: child),
+              ),
+              SmartErrorAnimation.pulse => Transform.scale(
+                scale: 1 + math.sin(progress * math.pi) * 0.035,
+                alignment: Alignment.center,
+                child: child,
+              ),
             };
           },
         );

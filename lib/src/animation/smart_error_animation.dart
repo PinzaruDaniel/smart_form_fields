@@ -8,4 +8,13 @@ enum SmartErrorAnimation {
 
   /// Briefly fade the invalid field in.
   fade,
+
+  /// Briefly slide the invalid field down into place.
+  slide,
+
+  /// Briefly scale the invalid field up into place.
+  scale,
+
+  /// Briefly enlarges and settles the invalid field.
+  pulse,
 }

@@ -219,6 +219,7 @@ class _RegistrationExamplePageState extends State<RegistrationExamplePage> {
                   ),
                   const SizedBox(height: 24),
                   SmartForm(
+                    errorAnimation: .pulse,
                     controller: _formController,
                     onSubmit: (_) => _submit(),
                     children: <Widget>[

@@ -145,6 +145,89 @@ void main() {
     expect(tester.widget<Opacity>(opacityFinder).opacity, 1);
   });
 
+  testWidgets('slide animation moves vertically and settles', (tester) async {
+    final controller = SmartFormController();
+    const fieldKey = ValueKey<String>('sliding-field');
+
+    await tester.pumpWidget(
+      _animationApp(
+        controller: controller,
+        fieldKey: fieldKey,
+        disableAnimations: false,
+        errorAnimation: SmartErrorAnimation.slide,
+      ),
+    );
+
+    final initialPosition = tester.getTopLeft(find.byKey(fieldKey));
+    await controller.validate(scrollToError: false, focusFirstError: false);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 90));
+
+    expect(
+      tester.getTopLeft(find.byKey(fieldKey)).dy,
+      lessThan(initialPosition.dy),
+    );
+    await tester.pumpAndSettle();
+    expect(tester.getTopLeft(find.byKey(fieldKey)), initialPosition);
+  });
+
+  testWidgets('scale animation grows into place', (tester) async {
+    final controller = SmartFormController();
+    const fieldKey = ValueKey<String>('scaling-field');
+
+    await tester.pumpWidget(
+      _animationApp(
+        controller: controller,
+        fieldKey: fieldKey,
+        disableAnimations: false,
+        errorAnimation: SmartErrorAnimation.scale,
+      ),
+    );
+
+    await controller.validate(scrollToError: false, focusFirstError: false);
+    await tester.pump();
+
+    final scaleFinder = find.ancestor(
+      of: find.byKey(fieldKey),
+      matching: find.byType(Transform),
+    );
+    final transform = tester.widget<Transform>(scaleFinder);
+    expect(transform.transform.storage[0], closeTo(0.96, 0.001));
+
+    await tester.pumpAndSettle();
+    final settled = tester.widget<Transform>(scaleFinder);
+    expect(settled.transform.storage[0], closeTo(1, 0.001));
+  });
+
+  testWidgets('pulse animation enlarges then settles', (tester) async {
+    final controller = SmartFormController();
+    const fieldKey = ValueKey<String>('pulsing-field');
+
+    await tester.pumpWidget(
+      _animationApp(
+        controller: controller,
+        fieldKey: fieldKey,
+        disableAnimations: false,
+        errorAnimation: SmartErrorAnimation.pulse,
+      ),
+    );
+
+    await controller.validate(scrollToError: false, focusFirstError: false);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 90));
+
+    final scaleFinder = find.ancestor(
+      of: find.byKey(fieldKey),
+      matching: find.byType(Transform),
+    );
+    final pulsing = tester.widget<Transform>(scaleFinder);
+    expect(pulsing.transform.storage[0], greaterThan(1));
+
+    await tester.pumpAndSettle();
+    final settled = tester.widget<Transform>(scaleFinder);
+    expect(settled.transform.storage[0], closeTo(1, 0.001));
+  });
+
   testWidgets('none leaves an invalid field stationary', (tester) async {
     final controller = SmartFormController();
     const fieldKey = ValueKey<String>('stationary-field');
