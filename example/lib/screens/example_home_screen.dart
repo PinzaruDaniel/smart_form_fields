@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'class_schema_form_screen.dart';
 import 'controller_playground_screen.dart';
+import 'custom_animation_screen.dart';
 import 'items_form_screen.dart';
 import 'json_form_screen.dart';
 import 'registration_form_screen.dart';
@@ -71,6 +72,15 @@ class ExampleHomeScreen extends StatelessWidget {
                   'Values, patching, server errors, focus and scroll commands, '
                   'disabled fields, and a bottom-sheet custom field.',
               onTap: () => _open(context, const ControllerPlaygroundPage()),
+            ),
+            const SizedBox(height: 12),
+            _DemoCard(
+              icon: Icons.animation_outlined,
+              title: 'Custom error animation',
+              description:
+                  'A form using SmartForm.errorAnimationBuilder for an '
+                  'application-owned validation animation.',
+              onTap: () => _open(context, const CustomAnimationExamplePage()),
             ),
           ],
         ),

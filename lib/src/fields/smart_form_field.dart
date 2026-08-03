@@ -34,6 +34,7 @@ class SmartFormField<T> extends StatefulWidget {
     this.autovalidateMode,
     this.asyncValidationDebounce,
     this.errorAnimation,
+    this.errorAnimationBuilder,
     this.resultValueTransformer,
     this.excludeFromDraft = false,
     super.key,
@@ -74,6 +75,9 @@ class SmartFormField<T> extends StatefulWidget {
 
   /// Overrides the containing form's error animation for this field.
   final SmartErrorAnimation? errorAnimation;
+
+  /// Overrides the containing form's custom error animation for this field.
+  final SmartErrorAnimationBuilder? errorAnimationBuilder;
 
   /// Optionally transforms the value captured in the validation result.
   ///
@@ -539,6 +543,10 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
         SmartErrorAnimation.none;
   }
 
+  SmartErrorAnimationBuilder? get _effectiveErrorAnimationBuilder {
+    return widget.errorAnimationBuilder ?? _formScope?.errorAnimationBuilder;
+  }
+
   void _animateError() {
     final animationsDisabled =
         MediaQuery.maybeOf(context)?.disableAnimations ?? false;
@@ -603,6 +611,10 @@ class _SmartFormFieldState<T> extends State<SmartFormField<T>>
             final progress = Curves.easeOut.transform(
               _errorAnimationController.value,
             );
+            final customBuilder = _effectiveErrorAnimationBuilder;
+            if (customBuilder != null) {
+              return customBuilder(context, child!, _errorAnimationController);
+            }
             return switch (_effectiveErrorAnimation) {
               SmartErrorAnimation.none => child!,
               SmartErrorAnimation.shake => Transform.translate(

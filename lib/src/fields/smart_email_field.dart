@@ -22,6 +22,7 @@ class SmartEmailField extends StatefulWidget {
     this.asyncValidationDebounce,
     this.autovalidateMode,
     this.errorAnimation,
+    this.errorAnimationBuilder,
     this.enabled = true,
     this.decoration = const InputDecoration(),
     this.textInputAction,
@@ -66,6 +67,9 @@ class SmartEmailField extends StatefulWidget {
 
   /// Field-level error animation override.
   final SmartErrorAnimation? errorAnimation;
+
+  /// Field-level custom error animation override.
+  final SmartErrorAnimationBuilder? errorAnimationBuilder;
 
   /// Whether the field accepts input and participates in validation.
   final bool enabled;
@@ -130,6 +134,7 @@ class _SmartEmailFieldState extends State<SmartEmailField> {
       asyncValidationDebounce: widget.asyncValidationDebounce,
       autovalidateMode: widget.autovalidateMode,
       errorAnimation: widget.errorAnimation,
+      errorAnimationBuilder: widget.errorAnimationBuilder,
       enabled: widget.enabled,
       decoration: widget.decoration,
       keyboardType: TextInputType.emailAddress,

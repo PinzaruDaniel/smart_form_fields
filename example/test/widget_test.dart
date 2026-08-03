@@ -18,6 +18,7 @@ void main() {
       'Class-defined form',
       'JSON API form',
       'Controller playground',
+      'Custom error animation',
     ]) {
       await tester.scrollUntilVisible(
         find.text(title),
@@ -331,6 +332,38 @@ void main() {
       find.widgetWithText(TextField, 'Dynamic referral code'),
       findsNothing,
     );
+  });
+
+  testWidgets('demonstrates custom error animation builder', (tester) async {
+    await tester.pumpWidget(const SmartFormFieldsExampleApp());
+    await _openExample(tester, 'Custom error animation');
+
+    expect(find.text('Application-owned error animation'), findsOneWidget);
+    expect(find.widgetWithText(TextField, 'Display name'), findsOneWidget);
+    expect(find.widgetWithText(TextField, 'Email'), findsOneWidget);
+
+    final validateButton = find.widgetWithText(
+      FilledButton,
+      'Validate custom animation',
+    );
+    await tester.tap(validateButton);
+    await tester.pump();
+
+    expect(find.text('Display name is required'), findsOneWidget);
+    expect(find.text('Email is required'), findsOneWidget);
+    expect(find.byType(Transform), findsWidgets);
+    await tester.pumpAndSettle();
+    await tester.pump(const Duration(seconds: 4));
+    await tester.pumpAndSettle();
+
+    final fillButton = find.widgetWithText(TextButton, 'Fill sample');
+    await tester.ensureVisible(fillButton);
+    await tester.tap(fillButton);
+    await tester.pump();
+    await tester.tap(validateButton);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Custom animation form is valid.'), findsOneWidget);
   });
 }
 

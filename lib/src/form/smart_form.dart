@@ -32,6 +32,7 @@ class SmartForm extends StatefulWidget {
     this.scrollCurve,
     this.scrollAlignment,
     this.errorAnimation,
+    this.errorAnimationBuilder,
     this.dismissKeyboardOnTapOutside = true,
     this.unfocusOnKeyboardDismiss = true,
     this.onKeyboardVisibilityChanged,
@@ -80,6 +81,9 @@ class SmartForm extends StatefulWidget {
 
   /// Error animation for descendant fields, or null to use the form theme.
   final SmartErrorAnimation? errorAnimation;
+
+  /// Custom error animation for descendant fields, or null to use the theme.
+  final SmartErrorAnimationBuilder? errorAnimationBuilder;
 
   /// Unfocuses this form's active field when a pointer taps outside it.
   final bool dismissKeyboardOnTapOutside;
@@ -614,6 +618,8 @@ class SmartFormState extends State<SmartForm>
             scrollCurve: widget.scrollCurve ?? theme.scrollCurve,
             scrollAlignment: widget.scrollAlignment ?? theme.scrollAlignment,
             errorAnimation: widget.errorAnimation ?? theme.errorAnimation,
+            errorAnimationBuilder:
+                widget.errorAnimationBuilder ?? theme.errorAnimationBuilder,
             autovalidateMode: widget.autovalidateMode,
             child: Column(
               mainAxisSize: widget.mainAxisSize,

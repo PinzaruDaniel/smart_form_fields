@@ -13,6 +13,7 @@ class SmartFormThemeData {
     this.scrollCurve = Curves.easeOutCubic,
     this.scrollAlignment = 0.2,
     this.errorAnimation = SmartErrorAnimation.shake,
+    this.errorAnimationBuilder,
   });
 
   /// Whether forms scroll to their first invalid field by default.
@@ -33,6 +34,9 @@ class SmartFormThemeData {
   /// Default animation applied when a field receives an error.
   final SmartErrorAnimation errorAnimation;
 
+  /// Default custom animation wrapper applied when a field receives an error.
+  final SmartErrorAnimationBuilder? errorAnimationBuilder;
+
   /// Returns a copy with the supplied behavior defaults replaced.
   SmartFormThemeData copyWith({
     bool? scrollToFirstError,
@@ -41,6 +45,7 @@ class SmartFormThemeData {
     Curve? scrollCurve,
     double? scrollAlignment,
     SmartErrorAnimation? errorAnimation,
+    SmartErrorAnimationBuilder? errorAnimationBuilder,
   }) {
     return SmartFormThemeData(
       scrollToFirstError: scrollToFirstError ?? this.scrollToFirstError,
@@ -49,6 +54,8 @@ class SmartFormThemeData {
       scrollCurve: scrollCurve ?? this.scrollCurve,
       scrollAlignment: scrollAlignment ?? this.scrollAlignment,
       errorAnimation: errorAnimation ?? this.errorAnimation,
+      errorAnimationBuilder:
+          errorAnimationBuilder ?? this.errorAnimationBuilder,
     );
   }
 
@@ -61,7 +68,8 @@ class SmartFormThemeData {
             other.scrollDuration == scrollDuration &&
             other.scrollCurve == scrollCurve &&
             other.scrollAlignment == scrollAlignment &&
-            other.errorAnimation == errorAnimation;
+            other.errorAnimation == errorAnimation &&
+            identical(other.errorAnimationBuilder, errorAnimationBuilder);
   }
 
   @override
@@ -72,6 +80,7 @@ class SmartFormThemeData {
     scrollCurve,
     scrollAlignment,
     errorAnimation,
+    errorAnimationBuilder,
   );
 }
 

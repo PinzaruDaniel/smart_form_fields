@@ -1,3 +1,13 @@
+import 'package:flutter/widgets.dart';
+
+/// Builds a custom validation-error animation around a smart field.
+typedef SmartErrorAnimationBuilder =
+    Widget Function(
+      BuildContext context,
+      Widget child,
+      Animation<double> animation,
+    );
+
 /// Animation applied when a smart field receives a validation error.
 enum SmartErrorAnimation {
   /// Do not animate validation errors.

@@ -228,6 +228,37 @@ void main() {
     expect(settled.transform.storage[0], closeTo(1, 0.001));
   });
 
+  testWidgets('custom error animation builder wraps invalid fields', (
+    tester,
+  ) async {
+    final controller = SmartFormController();
+    const fieldKey = ValueKey<String>('custom-animated-field');
+
+    await tester.pumpWidget(
+      _animationApp(
+        controller: controller,
+        fieldKey: fieldKey,
+        disableAnimations: false,
+        errorAnimationBuilder: (context, child, animation) {
+          return RotationTransition(turns: animation, child: child);
+        },
+      ),
+    );
+
+    await controller.validate(scrollToError: false, focusFirstError: false);
+    await tester.pump();
+
+    final rotationFinder = find.ancestor(
+      of: find.byKey(fieldKey),
+      matching: find.byType(RotationTransition),
+    );
+    expect(rotationFinder, findsOneWidget);
+
+    await tester.pumpAndSettle();
+    final rotation = tester.widget<RotationTransition>(rotationFinder);
+    expect(rotation.turns.value, 1);
+  });
+
   testWidgets('none leaves an invalid field stationary', (tester) async {
     final controller = SmartFormController();
     const fieldKey = ValueKey<String>('stationary-field');
@@ -363,6 +394,7 @@ Widget _animationApp({
   required Key fieldKey,
   required bool disableAnimations,
   SmartErrorAnimation errorAnimation = SmartErrorAnimation.shake,
+  SmartErrorAnimationBuilder? errorAnimationBuilder,
 }) {
   return MaterialApp(
     home: MediaQuery(
@@ -372,6 +404,7 @@ Widget _animationApp({
         scrollToFirstError: false,
         focusFirstError: false,
         errorAnimation: errorAnimation,
+        errorAnimationBuilder: errorAnimationBuilder,
         children: <Widget>[
           SmartFormField<String>(
             name: 'animated',

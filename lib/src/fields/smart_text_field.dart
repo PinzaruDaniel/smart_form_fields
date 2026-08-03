@@ -20,6 +20,7 @@ class SmartTextField extends StatefulWidget {
     this.asyncValidationDebounce,
     this.autovalidateMode,
     this.errorAnimation,
+    this.errorAnimationBuilder,
     this.enabled = true,
     this.decoration = const InputDecoration(),
     this.keyboardType,
@@ -67,6 +68,9 @@ class SmartTextField extends StatefulWidget {
 
   /// Field-level error animation override.
   final SmartErrorAnimation? errorAnimation;
+
+  /// Field-level custom error animation override.
+  final SmartErrorAnimationBuilder? errorAnimationBuilder;
 
   /// Whether the text field accepts input and participates in validation.
   final bool enabled;
@@ -188,6 +192,7 @@ class _SmartTextFieldState extends State<SmartTextField> {
       asyncValidationDebounce: widget.asyncValidationDebounce,
       autovalidateMode: widget.autovalidateMode,
       errorAnimation: widget.errorAnimation,
+      errorAnimationBuilder: widget.errorAnimationBuilder,
       resultValueTransformer: widget.resultValueTransformer,
       excludeFromDraft: widget.excludeFromDraft,
       enabled: widget.enabled,

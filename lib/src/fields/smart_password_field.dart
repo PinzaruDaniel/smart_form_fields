@@ -23,6 +23,7 @@ class SmartPasswordField extends StatefulWidget {
     this.asyncValidationDebounce,
     this.autovalidateMode,
     this.errorAnimation,
+    this.errorAnimationBuilder,
     this.enabled = true,
     this.decoration = const InputDecoration(),
     this.showVisibilityToggle = true,
@@ -72,6 +73,9 @@ class SmartPasswordField extends StatefulWidget {
 
   /// Field-level error animation override.
   final SmartErrorAnimation? errorAnimation;
+
+  /// Field-level custom error animation override.
+  final SmartErrorAnimationBuilder? errorAnimationBuilder;
 
   /// Whether the field accepts input and participates in validation.
   final bool enabled;
@@ -164,6 +168,7 @@ class _SmartPasswordFieldState extends State<SmartPasswordField> {
       asyncValidationDebounce: widget.asyncValidationDebounce,
       autovalidateMode: widget.autovalidateMode,
       errorAnimation: widget.errorAnimation,
+      errorAnimationBuilder: widget.errorAnimationBuilder,
       enabled: widget.enabled,
       decoration: decoration,
       textInputAction: widget.textInputAction,

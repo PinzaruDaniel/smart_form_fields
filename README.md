@@ -142,6 +142,20 @@ SmartFormTheme(
 Built-in error animations are `none`, `shake`, `fade`, `slide`, `scale`, and
 `pulse`. Reduced-motion accessibility settings disable motion automatically.
 
+Use `errorAnimationBuilder` for application-owned animation wrappers:
+
+```dart
+SmartForm(
+  errorAnimationBuilder: (context, child, animation) {
+    return RotationTransition(
+      turns: Tween<double>(begin: -0.01, end: 0).animate(animation),
+      child: child,
+    );
+  },
+  children: [...],
+);
+```
+
 Validation-message localization remains application-owned. Pass the desired
 message to a validator, for example
 `SmartValidators.required(message: 'Required')`.

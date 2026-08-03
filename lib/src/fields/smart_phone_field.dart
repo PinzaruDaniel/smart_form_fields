@@ -63,6 +63,7 @@ final class SmartPhoneFieldViewItem extends SmartFieldViewItem {
     this.asyncValidationDebounce,
     this.autovalidateMode,
     this.errorAnimation,
+    this.errorAnimationBuilder,
     this.enabled = true,
     this.decoration = const InputDecoration(),
     this.inputFormatters,
@@ -118,6 +119,9 @@ final class SmartPhoneFieldViewItem extends SmartFieldViewItem {
   /// Field-level error-animation override.
   final SmartErrorAnimation? errorAnimation;
 
+  /// Field-level custom error-animation override.
+  final SmartErrorAnimationBuilder? errorAnimationBuilder;
+
   /// Whether the field is enabled.
   final bool enabled;
 
@@ -169,6 +173,7 @@ class SmartPhoneField extends StatefulWidget {
     Duration? asyncValidationDebounce,
     AutovalidateMode? autovalidateMode,
     SmartErrorAnimation? errorAnimation,
+    SmartErrorAnimationBuilder? errorAnimationBuilder,
     bool? enabled,
     InputDecoration? decoration,
     List<TextInputFormatter>? inputFormatters,
@@ -198,6 +203,7 @@ class SmartPhoneField extends StatefulWidget {
        _asyncValidationDebounce = asyncValidationDebounce,
        _autovalidateMode = autovalidateMode,
        _errorAnimation = errorAnimation,
+       _errorAnimationBuilder = errorAnimationBuilder,
        _enabled = enabled,
        _decoration = decoration,
        _inputFormatters = inputFormatters,
@@ -314,6 +320,12 @@ class SmartPhoneField extends StatefulWidget {
   SmartErrorAnimation? get errorAnimation =>
       _errorAnimation ?? item?.errorAnimation;
 
+  final SmartErrorAnimationBuilder? _errorAnimationBuilder;
+
+  /// Field-level custom error animation override.
+  SmartErrorAnimationBuilder? get errorAnimationBuilder =>
+      _errorAnimationBuilder ?? item?.errorAnimationBuilder;
+
   final bool? _enabled;
 
   /// Whether the field accepts input and participates in validation.
@@ -424,6 +436,7 @@ class _SmartPhoneFieldState extends State<SmartPhoneField> {
       asyncValidationDebounce: widget.asyncValidationDebounce,
       autovalidateMode: widget.autovalidateMode,
       errorAnimation: widget.errorAnimation,
+      errorAnimationBuilder: widget.errorAnimationBuilder,
       enabled: widget.enabled,
       decoration: decoration ?? widget.decoration,
       keyboardType: TextInputType.phone,

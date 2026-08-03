@@ -1,7 +1,8 @@
 /// Behavior-first Flutter form registration, validation, and navigation.
 library;
 
-export 'src/animation/smart_error_animation.dart' show SmartErrorAnimation;
+export 'src/animation/smart_error_animation.dart'
+    show SmartErrorAnimation, SmartErrorAnimationBuilder;
 export 'src/draft/smart_form_draft.dart'
     show
         SmartCallbackDraftStorage,

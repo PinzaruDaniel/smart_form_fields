@@ -33,6 +33,7 @@ class SmartDropdownField<T> extends StatefulWidget {
     this.asyncValidators = const [],
     this.autovalidateMode,
     this.errorAnimation,
+    this.errorAnimationBuilder,
     this.enabled = true,
     this.decoration = const InputDecoration(),
     this.hint,
@@ -79,6 +80,9 @@ class SmartDropdownField<T> extends StatefulWidget {
 
   /// Field-level error animation override.
   final SmartErrorAnimation? errorAnimation;
+
+  /// Field-level custom error animation override.
+  final SmartErrorAnimationBuilder? errorAnimationBuilder;
 
   /// Whether the dropdown accepts input and participates in validation.
   final bool enabled;
@@ -214,6 +218,7 @@ class _SmartDropdownFieldState<T> extends State<SmartDropdownField<T>> {
       asyncValidators: widget.asyncValidators,
       autovalidateMode: dropdownAutovalidateMode,
       errorAnimation: widget.errorAnimation,
+      errorAnimationBuilder: widget.errorAnimationBuilder,
       excludeFromDraft: widget.excludeFromDraft,
       enabled: widget.enabled,
       focusNode: widget.focusNode,

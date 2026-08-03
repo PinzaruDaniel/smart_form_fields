@@ -1,3 +1,9 @@
+## 1.7.0
+
+* Add `SmartErrorAnimationBuilder` for custom field-error animations at the
+  field, form, and theme levels.
+* Add an example screen demonstrating `SmartForm.errorAnimationBuilder`.
+
 ## 1.6.0
 
 * Add `slide`, `scale`, and `pulse` built-in error animations for smart fields.
