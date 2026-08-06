@@ -251,6 +251,58 @@ void main() {
     expect(controller.values['phone'], '780 59 426');
   });
 
+  testWidgets('SmartTextFieldViewItem exposes current text', (tester) async {
+    final controller = SmartFormController();
+    final item = SmartTextFieldViewItem(
+      name: 'display_name',
+      validators: <SmartValidator>[
+        SmartValidators.required(message: 'Display name is required'),
+      ],
+    );
+    addTearDown(item.dispose);
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      _app(
+        SmartForm(controller: controller, items: <SmartFieldViewItem>[item]),
+      ),
+    );
+
+    await tester.enterText(find.byType(TextField), 'Ana Popescu');
+
+    expect(item.text, 'Ana Popescu');
+    expect(item.valueAs<String>(), 'Ana Popescu');
+
+    final result = await controller.validate(
+      scrollToError: false,
+      focusFirstError: false,
+    );
+    await tester.pumpAndSettle();
+
+    expect(result.text('display_name'), 'Ana Popescu');
+  });
+
+  testWidgets('SmartWidgetFieldViewItem exposes text through valueReader', (
+    tester,
+  ) async {
+    final textController = TextEditingController();
+    addTearDown(textController.dispose);
+
+    final item = SmartWidgetFieldViewItem(
+      name: 'display_name',
+      valueReader: () => textController.text,
+      builder: (_) =>
+          SmartTextField(name: 'display_name', controller: textController),
+    );
+
+    await tester.pumpWidget(_app(SmartForm(items: <SmartFieldViewItem>[item])));
+
+    await tester.enterText(find.byType(TextField), 'Mara');
+
+    expect(item.text, 'Mara');
+    expect(item.valueAs<String>(), 'Mara');
+  });
+
   testWidgets('SmartForm builds view items with configured separator height', (
     tester,
   ) async {

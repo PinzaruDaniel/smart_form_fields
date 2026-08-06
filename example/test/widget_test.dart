@@ -54,7 +54,10 @@ void main() {
     await tester.tap(validateButton);
     await tester.pumpAndSettle();
 
-    expect(find.text('Items form is valid: +37378059426'), findsOneWidget);
+    expect(
+      find.text('Items form is valid for Mara Ionescu: +37378059426'),
+      findsOneWidget,
+    );
     expect(find.text('Draft saved'), findsOneWidget);
   });
 

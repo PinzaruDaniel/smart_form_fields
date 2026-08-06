@@ -1,19 +1,25 @@
+// ignore_for_file: prefer_initializing_formals
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../animation/smart_error_animation.dart';
 import '../validation/smart_async_validator.dart';
 import '../validation/smart_validator.dart';
+import 'smart_field_view_item.dart';
 import 'smart_field_controller.dart';
 import 'smart_form_field.dart';
 
-/// A Material text field connected to the closest [SmartForm].
-class SmartTextField extends StatefulWidget {
-  /// Creates a Material text field registered as [name].
-  const SmartTextField({
-    required this.name,
+/// Immutable visual and behavioral configuration for a [SmartTextField].
+///
+/// The item owns a [TextEditingController] when one is not supplied, allowing
+/// callers to read [text] directly from the item.
+final class SmartTextFieldViewItem extends SmartFieldViewItem {
+  /// Creates a text field item.
+  SmartTextFieldViewItem({
+    required super.name,
     this.initialValue,
-    this.controller,
+    TextEditingController? controller,
     this.focusNode,
     this.validators = const [],
     this.asyncValidators = const [],
@@ -36,20 +42,37 @@ class SmartTextField extends StatefulWidget {
     this.onSubmitted,
     this.resultValueTransformer,
     this.excludeFromDraft = false,
-    super.key,
   }) : assert(
          controller == null || initialValue == null,
          'initialValue cannot be used with a TextEditingController.',
-       );
-
-  /// Unique form field name.
-  final String name;
+       ),
+       _controller =
+           controller ?? TextEditingController(text: initialValue ?? ''),
+       _ownsController = controller == null;
 
   /// Initial text used when no [controller] is supplied.
   final String? initialValue;
 
-  /// Optional caller-owned text controller.
-  final TextEditingController? controller;
+  final TextEditingController _controller;
+  final bool _ownsController;
+
+  /// Text controller used by the built field.
+  TextEditingController get controller => _controller;
+
+  /// Current text in [controller].
+  @override
+  String get text => _controller.text;
+
+  /// Current text as nullable value.
+  @override
+  String? get maybeText => _controller.text;
+
+  /// Updates [controller] text.
+  set text(String value) => _controller.text = value;
+
+  /// Current field value.
+  @override
+  Object? get value => _controller.text;
 
   /// Optional caller-owned focus node.
   final FocusNode? focusNode;
@@ -116,6 +139,229 @@ class SmartTextField extends StatefulWidget {
 
   /// Whether this field is omitted from persisted draft payloads.
   final bool excludeFromDraft;
+
+  /// Disposes the internally owned controller.
+  ///
+  /// Calling this is unnecessary when a caller-owned [controller] was supplied.
+  void dispose() {
+    if (_ownsController) {
+      _controller.dispose();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => SmartTextField(item: this);
+}
+
+/// A Material text field connected to the closest [SmartForm].
+class SmartTextField extends StatefulWidget {
+  /// Creates a Material text field from direct parameters or an [item].
+  ///
+  /// Direct parameters override corresponding values from [item].
+  const SmartTextField({
+    this.item,
+    String? name,
+    String? initialValue,
+    TextEditingController? controller,
+    FocusNode? focusNode,
+    List<SmartValidator>? validators,
+    List<SmartAsyncValidator<String>>? asyncValidators,
+    Duration? asyncValidationDebounce,
+    AutovalidateMode? autovalidateMode,
+    SmartErrorAnimation? errorAnimation,
+    SmartErrorAnimationBuilder? errorAnimationBuilder,
+    bool? enabled,
+    InputDecoration? decoration,
+    TextInputType? keyboardType,
+    TextInputAction? textInputAction,
+    TextCapitalization? textCapitalization,
+    bool? obscureText,
+    bool? autocorrect,
+    bool? enableSuggestions,
+    List<TextInputFormatter>? inputFormatters,
+    int? maxLines,
+    int? minLines,
+    ValueChanged<String>? onChanged,
+    ValueChanged<String>? onSubmitted,
+    SmartResultValueTransformer<String>? resultValueTransformer,
+    bool? excludeFromDraft,
+    super.key,
+  }) : assert(
+         controller == null || initialValue == null,
+         'initialValue cannot be used with a TextEditingController.',
+       ),
+       assert(
+         item != null || (name != null && name.length > 0),
+         'Provide a SmartTextFieldViewItem or a non-empty name.',
+       ),
+       _name = name,
+       _initialValue = initialValue,
+       _controller = controller,
+       _focusNode = focusNode,
+       _validators = validators,
+       _asyncValidators = asyncValidators,
+       _asyncValidationDebounce = asyncValidationDebounce,
+       _autovalidateMode = autovalidateMode,
+       _errorAnimation = errorAnimation,
+       _errorAnimationBuilder = errorAnimationBuilder,
+       _enabled = enabled,
+       _decoration = decoration,
+       _keyboardType = keyboardType,
+       _textInputAction = textInputAction,
+       _textCapitalization = textCapitalization,
+       _obscureText = obscureText,
+       _autocorrect = autocorrect,
+       _enableSuggestions = enableSuggestions,
+       _inputFormatters = inputFormatters,
+       _maxLines = maxLines,
+       _minLines = minLines,
+       _onChanged = onChanged,
+       _onSubmitted = onSubmitted,
+       _resultValueTransformer = resultValueTransformer,
+       _excludeFromDraft = excludeFromDraft;
+
+  /// Optional immutable configuration used to create this field.
+  final SmartTextFieldViewItem? item;
+
+  final String? _name;
+
+  /// Unique form field name.
+  String get name => _name ?? item!.name;
+
+  final String? _initialValue;
+
+  /// Initial text used when no [controller] is supplied.
+  String? get initialValue => _initialValue ?? item?.initialValue;
+
+  final TextEditingController? _controller;
+
+  /// Optional caller-owned text controller.
+  TextEditingController? get controller => _controller ?? item?.controller;
+
+  final FocusNode? _focusNode;
+
+  /// Optional caller-owned focus node.
+  FocusNode? get focusNode => _focusNode ?? item?.focusNode;
+
+  final List<SmartValidator>? _validators;
+
+  /// Synchronous validators run in order.
+  List<SmartValidator> get validators =>
+      _validators ?? item?.validators ?? const [];
+
+  final List<SmartAsyncValidator<String>>? _asyncValidators;
+
+  /// Asynchronous validators run after synchronous validators pass.
+  List<SmartAsyncValidator<String>> get asyncValidators =>
+      _asyncValidators ?? item?.asyncValidators ?? const [];
+
+  final Duration? _asyncValidationDebounce;
+
+  /// Debounce applied to automatic asynchronous validation.
+  Duration? get asyncValidationDebounce =>
+      _asyncValidationDebounce ?? item?.asyncValidationDebounce;
+
+  final AutovalidateMode? _autovalidateMode;
+
+  /// Field-level automatic validation override.
+  AutovalidateMode? get autovalidateMode =>
+      _autovalidateMode ?? item?.autovalidateMode;
+
+  final SmartErrorAnimation? _errorAnimation;
+
+  /// Field-level error animation override.
+  SmartErrorAnimation? get errorAnimation =>
+      _errorAnimation ?? item?.errorAnimation;
+
+  final SmartErrorAnimationBuilder? _errorAnimationBuilder;
+
+  /// Field-level custom error animation override.
+  SmartErrorAnimationBuilder? get errorAnimationBuilder =>
+      _errorAnimationBuilder ?? item?.errorAnimationBuilder;
+
+  final bool? _enabled;
+
+  /// Whether the text field accepts input and participates in validation.
+  bool get enabled => _enabled ?? item?.enabled ?? true;
+
+  final InputDecoration? _decoration;
+
+  /// Material input decoration.
+  InputDecoration get decoration =>
+      _decoration ?? item?.decoration ?? const InputDecoration();
+
+  final TextInputType? _keyboardType;
+
+  /// Keyboard configuration passed to `TextField`.
+  TextInputType? get keyboardType => _keyboardType ?? item?.keyboardType;
+
+  final TextInputAction? _textInputAction;
+
+  /// Action button displayed by the keyboard.
+  TextInputAction? get textInputAction =>
+      _textInputAction ?? item?.textInputAction;
+
+  final TextCapitalization? _textCapitalization;
+
+  /// Automatic capitalization behavior.
+  TextCapitalization get textCapitalization =>
+      _textCapitalization ??
+      item?.textCapitalization ??
+      TextCapitalization.none;
+
+  final bool? _obscureText;
+
+  /// Whether the entered text is obscured.
+  bool get obscureText => _obscureText ?? item?.obscureText ?? false;
+
+  final bool? _autocorrect;
+
+  /// Whether automatic correction is enabled.
+  bool get autocorrect => _autocorrect ?? item?.autocorrect ?? true;
+
+  final bool? _enableSuggestions;
+
+  /// Whether the platform may show input suggestions.
+  bool get enableSuggestions =>
+      _enableSuggestions ?? item?.enableSuggestions ?? true;
+
+  final List<TextInputFormatter>? _inputFormatters;
+
+  /// Formatters applied to text edits.
+  List<TextInputFormatter>? get inputFormatters =>
+      _inputFormatters ?? item?.inputFormatters;
+
+  final int? _maxLines;
+
+  /// Maximum number of displayed lines.
+  int? get maxLines => _maxLines ?? item?.maxLines ?? 1;
+
+  final int? _minLines;
+
+  /// Minimum number of displayed lines.
+  int? get minLines => _minLines ?? item?.minLines;
+
+  final ValueChanged<String>? _onChanged;
+
+  /// Called after a user or external controller edit updates the value.
+  ValueChanged<String>? get onChanged => _onChanged ?? item?.onChanged;
+
+  final ValueChanged<String>? _onSubmitted;
+
+  /// Called when the platform submits the text field.
+  ValueChanged<String>? get onSubmitted => _onSubmitted ?? item?.onSubmitted;
+
+  final SmartResultValueTransformer<String>? _resultValueTransformer;
+
+  /// Optionally transforms the text captured in the validation result.
+  SmartResultValueTransformer<String>? get resultValueTransformer =>
+      _resultValueTransformer ?? item?.resultValueTransformer;
+
+  final bool? _excludeFromDraft;
+
+  /// Whether this field is omitted from persisted draft payloads.
+  bool get excludeFromDraft =>
+      _excludeFromDraft ?? item?.excludeFromDraft ?? false;
 
   @override
   State<SmartTextField> createState() => _SmartTextFieldState();

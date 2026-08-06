@@ -53,7 +53,7 @@ export 'src/theme/smart_form_theme.dart'
     show SmartFormTheme, SmartFormThemeData;
 export 'src/fields/smart_field_controller.dart' show SmartFieldController;
 export 'src/fields/smart_field_view_item.dart'
-    show SmartFieldViewItem, SmartWidgetFieldViewItem;
+    show SmartFieldValueReader, SmartFieldViewItem, SmartWidgetFieldViewItem;
 export 'src/fields/smart_date_field.dart'
     show SmartDateField, SmartDateFormatter;
 export 'src/fields/smart_conditional_field.dart'
@@ -74,7 +74,8 @@ export 'src/fields/smart_phone_field.dart'
         SmartPhoneFieldViewItem,
         SmartPhoneValue,
         SmartPhoneValueParser;
-export 'src/fields/smart_text_field.dart' show SmartTextField;
+export 'src/fields/smart_text_field.dart'
+    show SmartTextField, SmartTextFieldViewItem;
 export 'src/validation/smart_async_validator.dart' show SmartAsyncValidator;
 export 'src/validation/smart_async_validators.dart' show SmartAsyncValidators;
 export 'src/validation/smart_validation_context.dart'

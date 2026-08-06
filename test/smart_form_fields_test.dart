@@ -301,6 +301,21 @@ void main() {
     expect(result.values['email'], 'person@example.com');
     expect(() => result.values['new'] = 'value', throwsUnsupportedError);
   });
+
+  test('SmartFormResult exposes typed and text values', () {
+    final result = SmartFormResult(
+      isValid: true,
+      values: const <String, Object?>{'email': 'person@example.com', 'age': 7},
+      errors: const <String, String>{},
+    );
+
+    expect(result.contains('email'), isTrue);
+    expect(result.valueOf<String>('email'), 'person@example.com');
+    expect(result.text('email'), 'person@example.com');
+    expect(() => result.maybeText('missing'), throwsArgumentError);
+    expect(() => result.valueOf<String>('age'), throwsStateError);
+    expect(() => result.text('age'), throwsStateError);
+  });
 }
 
 Widget _host(Widget child) {

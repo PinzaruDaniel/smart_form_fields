@@ -23,26 +23,24 @@ class _ItemsFormExamplePageState extends State<ItemsFormExamplePage> {
     expiration: const Duration(days: 7),
     restoreAutomatically: true,
   );
+  late final SmartTextFieldViewItem _displayNameItem = SmartTextFieldViewItem(
+    name: 'display_name',
+    decoration: const InputDecoration(
+      labelText: 'Display name',
+      prefixIcon: Icon(Icons.badge_outlined),
+    ),
+    textCapitalization: TextCapitalization.words,
+    textInputAction: TextInputAction.next,
+    validators: <SmartValidator>[
+      SmartValidators.required(message: 'Display name is required'),
+    ],
+  );
   String _callingCode = '+373';
   bool _isValidating = false;
 
   List<SmartFieldViewItem> _buildItems() {
     return <SmartFieldViewItem>[
-      SmartWidgetFieldViewItem(
-        name: 'display_name',
-        builder: (_) => SmartTextField(
-          name: 'display_name',
-          decoration: const InputDecoration(
-            labelText: 'Display name',
-            prefixIcon: Icon(Icons.badge_outlined),
-          ),
-          textCapitalization: TextCapitalization.words,
-          textInputAction: TextInputAction.next,
-          validators: <SmartValidator>[
-            SmartValidators.required(message: 'Display name is required'),
-          ],
-        ),
-      ),
+      _displayNameItem,
       SmartWidgetFieldViewItem(
         name: 'email',
         builder: (_) => const SmartEmailField(
@@ -163,6 +161,7 @@ class _ItemsFormExamplePageState extends State<ItemsFormExamplePage> {
     }
     setState(() => _isValidating = false);
 
+    final displayName = result.text('display_name');
     final phone = result.values['phone'];
     final phoneSummary = phone is SmartPhoneValue ? phone.e164 : phone;
     ScaffoldMessenger.of(context)
@@ -171,7 +170,7 @@ class _ItemsFormExamplePageState extends State<ItemsFormExamplePage> {
         SnackBar(
           content: Text(
             result.isValid
-                ? 'Items form is valid: $phoneSummary'
+                ? 'Items form is valid for $displayName: $phoneSummary'
                 : 'Correct ${result.errors.length} item field(s).',
           ),
           behavior: SnackBarBehavior.floating,
@@ -213,6 +212,7 @@ class _ItemsFormExamplePageState extends State<ItemsFormExamplePage> {
 
   @override
   void dispose() {
+    _displayNameItem.dispose();
     _draftController.dispose();
     _controller.dispose();
     super.dispose();

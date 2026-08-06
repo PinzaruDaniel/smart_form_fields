@@ -1,3 +1,12 @@
+## 1.8.0
+
+* Add typed/text helpers to `SmartFormResult`, including `valueOf<T>()`,
+  `maybeText()`, and `text()`.
+* Add value/text access to field view items, including `valueReader` for custom
+  widget-backed items.
+* Add `SmartTextFieldViewItem` so item-driven text fields can expose
+  `item.text` directly while still building a normal `SmartTextField`.
+
 ## 1.7.0
 
 * Add `SmartErrorAnimationBuilder` for custom field-error animations at the

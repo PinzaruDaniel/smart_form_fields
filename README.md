@@ -40,7 +40,7 @@ SmartForm(
 final result = await formKey.validate();
 
 if (result.isValid) {
-  print(result.values['email']);
+  print(result.text('email'));
 }
 ```
 
@@ -547,8 +547,9 @@ fields return their declared type.
 final result = await formController.validate();
 if (!result.isValid) return;
 
-final email = result.values['email'] as String?;
-final birthDate = result.values['birthDate'] as DateTime?;
+final email = result.text('email');
+final optionalNickname = result.maybeText('nickname');
+final birthDate = result.valueOf<DateTime>('birthDate');
 ```
 
 ## Country-aware phone fields
@@ -650,6 +651,23 @@ SmartForm(
   itemSeparatorHeight: 16,
 );
 ```
+
+Text items can expose their own current text, which is useful when a screen
+wants to keep a handle to one field without reading from the result map:
+
+```dart
+final displayNameItem = SmartTextFieldViewItem(
+  name: 'display_name',
+  decoration: const InputDecoration(labelText: 'Display name'),
+);
+
+SmartForm(items: [displayNameItem]);
+
+print(displayNameItem.text);
+```
+
+For fully custom items, provide a `valueReader` if you want `item.value`,
+`item.valueAs<T>()`, or `item.text` to return the widget-owned value.
 
 Use either `children` or `items` on one `SmartForm`. The existing `children`
 API remains unchanged.
